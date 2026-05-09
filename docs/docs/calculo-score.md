@@ -17,6 +17,7 @@ Em paralelo, o nosso banco de dados mapeia os votos oficiais (Sim, Não ou Abste
 
 ### 3. O Cruzamento Matemático (O *Match*)
 O motor do ContraDito utiliza a extensão **`pgvector`** no Supabase para calcular a **Similaridade de Cosseno** entre os vetores. 
+
 * Se a similaridade é alta, significa que o discurso e a lei tratam do mesmo assunto semântico.
 * O sistema recupera esse "par ideal" e aciona o **Llama 3** para confirmar a consistência:
     * **Coerência Positiva:** O discurso defende a pauta e o voto foi favorável (ou vice-versa).
@@ -35,6 +36,7 @@ O *Score de Coerência* é uma nota de **[0 a 100]**, calculada com base no perc
 
 ## Limitações e Mitigações
 Para garantir justiça e evitar punições por mudanças naturais de contexto:
+
 * **Fator Temporal:** Priorizamos cruzamentos entre discursos e votos próximos no tempo ou dentro da mesma legislatura.
 * **Contexto Político:** O motor LLM analisa se votos em "Destaques" ou manobras regimentais justificam uma aparente mudança de posicionamento, garantindo que a nota reflita a intenção real.
 
@@ -49,7 +51,9 @@ Para garantir que o processamento vetorial não seja prejudicado por ruídos pro
 3. **Idempotência (Upsert):** Utilizamos a função `.upsert()` para garantir que atualizações de discursos não gerem duplicidade de registros.
 
 **Trecho de destaque (Filtro de Ruído em Python):**
+
 ```python
+
 def buscar_ultimo_discurso_relevante(id_camara):
     # ... (conexão com API) ...
     for discurso in dados:
@@ -61,3 +65,4 @@ def buscar_ultimo_discurso_relevante(id_camara):
             return texto, data_hora
 
     return "Nenhum discurso relevante encontrado.", "2023-01-01"
+```
