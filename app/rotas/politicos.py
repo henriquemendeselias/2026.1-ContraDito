@@ -6,6 +6,7 @@ from slowapi.util import get_remote_address
 from app.bancos.supabase import supabase
 from fastapi_cache import FastAPICache
 from fastapi_cache.decorator import cache
+from collections import defaultdict
 import httpx
 from app.modelos.schemas import (
     PaginaPoliticos,
@@ -17,7 +18,7 @@ from app.modelos.schemas import (
     BuscaVetorialRequest,
     ResultadoSimilaridade,
 )
-from collections import defaultdict
+
 
 limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/api/politicos", tags=["Políticos"])
@@ -168,7 +169,7 @@ async def buscar_discursos_por_similaridade(request: Request, requisicao: BuscaV
                 resposta_worker = await client.post(
                     "http://worker:8001/gerar-embedding",
                     json={"texto": requisicao.texto_busca},
-                    timeout=15.0,
+                    timeout=8.0,
                 )
                 resposta_worker.raise_for_status()
             except httpx.RequestError:
@@ -260,3 +261,16 @@ def recalcular_todos_scores():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro interno ao recalcular scores: {str(e)}")
+    
+@router.post(
+    "/interno/limpar-cache",
+    summary="Invalida o cache global da API (Uso Interno)",
+    description="Limpa o InMemoryBackend. Chamado pelo ETL para garantir dados frescos no Front-end.",
+    include_in_schema=False
+)
+async def limpar_cache_global():
+    try:
+        await FastAPICache.clear()
+        return {"status": "sucesso", "mensagem": "Cache global limpo com sucesso. O Front-end agora receberá dados frescos."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao limpar cache: {str(e)}")

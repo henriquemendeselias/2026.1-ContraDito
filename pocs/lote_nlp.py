@@ -193,9 +193,16 @@ def processar_lote():
     try:
         # Usa o nome do serviço 'api' do docker-compose
         httpx.post("http://api:8000/api/politicos/interno/recalcular-scores", timeout=30.0)
-        print("   ↳ Scores atualizados com sucesso no banco!")
+        print("Scores atualizados com sucesso no banco!")
     except Exception as e:
         print(f"   Erro ao avisar a API para recalcular os scores: {e}")
+    print("-" * 50)
+    print("FASE 4: Invalidando cache da API...")
+    try:
+        httpx.post("http://api:8000/api/politicos/interno/limpar-cache", timeout=10.0)
+        print("Cache global limpo com sucesso! Dados frescos disponíveis.")
+    except Exception as e:
+        print(f"Erro ao limpar o cache da API: {e}")
 
     fim = time.time()
     print("=" * 50)
