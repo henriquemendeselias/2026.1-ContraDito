@@ -29,7 +29,7 @@ Responsável pela vetorização de textos, busca semântica e inferência lógic
 * **RF32 – Inferência de Postura:** O sistema deve enviar o prompt orquestrado ao LLM (Llama 3) para que a IA infira a postura teórica do deputado em relação à matéria (ex: A Favor, Contra, Neutro) estritamente com base nos discursos fornecidos.
 * **RF33 – Avaliação Lógica de Coerência:** O pipeline deve cruzar a postura inferida pela IA com o voto nominal real do parlamentar no painel. O sistema classificará o voto final como "Coerente" ou "Incoerente".
 * **RF34 – Persistência do Veredito:** O sistema deve salvar o resultado final da classificação e a justificativa textual gerada pela IA no banco de dados para posterior exibição.
-* **RF35 – Processamento de Matérias Extensas:** Para matérias cujo texto integral exceda o limite de contexto do modelo de embedding, o sistema deve priorizar a vetorização da Ementa ou gerar um Resumo Global via LLM antes da persistência vetorial.
+* **RF35 – Fluxo de Processamento de Matérias Extensas:** Na etapa de persistência vetorial de matérias legislativas, o sistema deve seguir uma ordem estrita de prioridade: (1) vetorizar o Texto Integral; (2) caso o limite de contexto do modelo seja excedido, gerar e vetorizar um Resumo via LLM; e (3) utilizar a Ementa oficial como último recurso (fallback).
 
 ### Requisitos Não-Funcionais e Regras de Negócio (Motor NLP)
 * **RNF06 – Limiar de Similaridade Vetorial (Threshold):** O banco de dados vetorial deve ser configurado com um threshold rigoroso (ex: 0.2 de distância de cosseno). Discursos abaixo dessa linha de corte não serão retornados.
