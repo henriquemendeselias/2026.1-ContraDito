@@ -1,52 +1,99 @@
-# Banco de Dados e Busca Vetorial (Supabase)
+# Modelagem do Banco de Dados
 
-## 1. Modelo Conceitual de Dados
-O banco de dados foi projetado para unir dados relacionais tradicionais com coordenadas espaciais (vetores), dividindo-se em dois domínios principais:
-
-### 1.1. Perfil e Agregação (`politicos`)
-
-Armazena o cadastro governamental oficial - dados extraídos das APIs: `id`, `nome_civil`, `nome_urna`, `cargo`, `partido`, `UF`, `foto_url` e `situacao`, além do `score_coerencia` após o seu cálculo. Adicionalmente, esta tabela atua como entidade principal no banco de dados, fornecendo a chave estrangeira para a tabela `provas_contradicao`.
-
-O `score_coerencia` deve ser nulo (`null`) caso não haja histórico processado do parlamentar. Isso é essencial para que o Front-end exiba o estado **"Sem Dados"**, em vez de assumir o valor `0` e acusar falsamente o político de incoerência.
-
-### 1.2. O Núcleo do RAG (`provas_contradicao`)
-
-É o repositório central onde a inteligência semântica opera. Esta estrutura conecta as informações essenciais do processo de checagem de coerência:
-
-- **Conteúdo Processado e Rastreabilidade:** Armazena o texto literal do discurso (higienizado pelo fluxo de ETL), acompanhado do seu respectivo `embedding` (vetor utilizado para busca semântica). Cada registro possui um `hash` único para evitar duplicação no banco e mantém metadados de origem, como `tipo_documento`, `data_evento` e `link_fonte`.
-
-- **Contexto Legislativo e Voto Oficial:** Mantém a ementa ou assunto da proposição analisada e registra diretamente o `voto_oficial`, permitindo o cruzamento entre discurso público e posicionamento formal em votações.
-
-- **Inferência do Motor NLP e Veredito:** Armazena a análise gerada de forma assíncrona pelo modelo de IA (Llama 3), responsável por identificar a `postura_extraida` (ex.: `"A Favor"` ou `"Contra"`) e produzir a justificativa textual da inferência. A partir disso, o sistema consolida o `status_coerencia`, um valor booleano derivado da comparação entre `voto_oficial` e `postura_extraida`.
+O modelo do banco (supabase) foi desenhado para suportar o padrão **CQRS** (segregação de leitura e escrita) e otimizar as consultas de **RAG** (Geração Aumentada por Recuperação) usando a extensão `pgvector`.
 
 ---
 
-## 2. O Motor Semântico: `pgvector` e HNSW
+## 1. Diagrama de Entidade-Relacionamento (ERD)
 
-O banco de dados (Supabase/PostgreSQL) do projeto não atua apenas como um repositório passivo de textos, mas também como um mecanismo ativo de busca semântica.
+O diagrama abaixo ilustra as entidades do sistema, suas chaves primárias/estrangeiras e as cardinalidades exatas que governam a integridade dos dados, isolando o motor vetorial da API principal.
 
-- **Espaço Vetorial (`pgvector`):** Cada discurso processado é convertido em um vetor matemático de 768 dimensões, denominado `embedding`. Esses vetores são armazenados no banco de dados e comparados por meio da métrica de **Similaridade por Cosseno**, utilizada para medir a proximidade semântica entre conteúdos. Essa abordagem permite ao sistema compreender relações de significado entre expressões diferentes — como “corte de gastos” e “redução de despesas” — sem depender de correspondência literal de palavras.
+```mermaid
+---
+config:
+  layout: elk
+---
+erDiagram
+    POLITICOS {
+        int politico_id PK
+        string nome_politico
+        string partido_politico
+        string estado
+        string cargo
+        string status_mandato
+        float score_coerencia
+        boolean dados_insuficientes
+        string url_foto_politico
+        datetime ultima_atualizacao
+    }
 
-- **Busca Vetorial Otimizada (Índice HNSW):** Comparar um vetor com todos os registros da base tornaria a consulta inviável em escala. Para solucionar esse problema, o sistema utiliza o índice **HNSW** (*Hierarchical Navigable Small World*), responsável por organizar os vetores em uma estrutura hierárquica de vizinhança. Dessa forma, o mecanismo de busca consegue ignorar rapidamente regiões semanticamente irrelevantes e direcionar a consulta apenas aos grupos mais próximos do contexto pesquisado. Isso garante buscas semânticas de alta performance e baixa latência, mesmo com o crescimento contínuo da base de dados.
+    PROPOSICOES {
+        int proposicao_id PK
+        string tipo_proposicao
+        string ementa_proposicao
+        datetime data_votacao
+        string url_texto_inteiro
+        string resumo_executivo
+        vector embedding_resumo_executivo
+    }
+    
+    VOTO {
+        int voto_id PK
+        int proposicao_id FK
+        int politico_id FK
+        string partido_na_epoca
+        string voto_oficial
+        string inferencia_ia
+        string justificativa
+        boolean eh_coerente
+    }
+    
+    DISCURSO {
+        int discurso_id PK
+        int politico_id FK
+        datetime data_discurso
+        text texto_bruto
+    }
+
+    DISCURSOS_CHUNKS {
+        int chunk_id PK
+        int discurso_id FK
+        text texto_chunk
+        vector embedding_chunk
+    }
+    
+    POLITICOS ||--o{ VOTO : "0 : N (registra)"
+    PROPOSICOES ||--|{ VOTO : "1 : N (recebe)"
+    POLITICOS ||--o{ DISCURSO : "0 : N (profere)"
+    DISCURSO ||--|{ DISCURSOS_CHUNKS : "1 : N (é quebrado em)"
+```
+
+ - **Tabela POLITICOS:** Tabela puramente de consulta para o lado de leitura (Query) da API FastAPI, minimizando processamento em tempo de execução.
+
+ - **Tabela PROPOSICOES:** Armazena os textos-base das matérias legislativas que foram formalmente votadas em plenário (PECs e PLs).
+
+ - **Tabela VOTO:** Tabela associativa que resolve a relação Muitos-para-Muitos (N:M) entre Parlamentares e Leis.
+
+ - **Tabela DISCURSO:** Armazena a massa de dados bruta extraída das notas taquigráficas da API da Câmara.
+
+- **Tabela DISCURSOS_CHUNKS:** Armazena os fragmentos textuais processados pelos algoritmos de divisão de texto (*Text Splitters*).
 
 ---
 
-## 3. A Busca Ativa: Função RPC
+## 2. Análise das Cardinalidades
 
-A extração de contexto utilizada pela inteligência artificial ocorre diretamente no banco de dados por meio de uma *Stored Procedure* (RPC). Executar a busca vetorial próximo aos dados reduz latência, elimina gargalos de rede e garante respostas em escala de milissegundos. A estrutura da função é baseada em quatro pilares principais:
+A consistência matemática do banco baseia-se na distinção estrita entre relações opcionais e obrigatórias:
 
-- **Filtro de Escopo (`p_politico_id`):** Antes da execução do cálculo vetorial, a função restringe os registros ao parlamentar alvo, garantindo isolamento contextual e impedindo que discursos de políticos diferentes sejam misturados na análise.
+- **Relação de POLITICOS com VOTO e DISCURSO:** Um parlamentar pode não ter votos e nem discursos (Suplentes). Relação opcional.
 
-- **Cálculo de Similaridade:** O banco utiliza o operador de **Distância do Cosseno** (`<=>`) para medir proximidade entre embeddings. Como distâncias menores representam maior similaridade semântica, a função aplica a transformação `1 - distância`, produzindo um `score_similaridade` mais intuitivo, no qual valores maiores indicam maior proximidade de significado.
+- **Relação de PROPOSIÇÕES com VOTO:** O escopo define que só é extraído proposições com votações, portanto a relação é obrigatória.
 
-- **Escudo Anti-Alucinação (`match_threshold`):** A similaridade calculada deve obrigatoriamente superar o limite definido em `match_threshold`. Caso o parlamentar não possua discursos semanticamente relacionados ao tema pesquisado, os registros são descartados e a função retorna vazio. Esse mecanismo reduz ruído contextual e mitiga significativamente o risco de inferências imprecisas pelo modelo LLM (Llama 3).
+ - **Relação de DISCURSOS com DISCURSOS_CHUNKS:** Um chunk de discurso só existe se seu discurso existir. Relação obrigatória.
+---
 
-- **Contexto Enxuto (`match_count`):** Para respeitar a janela de contexto do modelo e otimizar o consumo de tokens, os resultados aprovados são ordenados do maior para o menor `score_similaridade` e limitados à quantidade especificada em `match_count`.
+## 3. Banco de Dados como Motor Ativo 
+Pra nao sobrecarregar a memória da aplicação, a nossa modelagem transfere a carga de processamento para o banco com duas abordagens:
 
-#### Retorno para o Back-end
+* **Busca Inteligente de Contexto:** O sistema utiliza buscas semânticas para encontrar os trechos de discursos mais relacionados com cada proposta analisada.
 
-A função retorna apenas os elementos necessários para a composição do prompt enviado ao modelo de IA:
-
-- `id` da evidência;
-- `texto_extraido` correspondente ao discurso;
-- `score_similaridade` calculado na busca vetorial.
+* **Separação entre Processamento e Consulta (CQRS):** O processamento pesado da IA acontece de forma isolada no Worker NLP, enquanto a API principal apenas consulta dados já processados e prontos para exibição. Isso garante que a interface continue rápida mesmo durante análises complexas.
