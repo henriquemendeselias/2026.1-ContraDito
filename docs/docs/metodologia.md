@@ -1,6 +1,6 @@
 # Metodologia e Processo de Desenvolvimento
 
-Este documento descreve as práticas ágeis, os ritos e as políticas de engenharia de software adotadas pela **Squad 09** para o desenvolvimento do ContraDito. Nosso processo foi desenhado para garantir entregas contínuas, alta qualidade de código e alinhamento constante com os objetivos da disciplina de MDS.
+Este documento descreve as práticas ágeis, os ritos e as políticas de engenharia de software adotadas pela **Squad 09** para o desenvolvimento do ContraDito. Nosso processo foi desenhado para garantir entregas contínuas e alinhamento constante com os objetivos da disciplina de MDS.
 
 ## 1. Framework Ágil
 A equipe adota uma abordagem híbrida baseada em **Scrum** e **Extreme Programming (XP)**. Utilizamos o Scrum para cadência, ritos e planejamento das Sprints, enquanto os valores do XP guiam nossas práticas de engenharia de software e nosso foco na qualidade técnica do código.
@@ -8,7 +8,7 @@ A equipe adota uma abordagem híbrida baseada em **Scrum** e **Extreme Programmi
 ## 2. Papéis da Equipe
 Para garantir o desenvolvimento de habilidades em todas as áreas e uma boa divisão de carga, a equipe adotou a seguinte distribuição de papéis:
 
-* **Scrum Master / Agile Master:** @henriquemendeselias - Responsável por remover impedimentos e garantir a execução e qualidade dos ritos ágeis.
+* **Scrum Master:** @henriquemendeselias - Responsável por remover impedimentos e garantir a execução e qualidade dos ritos ágeis.
 * **Product Owner (PO):** @jot4-ge - Responsável por refinar e priorizar o Backlog, definir o escopo e validar as entregas junto às expectativas do projeto.
 * **Desenvolvedores Backend e DevOps:** @luizhtmoreira @lucasaraujoszz @matheus0346 - Responsáveis pelo pipeline ETL, motor NLP, modelagem do banco de dados vetorial, infraestrutura e documentação.
 * **Desenvolvedores Frontend:** @G2SBiell - Responsáveis pela construção da interface do usuário (Next.js/React), integração com a API e fidelidade ao escopo de UX.

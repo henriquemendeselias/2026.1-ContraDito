@@ -1,11 +1,8 @@
- # Entendendo o Score de Coerência
+# Entendendo o Score de Coerência
 
-
-O **Score de Coerência** é a principal métrica do ContraDito. Ele não é baseado em opiniões políticas ou viés ideológico, mas sim em um cruzamento analítico e matemático rigoroso entre as declarações públicas do parlamentar e suas ações no painel de votação eletrônico.
-
+O **Score de Coerência** é a principal métrica do ContraDito. Ele é o resultado de um cruzamento analítico e matemático entre as declarações públicas do parlamentar e seus votos oficiais.
 
 Abaixo, detalhamos as regras de negócio e os critérios matemáticos que definem como essa pontuação é calculada.
-
 
 ---
 
@@ -15,11 +12,8 @@ Abaixo, detalhamos as regras de negócio e os critérios matemáticos que define
 
 O índice de coerência de um parlamentar é calculado percentualmente, resultando em uma nota de **0 a 100**. A fórmula é baseada exclusivamente nos cruzamentos validados com sucesso pela nossa Inteligência Artificial:
 
-
 $$
-
 Score = \left( \frac{\text{Quantidade de Votos Coerentes}}{\text{Total de Votações Válidas Analisadas}} \right) \times 100
-
 $$
 
 
