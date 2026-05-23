@@ -88,7 +88,8 @@ A consistência matemática do banco baseia-se na distinção estrita entre rela
 
 - **Relação de PROPOSIÇÕES com VOTO:** O escopo define que só é extraído proposições com votações, portanto a relação é obrigatória.
 
- - **Relação de DISCURSOS com DISCURSOS_CHUNKS:** Um chunk de discurso só existe se seu discurso existir. Relação obrigatória.
+- **Relação de DISCURSOS com DISCURSOS_CHUNKS:** Um chunk de discurso só existe se seu discurso existir. Relação obrigatória.
+
 ---
 
 ## 3. Banco de Dados como Motor Ativo 

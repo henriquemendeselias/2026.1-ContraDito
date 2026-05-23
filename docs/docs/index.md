@@ -18,9 +18,9 @@ No entanto, o volume desses dados é massivo. Compreender se um político manté
 
 ##  Motivação
 
-O projeto nasce da necessidade de combater a desinformação e a polarização através de dados concretos. Frequentemente, observa-se no cenário político o fenômeno do discurso duplo: um parlamentar pode proferir discursos inflamados a favor de um tema (para gerar engajamento nas redes sociais), mas votar de forma oposta ou abster-se quando o projeto vai a plenário.
+O projeto nasce da necessidade de combater a desinformação e a polarização através de dados concretos. Frequentemente, observa-se no cenário político o fenômeno do discurso duplo: um parlamentar pode proferir discursos inflamados a favor de um tema (para gerar engajamento nas redes sociais), mas votar de forma oposta quando o projeto vai a plenário.
 
-A nossa motivação é **reduzir a assimetria de informação** entre o representante e o eleitor, automatizando o cruzamento desses dados e expondo contradições (ou confirmando coerências) de forma visual, rápida e isenta de viés ideológico.
+A nossa motivação é **reduzir a assimetria de informação** entre o representante e o eleitor, automatizando o cruzamento desses dados e expondo contradições ou confirmando coerências de forma visual, rápida e isenta de viés ideológico.
 
 ---
 
@@ -31,9 +31,9 @@ O objetivo central do ContraDito é fornecer uma ferramenta de auditoria cidadã
 1. **Ingestão Automatizada (ETL):** Consumir, higienizar e estruturar dados oficiais das APIs da Câmara dos Deputados e do Senado Federal.
 2. **Busca Semântica (RAG):** Utilizar modelos de linguagem (NLP) e bancos de dados vetoriais para correlacionar o tema de uma votação com discursos passados do parlamentar sobre o mesmo assunto.
 3. **Score de Coerência:** Calcular matematicamente um índice de fidelidade entre o discurso proferido e a ação legislativa tomada no painel eletrônico.
-4. **Interface Clara:** Apresentar essas "provas" lado a lado em uma interface web intuitiva, permitindo que o cidadão tire as suas próprias conclusões.
+4. **Interface Clara:** Apresentar essas informações em uma interface web intuitiva, permitindo que o cidadão tire as suas próprias conclusões.
 
-> **O ContraDito não emite opiniões políticas.** O nosso papel é puramente tecnológico: organizar as informações e colocar a fala e o voto frente a frente num "ringue" de dados públicos.
+**O ContraDito não emite opiniões políticas.** O nosso papel é puramente tecnológico: organizar as informações públicas e colocar a fala e o voto frente a frente.
 
 ## Equipe
 

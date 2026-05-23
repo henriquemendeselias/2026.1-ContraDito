@@ -1,36 +1,32 @@
 # Manual do Usuário
 
-Bem-vindo ao manual de uso do **ContraDito**! Nossa plataforma foi projetada para ser uma ferramenta de inteligência de dados com navegação intuitiva, focada na redução da assimetria de informação. Abaixo, detalhamos o fluxo da interface para que você possa extrair o máximo das nossas análises de coerência política.
+Bem-vindo ao **ContraDito**! Nossa plataforma foi desenhada para ser rápida, intuitiva e direta ao ponto. Abaixo, explicamos como navegar pelas principais funcionalidades do sistema.
 
-## 1. Painel de Visão Geral (Hero Section)
+## 1. A Página Inicial (Homepage)
 
-Logo ao acessar o ContraDito, você encontrará a nossa *Hero Section*, que exibe as **Estatísticas Globais ao Vivo** do Congresso Nacional. Este painel consolida o pulso do cenário político brasileiro em tempo real, apresentando:
+A **Homepage** é a principal porta de entrada da plataforma. Nela, você encontra um panorama completo e as ferramentas centrais de navegação:
 
-*   **Raio-X do Congresso:** O total de parlamentares monitorados ativamente (513 deputados federais e 81 senadores).
-*   **Volume de Dados:** A quantidade de discursos proferidos em plenário que já foram processados e cruzados pelo nosso motor NLP.
-*   **Score de coerência dos políticos:** Uma lista que mostra os scores de coerência dos políticos avaliados pelo portal, em ordem decrescente.
+*   **Barra de Pesquisa e Filtros:** Localize parlamentares rapidamente buscando por **Nome**, **Partido**, **Estado (UF)** ou **Cargo** (Deputado Federal / Senador).
+*   **Ranking de Coerência:** Uma lista objetiva exibindo os políticos ordenados do maior para o menor *Score de Coerência*, permitindo visualizar de forma clara os parlamentares mais e menos alinhados com suas próprias falas.
+*   **Raio-X do Congresso:** Um painel geral que apresenta o escopo ativamente monitorado pelo nosso sistema, contemplando os **594 parlamentares federais** (Câmara dos Deputados e Senado Federal).
 
-## 2. O Diretório de Políticos
+## 2. O Dossiê do Parlamentar
 
-A ferramenta central de pesquisa da plataforma é o **Diretório de Políticos**. É nesta seção que você pode investigar parlamentares específicos ou visualizar recortes geográficos e partidários.
+Ao selecionar um político, você acessa o seu perfil individual estruturado em formato de dossiê:
 
-### Busca Rápida
-Se você já sabe quem deseja investigar, utilize a **Barra de Pesquisa**. Basta digitar o nome do parlamentar e o sistema filtrará os resultados instantaneamente.
+*   **Perfil Oficial:** Informações gerais e atualizadas extraídas das bases de dados governamentais.
+*   **Análise de Votações:** Todas as votações processadas pelo sistema são listadas no perfil do parlamentar.
+*   **Justificativa da IA:** Para cada voto registrado, a interface detalha o posicionamento oficial na sessão (Sim/Não) e a classificação final de coerência ou incoerência. Acompanhando o veredito, exibimos uma **justificativa textual gerada pela Inteligência Artificial**, explicando o porquê do voto ter sido considerado coerente (ou não) em relação aos discursos anteriores do político.
 
-### Filtros de Segmentação
-Para análises mais amplas ou para monitorar bancadas específicas, utilize os filtros de seleção localizados junto à busca:
-*   **Todos os Partidos:** Permite isolar os representantes de uma legenda partidária específica.
-*   **Todos os Estados:** Permite filtrar pela Unidade Federativa (UF), ajudando você a acompanhar exclusivamente os políticos eleitos pelo seu estado.
+## 3. Face-to-Face (O Ringue de Comparação)
 
-## 3. Analisando os Resultados
+Para análises de contraste, a plataforma oferece o **Face-to-Face** (O Ringue de Comparação Profunda). Esta funcionalidade permite colocar dois políticos distintos lado a lado para uma avaliação cruzada.
 
-Após realizar uma busca ou aplicar os filtros, a interface exibirá os dados cruzados em uma tabela de resultados objetiva. Cada linha da tabela é dedicada a um parlamentar e apresenta as seguintes informações:
+*   **Comparação Direta:** Selecione dois parlamentares para visualizar simultaneamente os seus perfis e desempenhos.
+*   **Contraste de Coerência:** A interface exibe de forma clara o *Score de Coerência* geral de ambos, facilitando a identificação imediata de qual representante possui o maior alinhamento entre discurso e prática.
+*   **Transparência Temporal:** Para atestar a precisão da sua análise, o painel exibe a **data do último cálculo** processado pela nossa Inteligência Artificial, informando exatamente o quão recentes são os scores apresentados.
 
-*   **Nome:** Identificação do político.
-*   **Partido:** Sigla da legenda atual.
-*   **UF:** Estado de representação.
-*   **Cargo:** Casa legislativa (Deputado Federal ou Senador).
-*   **Score de Coerência (%):** O indicador principal da nossa inteligência. É uma nota de 0 a 100 que resume o grau de alinhamento matemático entre as falas do político e suas ações (votos) no plenário.
+---
 
 > **Quer aprofundar a análise?** 
 > Para entender exatamente qual é a fórmula matemática por trás dessa nota e como a nossa inteligência artificial trata nuances e manobras regimentais, consulte a próxima página: [Entendendo o Score de Coerência](./calculo-score.md).

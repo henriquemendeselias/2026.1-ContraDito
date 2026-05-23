@@ -54,15 +54,4 @@ Para garantir que o processamento vetorial não seja prejudicado por ruídos pro
 
 **Trecho de destaque (Filtro de Ruído em Python):**
 
-```python
-def buscar_ultimo_discurso_relevante(id_camara):
-    # ... (conexão com API) ...
-    for discurso in dados:
-        texto = discurso.get("transcricao", "")
-        data_hora = discurso.get("dataHoraInicio", "2023-01-01T00:00").split("T")[0]
 
-        # Regra de Negócio: Ignora discursos curtos/protocolares
-        if len(texto) > 150:
-            return texto, data_hora
-
-    return "Nenhum discurso relevante encontrado.", "2023-01-01"
