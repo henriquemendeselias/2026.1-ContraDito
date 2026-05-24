@@ -16,7 +16,7 @@ O dado nasce bruto nos servidores do Governo Federal, é processado, limpo e tem
 graph TD
     A[APIs Federais: Câmara dos Deputados] -->|HTTP GET Assincrono| B(Worker NLP: Filtro 1 - ETL)
     
-    subgraph pipeline [Transformação e Higienização]
+    subgraph pipeline [Transformação e Higiene]
         B --> C{Parser e Filtros}
         C -->|Regex e BS4| D[Higienização de Discursos]
         C -->|pdfplumber| E[Extração de PDFs: Inteiro Teor]
@@ -28,6 +28,7 @@ graph TD
     F --> G
     
     G -.->|Dispara Pipeline de IA| H[Worker NLP: Filtro 2 - Llama e SBERT]
+```
  
 ## 2. Escopo e Endpoints Consumidos (MVP)
  
