@@ -1,14 +1,18 @@
 # Sprint 08: Planejamento e Pair Programming
 
-* **Data da Reunião:** 12/05/2026
-* **Data de Entrega:** 19/05/2026
-* **Dashboard de Produtividade:** [Acessar Dashboard](https://unb-mds.github.io/2026.1-ContraDito/productivity/)
+**Data da Reunião:** 12/05/2026
+**Data de Entrega:** 19/05/2026
+**Dashboard de Produtividade:** [Acessar Dashboard](https://unb-mds.github.io/2026.1-ContraDito/productivity/)
+
+---
 
 ## 1. Descrição e Objetivo
 * Retrospectiva da sprint anterior com foco na revisão da documentação do projeto.
 * Consolidação do dashboard de produtividade utilizando a abordagem SDD (Specification-Driven Development).
 * Integração de métricas de produtividade com GitHub Actions.
 * Planejamento do backlog baseado na metodologia XP (Extreme Programming), com adoção de Pair Programming para módulos de alta complexidade.
+
+---
 
 ## 2. Participantes
 * @henriquemendeselias
