@@ -27,6 +27,7 @@ nav:
   -  O Projeto:
       - Sobre o ContraDito: index.md
       - Escopo e Visão Geral: escopo.md
+      - Links Úteis: links.md
 
   -  O Produto:
       - Manual do Usuário: manual.md
@@ -62,10 +63,10 @@ nav:
       - Integração e API: integracaoapi.md
       - Decisões Arquiteturais (ADRs): adrs/index.md
       - Testes e Qualidade: qualidade.md
-  -  Encerramento:
+ # -  Encerramento:
       #- Avaliação Final: avaliacao.md
-      - Próximos Passos (Roadmap): roadmap.md
-      - Links Úteis: links.md
+      #- Próximos Passos (Roadmap): roadmap.md
+      #- Links Úteis: links.md
 
 extra_css:
   - stylesheets/extra.css
