@@ -1,0 +1,277 @@
+{% extends "main.html" %}
+
+{% block tabs %}
+{% endblock %}
+
+{% block site_nav %}
+{% endblock %}
+
+{% block site_toc %}
+{% endblock %}
+
+{% block header %}
+<header class="custom-header">
+  <div class="header-container">
+    <a href="{{ base_url }}" class="logo">ContraDito</a>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="landing-page-wrapper">
+  <!-- ═══════════════════════════════════
+       HERO
+  ══════════════════════════════════════ -->
+  <div class="hero-section">
+    <div class="hero-badge">Projeto Acadêmico · MDS/UnB · 2026</div>
+    <h1 class="hero-title">O que os políticos <span>dizem</span><br>vs. o que eles <span>votam</span></h1>
+    <p class="hero-subtitle">
+      O <strong>ContraDito</strong> usa Inteligência Artificial para cruzar discursos parlamentares
+      com votos oficiais e calcular um <strong>Score de Coerência</strong> auditável e transparente.
+    </p>
+    <div class="hero-cta">
+      <a href="{{ base_url }}/ux/prototipos/" class="btn-primary">Ver a Plataforma</a>
+      <a href="{{ base_url }}/arquitetura/" class="btn-secondary">Ver a Arquitetura</a>
+    </div>
+  </div>
+
+  <hr class="landing-divider">
+
+  <!-- ═══════════════════════════════════
+       COMO FUNCIONA
+  ══════════════════════════════════════ -->
+  <p class="section-title">Como funciona</p>
+  <p class="section-subtitle">Três etapas transformam dados brutos governamentais em inteligência política auditável.</p>
+
+  <div class="pipeline-grid">
+    <div class="pipeline-card">
+      <div class="pipeline-number">01</div>
+      <h3>Ingestão (ETL)</h3>
+      <p>Extração automática de discursos, proposições e votos das APIs oficiais da Câmara e do Senado, com higienização rigorosa dos textos.</p>
+    </div>
+    <div class="pipeline-card">
+      <div class="pipeline-number">02</div>
+      <h3>Motor NLP e RAG</h3>
+      <p>Os discursos são vetorizados com <strong>BGE-M3</strong> e cruzados semanticamente com as matérias votadas via busca vetorial no Supabase.</p>
+    </div>
+    <div class="pipeline-card">
+      <div class="pipeline-number">03</div>
+      <h3>Score de Coerência</h3>
+      <p>O <strong>Llama 3.1 8B</strong> analisa o contexto e emite um veredito. O resultado é exibido ao cidadão como uma métrica de 0 a 100.</p>
+    </div>
+  </div>
+
+  <hr class="landing-divider">
+
+  <!-- ═══════════════════════════════════
+       SCORE DE COERÊNCIA
+  ══════════════════════════════════════ -->
+  <p class="section-title">O Score de Coerência</p>
+  <p class="section-subtitle">Uma métrica matemática, determinística e auditável — sem opiniões subjetivas.</p>
+
+  <div class="score-box">
+    <div class="score-formula">
+      <p>Fórmula</p>
+      <div class="formula">
+        Score = (Votos Coerentes ÷<br>Votações Válidas) × 100
+      </div>
+    </div>
+    <div class="score-rules">
+      <h3>Regras do cálculo</h3>
+      <ul>
+        <li>Apenas votos "Sim" ou "Não" entram no denominador.</li>
+        <li>Só discursos anteriores à data do voto são considerados.</li>
+        <li>Ausências e abstenções são ignoradas para não distorcer o índice.</li>
+        <li>Parlamentares sem dados suficientes exibem "N/A" — sem falsos incoerentes.</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="landing-divider">
+
+  <!-- ═══════════════════════════════════
+       ACESSO RÁPIDO
+  ══════════════════════════════════════ -->
+  <p class="section-title">Explore a documentação</p>
+  <p class="section-subtitle">Navegue pelas seções principais do portal.</p>
+
+  <div class="nav-grid">
+    <a href="{{ base_url }}/manual/" class="nav-card">
+      <h3>Manual do Usuário</h3>
+      <p>Como usar a plataforma, buscar políticos e interpretar o dossiê.</p>
+    </a>
+    <a href="{{ base_url }}/arquitetura/" class="nav-card">
+      <h3>Arquitetura</h3>
+      <p>CQRS, pipeline Pipe and Filter e decisões técnicas do sistema.</p>
+    </a>
+    <a href="{{ base_url }}/requisitos/" class="nav-card">
+      <h3>Requisitos</h3>
+      <p>Épicos, RFs, RNFs e regras de negócio que guiam o desenvolvimento.</p>
+    </a>
+    <a href="{{ base_url }}/execucao/" class="nav-card">
+      <h3>Como Executar</h3>
+      <p>Guia Docker: subir o ambiente local em minutos.</p>
+    </a>
+    <a href="{{ base_url }}/adrs/" class="nav-card">
+      <h3>Decisões (ADRs)</h3>
+      <p>Registro das mudanças arquiteturais críticas ao longo do projeto.</p>
+    </a>
+  </div>
+
+  <hr class="landing-divider">
+
+  <!-- ═══════════════════════════════════
+       STACK TECNOLÓGICO
+  ══════════════════════════════════════ -->
+  <p class="section-title">Stack Tecnológico</p>
+  <p class="section-subtitle">As tecnologias que sustentam o ContraDito.</p>
+
+  <div class="stack-grid">
+    <div class="stack-badge">Python 3.12</div>
+    <div class="stack-badge">FastAPI</div>
+    <div class="stack-badge">Next.js 14</div>
+    <div class="stack-badge">Docker Compose</div>
+    <div class="stack-badge">Supabase (pgvector)</div>
+    <div class="stack-badge">Llama 3.1 8B</div>
+    <div class="stack-badge">BAAI/bge-m3</div>
+    <div class="stack-badge">LangChain</div>
+    <div class="stack-badge">Redis (Pub/Sub)</div>
+    <div class="stack-badge">HuggingFace</div>
+  </div>
+
+  <hr class="landing-divider">
+
+  <!-- ═══════════════════════════════════
+       EQUIPE
+  ══════════════════════════════════════ -->
+  <p class="section-title">A Equipe — Squad 09</p>
+  <p class="section-subtitle">Estudantes de Engenharia de Software da Universidade de Brasília (UnB/FCTE).</p>
+
+  <div class="team-grid">
+    <a href="https://github.com/henriquemendeselias" class="team-card">
+      <img src="https://avatars.githubusercontent.com/henriquemendeselias" alt="Henrique Mendes">
+      <span class="team-name">Henrique Mendes</span>
+    </a>
+    <a href="https://github.com/jot4-ge" class="team-card">
+      <img src="https://avatars.githubusercontent.com/jot4-ge" alt="João Guilherme">
+      <span class="team-name">João Guilherme Amâncio</span>
+    </a>
+    <a href="https://github.com/luizhtmoreira" class="team-card">
+      <img src="https://avatars.githubusercontent.com/luizhtmoreira" alt="Luiz Henrique">
+      <span class="team-name">Luiz Henrique Thomaz</span>
+    </a>
+    <a href="https://github.com/lucasaraujoszz" class="team-card">
+      <img src="https://avatars.githubusercontent.com/lucasaraujoszz" alt="Lucas Araújo">
+      <span class="team-name">Lucas Araújo Lima</span>
+    </a>
+    <a href="https://github.com/matheus0346" class="team-card">
+      <img src="https://avatars.githubusercontent.com/matheus0346" alt="Matheus Rodrigues">
+      <span class="team-name">Matheus Rodrigues</span>
+    </a>
+    <a href="https://github.com/G2SBiell" class="team-card">
+      <img src="https://avatars.githubusercontent.com/G2SBiell" alt="Gabriel Portácio">
+      <span class="team-name">Gabriel Portácio</span>
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="custom-footer">
+  <div class="footer-container">
+    <p>&copy; 2026 Squad 09 - MDS UnB. Projeto acadêmico e open source.</p>
+  </div>
+</footer>
+{% endblock %}
+
+{% block extrahead %}
+{{ super() }}
+<link rel="stylesheet" href="{{ base_url }}/stylesheets/landing.css">
+<style>
+  /* Reset MkDocs constraints */
+  .md-grid {
+    max-width: 100% !important;
+    padding: 0;
+    margin: 0;
+  }
+  .md-main__inner {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+  .md-content {
+    max-width: 100% !important;
+  }
+  .md-sidebar {
+    display: none !important;
+  }
+  
+  /* Background fix to make the whole page consistent */
+  body {
+    background-color: #061121;
+  }
+
+  /* Custom Header */
+  .custom-header {
+    background: rgba(11, 28, 55, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .header-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .logo {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 800;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .logo:hover {
+    color: #93b4f8;
+  }
+  
+  /* Wrapper */
+  .landing-page-wrapper {
+    padding-top: 100px; /* space for fixed header */
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+    padding-inline: 1.5rem;
+  }
+
+  /* Custom Footer */
+  .custom-footer {
+    background: #040c17;
+    padding: 3rem 2rem;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    margin-top: 4rem;
+  }
+  .custom-footer p {
+    color: rgba(255,255,255,0.4);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  /* Responsive header */
+  @media (max-width: 768px) {
+    .landing-page-wrapper {
+      padding-top: 80px;
+    }
+  }
+</style>
+{% endblock %}
