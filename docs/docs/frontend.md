@@ -1,23 +1,41 @@
 # Frontend e Interface (Next.js & Tailwind CSS)
 
-A interface do **ContraDito** foi projetada com foco na experiência do usuário (UX), especificamente voltada para a nossa persona principal: o jornalista investigativo. O objetivo é fornecer um painel rápido, responsivo, elegante e de fácil leitura para cruzamento de dados.
+A interface do **ContraDito** foi projetada com foco na experiência do usuário (UX), voltada principalmente ao **jornalista investigativo**. O objetivo é um painel rápido, responsivo e de fácil leitura para cruzamento de dados.
 
-##  Arquitetura Base
+---
 
-O frontend foi construído utilizando **Next.js** com **React** e estilizado via **Tailwind CSS**. A estrutura de pastas segue o padrão moderno *App Router*:
+## Arquitetura Base
 
-* **Tela Inicial (O Diretório):** O arquivo `app/page.tsx` abriga a capa principal, a barra de busca com filtros cruzados (Partido/UF) e o ranking de políticos.
-  * **Integração API:** Consome a rota `GET /api/politicos`.
-* **Dossiê do Político (Rota Dinâmica):** O arquivo `app/politico/[id]/page.tsx` abriga a tela detalhada em formato *split* ou vertical, listando o histórico de discursos e as evidências (contradições) daquele parlamentar específico.
-  * **Integração API:** Consome a rota `GET /api/politicos/{id_parlamentar}`.
+O frontend foi construído com **Next.js** (App Router), **React** e **Tailwind CSS**.
 
-##  Guia de Estilos e Design System
+```mermaid
+flowchart LR
+    subgraph APP["App Router (Next.js)"]
+        HOME["app/page.tsx\nDiretório + Busca + Ranking"]
+        DOSSIE["app/politico/[id]/page.tsx\nDossiê do Parlamentar"]
+        RINGUE["app/comparacao/page.tsx\nFace-to-Face"]
+    end
 
-Para manter a identidade visual do projeto padronizada e transmitir a credibilidade necessária de uma ferramenta *GovTech*, adotamos as seguintes regras baseadas nas classes do Tailwind CSS:
+    API["FastAPI\n:8000"]
 
-* **Cores Principais:** O fundo padrão do sistema é predominantemente escuro (`bg-slate-900`) para transmitir seriedade jornalística e um tom de investigação profunda.
-* **Tipografia:** Utilizamos fontes *clean* e modernas, representadas pelo padrão `font-sans` para garantir a leiturabilidade de textos longos.
-* **Score de Coerência (Cores Semânticas):** O índice de contradição gerado pela IA utiliza cores com significado direto para facilitar a análise rápida pelo usuário:
-  * **Notas altas (coerentes)** recebem obrigatoriamente a cor verde (`text-green-600`).
-  * **Notas baixas (contraditórios)** recebem a cor vermelha (`text-red-600`).
-* **Componentes Visuais:** Os *cards* de informação, tabelas e dossiês utilizam bordas suaves (`border-slate-300`) e fundos brancos (`bg-white`), criando um esquema de alto contraste perfeito para a leitura de dados governamentais.s
+    HOME -->|GET /api/politicos| API
+    DOSSIE -->|GET /api/politicos/{id}| API
+    RINGUE -->|GET /api/politicos/{id} x2| API
+```
+
+- **Tela Inicial (O Diretório):** `app/page.tsx` — barra de busca com filtros cruzados (Partido/UF) e ranking de políticos.
+- **Dossiê do Político:** `app/politico/[id]/page.tsx` — tela detalhada listando histórico de discursos e evidências de contradição.
+
+---
+
+## Guia de Estilos e Design System
+
+Para manter a identidade visual padronizada e transmitir a credibilidade de uma ferramenta *GovTech*:
+
+| Elemento | Estilo |
+|---|---|
+| **Fundo principal** | `bg-slate-900` — escuro, tom investigativo e jornalístico. |
+| **Tipografia** | `font-sans` — clean e moderna para leiturabilidade de textos longos. |
+| **Score alto (coerente)** | `text-green-600` — verde semântico. |
+| **Score baixo (contraditório)** | `text-red-600` — vermelho semântico. |
+| **Cards e Tabelas** | `border-slate-300` + `bg-white` — alto contraste para leitura de dados. |

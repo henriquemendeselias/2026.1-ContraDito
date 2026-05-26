@@ -1,32 +1,30 @@
 # Story Map e Personas
 
-Para garantir que o **ContraDito** resolva um problema real e entregue valor desde o primeiro dia, baseamos o nosso desenvolvimento em metodologias de design centradas no usuário.
+Para garantir que o **ContraDito** resolva um problema real e entregue valor desde o primeiro dia, o desenvolvimento foi baseado em metodologias de design centradas no usuário.
 
-##  A nossa Persona: O Jornalista Investigativo
+---
 
-O sistema foi desenhado especificamente para as necessidades de um **Jornalista Investigativo** ou analista político.
+## A Persona: O Jornalista Investigativo
 
-* **O Problema:** Perda de tempo ao analisar horas de vídeos de sessões plenárias e ao cruzar dados de centenas de páginas do Diário Oficial.
-* **A Necessidade:** Uma ferramenta rápida, com interface limpa, que faça o cruzamento automático do que foi dito vs. o que foi votado.
+O sistema foi desenhado para as necessidades de um **Jornalista Investigativo** ou analista político.
 
-> **Nota visual:** A Persona do ContraDito original construída pela equipe no Figma está detalhado abaixo.
+- **O Problema:** Perda de tempo ao analisar horas de vídeos de sessões plenárias e ao cruzar dados de centenas de páginas do Diário Oficial.
+- **A Necessidade:** Uma ferramenta rápida, com interface limpa, que faça o cruzamento automático entre o que foi *dito* e o que foi *votado*.
+
+> **Nota:** A Persona completa construída pela equipe no Figma está ilustrada abaixo.
+
 ![Card da Persona do ContraDito](../imagens/Persona.png.jpg)
 
-##  User Story Map
+---
 
-Mapeamos a jornada do nosso usuário no Figma para definir claramente o que entra no nosso MVP (Produto Mínimo Viável) e o que ficará para atualizações futuras.
+## User Story Map
 
-### 1. Descobrir e Buscar Políticos
-* **MVP (Prioridade Alta):** Pesquisar por nome do parlamentar e utilizar filtros cruzados (Partido e Estado/UF).
-* **Melhorias Futuras:** Ranking na página inicial destacando os políticos Mais/Menos Coerentes.
+A jornada do usuário foi mapeada no Figma para definir o que entra no MVP e o que fica para iterações futuras.
 
-### 2. Analisar Dossiê e Contradições
-* **MVP (Prioridade Alta):** Visualizar o Score de Coerência e as evidências em texto extraídas pela Inteligência Artificial.
-* **Melhorias Futuras:** Opção para exportar o dossiê completo em formato PDF.
+| Jornada | MVP (Prioridade Alta) | Melhorias Futuras |
+|---|---|---|
+| **Descobrir e Buscar** | Pesquisa por nome + filtros cruzados (Partido/UF). | Ranking em destaque na página inicial. |
+| **Analisar Dossiê** | Score de Coerência e evidências de contradição em texto. | Exportação do dossiê em PDF. |
+| **Comparar Políticos** | Tela "Ringue" com scores lado a lado. | Filtros de comparação por tema (ex: economia, meio ambiente). |
 
-### 3. Comparar Políticos (Lado a Lado)
-* **MVP :** Tela "Ringue" para comparar dois políticos, contrastando seus scores e contradições lado a lado.
-* **Melhorias Futuras:** Filtros de comparação avançados por temas específicos (ex: economia, meio ambiente).
-
-> **Nota visual:** O User Storymap do ContraDito construído pela equipe no Figma está no link abaixo.
-[Acessar Storymap no Figma](https://www.figma.com/board/J6igyv5zX16YPhLaoKM3c4/ContraDito?node-id=0-1&t=Jq1ENqM8V4La6slk-0)
+> [Acessar Storymap completo no Figma](https://www.figma.com/board/J6igyv5zX16YPhLaoKM3c4/ContraDito?node-id=0-1&t=Jq1ENqM8V4La6slk-0)
