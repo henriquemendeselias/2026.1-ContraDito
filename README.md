@@ -70,7 +70,7 @@ GROQ_API_KEY=sua_chave_da_groq_aqui
 
 # Integração Interna (Docker)
 REDIS_URL=redis://redis:6379
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:8001
 ```
 
 **3. Inicie a Orquestração dos Contêineres:**
@@ -84,7 +84,7 @@ docker compose up --build
 **4. Acesso aos Serviços Locais:**
 Com a stack ativa, a plataforma será roteada localmente para as seguintes portas:
 - **Aplicação Web (Next.js - Vitrine do Eleitor):** [http://localhost:3000](http://localhost:3000)
-- **API de Leitura / Documentação Swagger (FastAPI):** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **API de Leitura / Documentação Swagger (FastAPI):** [http://localhost:8001/docs](http://localhost:8001/docs)
 
 ---
 
