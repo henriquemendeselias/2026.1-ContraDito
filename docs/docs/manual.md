@@ -35,4 +35,4 @@ A funcionalidade **Face-to-Face** permite colocar dois políticos lado a lado pa
 ---
 
 !!! tip "Quer aprofundar a análise?"
-    Para entender a fórmula matemática por trás do Score e como a IA trata nuances e manobras regimentais, consulte: [Entendendo o Score de Coerência](./calculo-score.md).
+    Para entender a fórmula matemática por trás do Score e como a IA trata nuances e manobras regimentais, consulte [Entendendo o Score de Coerência](calculo-score.md).

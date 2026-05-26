@@ -27,11 +27,12 @@ nav:
 
   -  O Projeto:
       - Sobre o ContraDito: index.md
-      - Escopo e Visão Geral: escopo.md
-      - Links Úteis: links.md
+      
 
   -  O Produto:
       - Manual do Usuário: manual.md
+      - Escopo e Visão Geral: escopo.md
+      - Links Úteis: links.md
       - Entendendo o Score de Coerência: calculo-score.md
       - Transparência, LGPD e Dados: lgpd.md
 

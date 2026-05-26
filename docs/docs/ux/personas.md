@@ -17,14 +17,8 @@ O sistema foi desenhado para as necessidades de um **Jornalista Investigativo** 
 
 ---
 
-## User Story Map
+## Story Map
 
-A jornada do usuário foi mapeada no Figma para definir o que entra no MVP e o que fica para iterações futuras.
-
-| Jornada | MVP (Prioridade Alta) | Melhorias Futuras |
-|---|---|---|
-| **Descobrir e Buscar** | Pesquisa por nome + filtros cruzados (Partido/UF). | Ranking em destaque na página inicial. |
-| **Analisar Dossiê** | Score de Coerência e evidências de contradição em texto. | Exportação do dossiê em PDF. |
-| **Comparar Políticos** | Tela "Ringue" com scores lado a lado. | Filtros de comparação por tema (ex: economia, meio ambiente). |
+O Story Map foi utilizado para organizar a jornada do usuário e definir as funcionalidades do ContraDito de forma incremental. Ele permitiu identificar os fluxos prioritários da PoC, alinhar objetivos de negócio, necessidades dos usuários e viabilidade técnica, além de orientar o planejamento das releases e do escopo inicial do projeto. As funcionalidades foram distribuídas conforme as etapas da experiência do usuário, desde a busca por parlamentares até a análise e comparação de coerência política.
 
 > [Acessar Storymap completo no Figma](https://www.figma.com/board/J6igyv5zX16YPhLaoKM3c4/ContraDito?node-id=0-1&t=Jq1ENqM8V4La6slk-0)

@@ -1,17 +1,6 @@
 # Protótipos e UI/UX (Figma)
 
-A interface do **ContraDito** foi idealizada seguindo o princípio de **Mobile First**, garantindo uma experiência de fiscalização pública fluida e intuitiva em qualquer dispositivo.
-
----
-
-## O "Ringue" (Comparação Lado a Lado)
-
-Uma das inovações de UX do projeto é a tela de comparação:
-
-- **Desktop:** Layout de tela dividida (*split screen*) — dois políticos visíveis ao mesmo tempo.
-- **Mobile:** Dados empilhados de forma inteligente, mantendo o contexto da comparação sem prejudicar o uso.
-
----
+* **Design e Protótipos (Figma):** [Acessar Board no Figma](https://www.figma.com/board/J6igyv5zX16YPhLaoKM3c4/ContraDito?node-id=0-1&t=Jq1ENqM8V4La6slk-0)
 
 ## Protótipos de Alta Fidelidade
 
@@ -19,8 +8,12 @@ As telas principais do sistema, conforme projetadas no Figma:
 
 ### Tela Inicial e Busca
 
-![Protótipo Home](../imagens/prototipo_home.jpg)
+![Protótipo Home](../imagens/Homepage_CD.jpeg)
 
 ### Comparação (O Ringue)
 
-![Protótipo Comparação](../imagens/prototipo_comparacao.jpg)
+![Protótipo Comparação](../imagens/FacetoFace_CD.jpeg)
+
+### Dossiê Político
+
+![Protótipo Comparação](../imagens/Dossiê_CD.jpeg)

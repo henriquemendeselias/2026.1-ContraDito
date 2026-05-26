@@ -1,7 +1,5 @@
 # O Mapa do ETL: Ingestão, Higienização e Carga (Filtro 1)
 
-**Responsável:** João Guilherme (@jot4-ge)
-
 Este documento detalha a arquitetura da camada de Extração, Transformação e Carga (ETL) do **ContraDito**. Conforme a **ADR 002**, este módulo atua como o **Filtro 1** dentro do pipeline *Pipe and Filter* do Worker NLP (Lado *Command* do CQRS).
 
 O objetivo desta camada é garantir a ingestão robusta de discursos, proposições e votos nominais, aplicando higienização extrema para blindar os modelos (SBERT e Llama 3.1) contra ruídos semânticos e burocráticos.

@@ -6,12 +6,7 @@ A API do ContraDito foi construída com **FastAPI**, focada em alta performance,
 
 ## 1. Documentação Interativa (Swagger)
 
-Com os contêineres em execução, toda a documentação de *schemas*, contratos e testes de rotas está disponível automaticamente:
-
-| Interface | URL |
-|---|---|
-| **Swagger UI** | `http://localhost:8000/docs` |
-| **ReDoc** | `http://localhost:8000/redoc` |
+Com os contêineres em execução, toda a documentação de *schemas*, contratos e testes de rotas está disponível automaticamente: **Swagger UI:**`http://localhost:8001/docs`
 
 ---
 
@@ -94,60 +89,3 @@ Rota consumida na tela individual do parlamentar. Retorna dados cadastrais e o h
 | `404 Not Found` | `id_parlamentar` não encontrado no banco. |
 
 ---
-
-## 3. Domínio: Busca Semântica (`/api/politicos/buscar-similares`)
-
-### `POST /api/politicos/buscar-similares` — Busca RAG
-
-Esta rota representa o núcleo de Busca Semântica do sistema. Em vez de executar NLP diretamente na API, a geração de embeddings é delegada ao Worker assíncrono.
-
-**Fluxo de Execução:**
-
-```mermaid
-sequenceDiagram
-    participant C as Cliente (Next.js)
-    participant F as FastAPI
-    participant W as Worker NLP
-    participant S as Supabase (pgvector)
-
-    C->>F: POST /buscar-similares {texto_busca}
-    F->>W: POST /gerar-embedding {texto_busca}
-    W-->>F: {embedding: [...]}
-    F->>S: RPC buscar_discursos_similares(embedding)
-    S-->>F: [{discurso, similaridade}, ...]
-    F-->>C: 200 OK [{id, texto, similaridade}]
-```
-
-**Corpo da Requisição:**
-
-```json
-{
-  "texto_busca": "Aumento do limite de gastos governamentais",
-  "id_parlamentar": 1,
-  "limite": 5
-}
-```
-
-**Retorno de Sucesso (`200 OK`):**
-
-```json
-[
-  {
-    "id": 45,
-    "texto_extraido": "Meu voto sempre foi favorável ao teto...",
-    "similaridade": 0.85
-  },
-  {
-    "id": 102,
-    "texto_extraido": "É preciso responsabilidade fiscal...",
-    "similaridade": 0.78
-  }
-]
-```
-
-**Erros:**
-
-| Status | Cenário |
-|---|---|
-| `400 Bad Request` | Falha na geração do embedding pelo Worker NLP. |
-| `503 Service Unavailable` | Worker NLP offline ou timeout > 15 segundos. |
