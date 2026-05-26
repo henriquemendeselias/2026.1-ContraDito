@@ -1,75 +1,188 @@
 # Visão Geral da Arquitetura
 
-A arquitetura do **ContraDito** foi desenhada com foco em resiliência absoluta e simplicidade estrutural. Para atingir esses objetivos, o sistema adota duas abordagens complementares que separam rigorosamente as responsabilidades de processamento de inteligência artificial da entrega de dados para o usuário final.
+A arquitetura do **ContraDito** foi desenhada com foco em resiliência absoluta e simplicidade estrutural, separando rigorosamente o processamento de inteligência artificial da entrega de dados ao usuário final.
 
-## 1. Diagrama Arquitetural
+---
 
-O diagrama abaixo ilustra o fluxo de dados do sistema, desde a solicitação do usuário até o pipeline de processamento assíncrono.
+## 1. Visão Arquitetural: C4 Model
+
+Para garantir clareza e transparência no fluxo de processamento e arquitetura do ContraDito, utilizamos o modelo C4 para documentar os diferentes níveis de abstração do sistema.
+
+### Nível 1: C4 Context (Sistema e Usuário)
+O diagrama de Contexto mostra a visão de "helicóptero" de como a plataforma interage com o usuário final e sistemas externos (governamentais).
 
 ```mermaid
----
-config:
-  layout: dagre
----
-flowchart TB
-    Cliente((Next.js / Front-end))
-    Relogio([Agendador])
-    Supabase[(Supabase)]
-    subgraph View_Query [CQRS: Lado Leitura / Vitrine]
-        direction TB
-        FastAPI[API FastAPI]
-    end
-    subgraph View_Command [CQRS: Lado Processamento Pesado]
-        direction TB
-        subgraph PipeFilter [Fluxo de dados]
-            direction TB
-            F1[Filtro 1: Extração de dados da API: Políticos, Discursos Higienizados e Proposições definidas no escopo.]
-            F2[Filtro 2: Geração de Resumo Executivo via LLM Local]
-            F3[Filtro 3: Geração dos chunks dos discursos extraídos]
-            F4[Filtro 4: Vetorização do Resumo Executivo e dos chunks de discurso via SBERT]
-            F5[Filtro 5: Recuperação de Contexto RAG]
-            F6[Filtro 6: Veredito Llama 3.1 e Cálculo do Score]
-            
-            F1 ==> F2 ==> F3 ==> F4 ==> F5 ==> F6
-        end
-    end
-    Cliente == 1. Requisita Dados ==> FastAPI
-    FastAPI == 2. Puxa os dados requisitados ==> Supabase
-    Relogio == Dispara Pipeline ==> F1
-    F6 == Salva Dados e Scores Consolidados ==> Supabase
-    F6 -.->|Dispara Limpeza de cachê| FastAPI
-    style View_Query fill:#eef2ff,stroke:#6366f1,stroke-width:2px
-    style View_Command fill:#fdf4ff,stroke:#d946ef,stroke-width:2px
-    style PipeFilter fill:#ecfdf5,stroke:#10b981,stroke-width:2px
-    style Supabase fill:#f0fdf4,stroke:#22c55e,stroke-width:2px
+C4Context
+  title Nível 1: Contexto de Sistemas - ContraDito
+  
+  Person(cidadao, "Cidadão / Eleitor", "Busca coerência política")
+  System(contradito, "ContraDito", "Calcula e exibe Scores")
+  
+  System_Ext(camara, "API da Câmara", "Deputados e Votos")
+  System_Ext(senado, "API do Senado", "Senadores e Discursos")
+  
+  Rel_D(cidadao, contradito, "Acessa vitrine", "Web")
+  Rel_D(contradito, camara, "Extrai votos", "REST")
+  Rel_D(contradito, senado, "Extrai falas", "REST")
+  
+  UpdateElementStyle(cidadao, $bgColor="#08427b", $fontColor="#ffffff", $borderColor="#052e56")
+  UpdateElementStyle(contradito, $bgColor="#1168bd", $fontColor="#ffffff", $borderColor="#0b4884")
+  UpdateElementStyle(camara, $bgColor="#374151", $fontColor="#ffffff", $borderColor="#4b5563")
+  UpdateElementStyle(senado, $bgColor="#374151", $fontColor="#ffffff", $borderColor="#4b5563")
+  
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
 
-## 2. Macroarquitetura: CQRS (Command Query Responsibility Segregation)
+### Nível 2: C4 Container (Aplicações e Dados)
+O diagrama de Container detalha a Plataforma ContraDito em seus serviços independentes, evidenciando o padrão arquitetural CQRS que isola leitura de processamento.
 
-O sistema é dividido física e logicamente em dois serviços independentes que não realizam chamadas HTTP diretas entre si, utilizando o banco de dados (Supabase/PostgreSQL com `pgvector`) como único meio de persistência e comunicação indireta.
+```mermaid
+C4Container
+  title Nível 2: Diagrama de Container - ContraDito
+  
+  Person(cidadao, "Cidadão / Eleitor", "Acessa portal")
+  System_Ext(gov_apis, "APIs do Governo", "Câmara/Senado")
 
-### 2.1. Lado de Leitura (Query — FastAPI)
-Uma API REST desenhada estritamente para consultas de altíssima performance, isolada da complexidade da inteligência artificial.
+  Container_Boundary(c1, "ContraDito") {
+    Container(frontend, "Front-end Web", "Next.js", "Interface e Vitrine")
+    Container(fastapi, "API de Leitura", "FastAPI", "Endpoints View_Query")
+    Container(worker, "Worker NLP", "Python", "Processa View_Command")
+    ContainerDb(supabase, "Banco de Dados", "Supabase", "Armazena tudo")
+  }
 
-* **Responsabilidades:** Ler dados já processados e consolidados, fornecer paginação rápida, validar parâmetros de busca via componentes fechados e entregar JSONs enxutos ao front-end.
-* **Performance e Invalidação Ativa:** A FastAPI opera majoritariamente com respostas cacheadas em memória. Ao final de cada ciclo do Worker NLP, a API recebe um comando administrativo assíncrono para limpar o cache, garantindo que os usuários tenham acesso imediato aos dados recém processados.
+  Rel_D(cidadao, frontend, "Navega", "HTTPS")
+  Rel_D(frontend, fastapi, "Consome", "JSON")
+  Rel_D(fastapi, supabase, "Lê dados", "SQL")
+  
+  Rel_R(worker, gov_apis, "Extrai dados", "HTTPS")
+  Rel_U(worker, supabase, "Escreve", "pgvector")
+  
+  UpdateElementStyle(cidadao, $bgColor="#08427b", $fontColor="#ffffff", $borderColor="#052e56")
+  UpdateElementStyle(gov_apis, $bgColor="#374151", $fontColor="#ffffff", $borderColor="#4b5563")
+  UpdateElementStyle(frontend, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
+  UpdateElementStyle(fastapi, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
+  UpdateElementStyle(worker, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
+  UpdateElementStyle(supabase, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
+  
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+```
 
-### 2.2. Lado de Escrita/Processamento (Command — Worker NLP)
-Serviço Python isolado que atua em *background*, executado de forma assíncrona por rotinas agendadas (Cron Jobs).
+### Nível 3: C4 Component (Worker NLP)
+Focando no serviço mais complexo do backend — o **Worker NLP** —, este diagrama ilustra o padrão Pipe and Filter para a extração, sumarização e cálculo de coerência.
 
-* **Responsabilidades:** Lidar com toda a carga computacional intensiva do ecossistema, incluindo a extração de dados brutos das APIs governamentais, comunicação vetorial com o SBERT e inferência local do Llama 3.1 8B.
-* **Resiliência e Tolerância a Falhas:** Caso ocorra lentidão ou esgotamento de memória no modelo de linguagem, o erro fica completamente restrito ao contêiner do Worker NLP. Como não há vínculo direto em tempo de execução, a API Principal continua no ar servindo o portal sem instabilidades.
+```mermaid
+C4Component
+  title Nível 3: Diagrama de Componentes - Worker NLP
+  
+  ContainerDb(supabase, "Supabase", "Armazenamento", "Tabelas e Vetores")
+  System_Ext(gov_apis, "APIs do Governo", "Câmara e Senado")
+  
+  Container_Boundary(worker_nlp, "Worker NLP") {
+    Component(extrator, "1: Extrator", "Python", "Busca proposições")
+    Component(sumarizador, "2: Sumarizador", "Llama 3.1", "Resume tema")
+    Component(chunker, "3: Chunker", "Python", "Fragmenta texto")
+    Component(sbert, "4: Vetorizador", "SBERT", "Gera embeddings")
+    Component(rag, "5: Mecanismo RAG", "pgvector", "Recupera discursos")
+    Component(veredito, "6: Orquestrador", "Llama 3.1", "Calcula score")
+  }
+  
+  Rel_D(extrator, gov_apis, "Consulta", "HTTPS")
+  Rel_R(extrator, sumarizador, "Repassa", "Memória")
+  Rel_D(sumarizador, chunker, "Repassa", "Memória")
+  Rel_L(chunker, sbert, "Repassa", "Memória")
+  Rel_D(sbert, rag, "Repassa", "Memória")
+  Rel_L(rag, supabase, "Busca vizinhos", "SQL")
+  Rel_R(rag, veredito, "Repassa", "Memória")
+  Rel_U(veredito, supabase, "Salva score", "SQL")
+  
+  UpdateElementStyle(supabase, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
+  UpdateElementStyle(gov_apis, $bgColor="#374151", $fontColor="#ffffff", $borderColor="#4b5563")
+  UpdateElementStyle(extrator, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
+  UpdateElementStyle(sumarizador, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
+  UpdateElementStyle(chunker, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
+  UpdateElementStyle(sbert, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
+  UpdateElementStyle(rag, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
+  UpdateElementStyle(veredito, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
+  
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+```
 
-----
+### Nível 4: C4 Code (Diagrama de Classes de Domínio)
+O modelo de classes a seguir apresenta as principais estruturas de domínio que trafegam pelo motor NLP até persistirem no banco de dados para consumo posterior.
+
+```mermaid
+classDiagram
+  class Politico {
+    +UUID id
+    +String nome
+    +String partido
+    +String estado
+    +Float score_coerencia_geral
+    +atualizar_score()
+  }
+  
+  class Proposicao {
+    +UUID id
+    +String ementa_oficial
+    +String resumo_executivo
+    +String tema
+  }
+  
+  class Discurso {
+    +UUID id
+    +UUID politico_id
+    +String texto_higienizado
+    +Date data
+    +Vector_768 embedding_bge_m3
+  }
+  
+  class Voto {
+    +UUID id
+    +UUID politico_id
+    +UUID proposicao_id
+    +Enum tipo_voto
+  }
+  
+  class VereditoCoerencia {
+    +UUID id
+    +UUID politico_id
+    +UUID proposicao_id
+    +String explicacao_llama
+    +Float pontuacao_local
+    +List~Discurso~ discursos_recuperados
+    +calcular_coerencia()
+  }
+
+  Politico "1" *-- "many" Discurso : Realiza
+  Politico "1" *-- "many" Voto : Efetua
+  Voto "many" -- "1" Proposicao : Pertence a
+  Politico "1" *-- "many" VereditoCoerencia : Possui
+  VereditoCoerencia "many" -- "1" Proposicao : Avalia
+```
+
+---
+
+
+## 2. Macroarquitetura: CQRS
+
+O sistema é dividido física e logicamente em dois serviços independentes que não realizam chamadas HTTP diretas entre si, usando o Supabase (PostgreSQL + `pgvector`) como único meio de persistência e comunicação indireta.
+
+| | Lado de Leitura (Query — FastAPI) | Lado de Escrita (Command — Worker NLP) |
+|---|---|---|
+| **Tipo** | API REST para consultas de alta performance | Serviço Python isolado, executado em background via Cron Jobs |
+| **Responsabilidades** | Ler dados consolidados, paginar, validar parâmetros, entregar JSONs ao front-end | Extração de APIs governamentais, comunicação com SBERT, inferência local do Llama 3.1 8B |
+| **Cache** | Opera com respostas cacheadas em memória | Ao final de cada ciclo, publica sinal de invalidação de cache via Redis |
+| **Resiliência** | Continua servindo o portal mesmo se o Worker falhar | Falhas ficam restritas ao contêiner do Worker — sem impacto na API principal |
+
+---
+
 ## 3. Microarquitetura do Worker: Pipe and Filter
 
-Para o processamento dos dados no Worker NLP, a arquitetura interna abandona abstrações complexas e segue um fluxo estritamente procedural, determinístico e linear através do padrão de design **Pipe and Filter**.
+Para o processamento interno do Worker NLP, a arquitetura abandona abstrações complexas e segue um fluxo **estritamente procedural, determinístico e linear**. O pacote de dados trafega de forma unidirecional por 6 estágios sequenciais — a saída de um filtro é obrigatoriamente a entrada do próximo:
 
-O pacote de dados trafega de forma unidirecional por 6 estágios de processamento sequenciais. A saída processada de um filtro atua obrigatoriamente como dado de entrada do próximo filtro:
-
-1. **Filtro 1 (Extração API):** Consumo das APIs federais para resgatar os perfis dos políticos, suas proposições validadas no escopo e seus discursos, aplicando imediatamente a higienização textual.
-2. **Filtro 2 (Sumarização):** Submissão da ementa legislativa recém-capturada ao Llama 3.1 local para a geração de um resumo executivo coeso.
-3. **Filtro 3 (Fragmentação):** Divisão dos discursos limpos em pequenos *chunks* textuais com sobreposição, preparando a carga para modelos com limite de contexto estrito.
-4. **Filtro 4 (Vetorização):** Transformação em *embeddings* vetoriais gerados através do modelo SBERT, parametrizando tanto os fragmentos do discurso quanto o resumo da matéria legislativa.
-5. **Filtro 5 (Recuperação Contextual RAG):** Busca espacial efetuada pelo Supabase via distância de cosseno. O sistema pinça apenas os fragmentos discursivos que dialogam com a proposta avaliada.
-6. **Filtro 6 (Inferência e Veredito):** Orquestração dos dados filtrados para envio ao LLM, determinando se a ação parlamentar foi Coerente ou Incoerente, além do armazenamento consolidado dos scores de volta ao banco de dados.
+1. **Filtro 1 — Extração (API):** Consumo das APIs federais para capturar perfis, proposições validadas e discursos, com higienização textual imediata.
+2. **Filtro 2 — Sumarização:** Submissão da ementa legislativa ao Llama 3.1 local para geração de um resumo executivo coeso.
+3. **Filtro 3 — Fragmentação (Chunking):** Divisão dos discursos limpos em *chunks* textuais com sobreposição, preparando a carga para modelos com limite de contexto estrito.
+4. **Filtro 4 — Vetorização:** Transformação em *embeddings* vetoriais via SBERT (modelo `BAAI/bge-m3`), parametrizando tanto os fragmentos de discurso quanto o resumo legislativo.
+5. **Filtro 5 — Recuperação Contextual (RAG):** Busca espacial no Supabase via distância de cosseno — apenas fragmentos discursivos semanticamente próximos à proposição avaliada são selecionados.
+6. **Filtro 6 — Inferência e Veredito:** Orquestração dos dados filtrados para envio ao LLM, determinando a coerência ou incoerência do voto e armazenando os scores consolidados no banco.

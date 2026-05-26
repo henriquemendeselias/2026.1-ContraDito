@@ -1,16 +1,25 @@
 # Próximos Passos (Roadmap)
 
-A arquitetura atual do **ContraDito** estabelece uma fundação escalável e resiliente. Com o processamento de linguagem natural (NLP) e o banco vetorial consolidados, o projeto possui um vasto horizonte de evolução técnica e de produto. Abaixo estão as iniciativas mapeadas para os próximos ciclos de desenvolvimento.
+A arquitetura atual do **ContraDito** estabelece uma fundação escalável e resiliente. Com o NLP e o banco vetorial consolidados, o projeto possui um vasto horizonte de evolução técnica e de produto.
+
+---
 
 ## 1. Retenção e Personalização de Usuários
-* **Autenticação Não Obrigatória (Soft Login):** Implementação de um sistema de login opcional (OAuth2 via Google/GitHub), permitindo o acesso anônimo para consultas básicas, mas oferecendo vantagens para usuários cadastrados.
-* **Monitoramento Personalizado:** Criação de um sistema de favoritos para que o eleitor possa criar uma carteira personalizada de parlamentares (ex: acompanhar apenas a bancada do seu estado).
-* **Motor de Alertas:** Integração de um serviço de mensageria para envio de notificações por e-mail sobre novos discursos, pautas de votação iminentes ou variações significativas no Score de Coerência dos políticos favoritados.
+
+- **Soft Login (OAuth2):** Sistema de login opcional via Google/GitHub, mantendo acesso anônimo para consultas básicas e oferecendo vantagens para usuários cadastrados.
+- **Monitoramento Personalizado:** Sistema de favoritos para acompanhar parlamentares específicos (ex: bancada do próprio estado).
+- **Motor de Alertas:** Notificações por e-mail sobre novos discursos, pautas iminentes ou variações significativas no Score de Coerência.
+
+---
 
 ## 2. Evolução Analítica e Histórica
-* **Série Histórica do Score:** Transformação do Score de Coerência atual (que é um retrato de momento) em um gráfico de linha do tempo. Isso permitirá visualizar se o político perdeu ou ganhou coerência ao longo de todo o seu mandato.
-* **Extração Temática (Topic Modeling):** Expansão do uso do nosso motor PyTorch/SBERT não apenas para similaridade, mas para clusterização de temas. O objetivo é gerar resumos visuais mostrando os tópicos mais falados pelo político em contraste com os temas em que ele mais vota.
+
+- **Série Histórica do Score:** Transformação do Score atual (retrato de momento) em um gráfico de linha do tempo, mostrando se o político ganhou ou perdeu coerência ao longo do mandato.
+- **Extração Temática (Topic Modeling):** Uso do motor SBERT para clusterização de temas — gerando resumos visuais dos assuntos mais falados pelo político e os temas em que mais vota.
+
+---
 
 ## 3. Ecossistema e Acesso aos Dados
-* **API Pública para Jornalistas e Pesquisadores:** Estruturação de rotas públicas no nosso backend FastAPI, protegidas por *rate limiting* e chaves de API. Isso transformará o ContraDito em um provedor de dados B2B para ONGs e veículos de mídia investigativa.
-* **Transição para Near Real-Time:** Evolução do pipeline de ETL (atualmente em *batch*) para uma arquitetura orientada a eventos (*webhooks* ou *polling* de alta frequência) junto às APIs da Câmara e do Senado, reduzindo o tempo entre um discurso proferido e seu processamento na plataforma.
+
+- **API Pública para Pesquisadores:** Rotas públicas no FastAPI protegidas por *rate limiting* e chaves de API, transformando o ContraDito em provedor de dados para ONGs e veículos de mídia investigativa.
+- **Near Real-Time:** Evolução do ETL (atualmente em *batch*) para arquitetura orientada a eventos (*webhooks* ou *polling* de alta frequência), reduzindo o tempo entre um discurso proferido e seu processamento na plataforma.

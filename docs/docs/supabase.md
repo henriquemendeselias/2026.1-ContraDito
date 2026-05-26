@@ -1,12 +1,12 @@
 # Modelagem do Banco de Dados
 
-O modelo do banco (supabase) foi desenhado para suportar o padrão **CQRS** (segregação de leitura e escrita) e otimizar as consultas de **RAG** (Geração Aumentada por Recuperação) usando a extensão `pgvector`.
+O modelo do banco (Supabase/PostgreSQL) foi desenhado para suportar o padrão **CQRS** e otimizar as consultas de **RAG** usando a extensão `pgvector`.
 
 ---
 
 ## 1. Diagrama de Entidade-Relacionamento (ERD)
 
-O diagrama abaixo ilustra as entidades do sistema, suas chaves primárias/estrangeiras e as cardinalidades exatas que governam a integridade dos dados, isolando o motor vetorial da API principal.
+O diagrama ilustra as entidades, suas chaves e cardinalidades, isolando o motor vetorial da API principal.
 
 ```mermaid
 ---
@@ -68,33 +68,33 @@ erDiagram
     DISCURSO ||--|{ DISCURSOS_CHUNKS : "1 : N (é quebrado em)"
 ```
 
- - **Tabela POLITICOS:** Tabela puramente de consulta para o lado de leitura (Query) da API FastAPI, minimizando processamento em tempo de execução.
+---
 
- - **Tabela PROPOSICOES:** Armazena os textos-base das matérias legislativas que foram formalmente votadas em plenário (PECs e PLs).
+## 2. Descrição das Entidades
 
- - **Tabela VOTO:** Tabela associativa que resolve a relação Muitos-para-Muitos (N:M) entre Parlamentares e Leis.
-
- - **Tabela DISCURSO:** Armazena a massa de dados bruta extraída das notas taquigráficas da API da Câmara.
-
-- **Tabela DISCURSOS_CHUNKS:** Armazena os fragmentos textuais processados pelos algoritmos de divisão de texto (*Text Splitters*).
+| Tabela | Papel no Sistema |
+|---|---|
+| **POLITICOS** | Tabela de consulta do Lado de Leitura (FastAPI). Minimiza processamento em tempo de execução. |
+| **PROPOSICOES** | Armazena os textos-base de matérias votadas em plenário (PECs e PLs), incluindo o `embedding_resumo_executivo`. |
+| **VOTO** | Tabela associativa (N:M) entre parlamentares e leis. Armazena também a inferência da IA e o veredito. |
+| **DISCURSO** | Massa textual bruta extraída das notas taquigráficas da API da Câmara. |
+| **DISCURSOS_CHUNKS** | Fragmentos textuais processados pelo *Text Splitter*, com seus respectivos `embedding_chunk` para busca RAG. |
 
 ---
 
-## 2. Análise das Cardinalidades
+## 3. Análise das Cardinalidades
 
-A consistência matemática do banco baseia-se na distinção estrita entre relações opcionais e obrigatórias:
+A consistência matemática baseia-se na distinção entre relações opcionais e obrigatórias:
 
-- **Relação de POLITICOS com VOTO e DISCURSO:** Um parlamentar pode não ter votos e nem discursos (Suplentes). Relação opcional.
-
-- **Relação de PROPOSIÇÕES com VOTO:** O escopo define que só é extraído proposições com votações, portanto a relação é obrigatória.
-
-- **Relação de DISCURSOS com DISCURSOS_CHUNKS:** Um chunk de discurso só existe se seu discurso existir. Relação obrigatória.
+- **POLITICOS → VOTO e DISCURSO:** Relação opcional — um parlamentar suplente pode não ter votos nem discursos.
+- **PROPOSICOES → VOTO:** Relação obrigatória — pelo escopo do ETL, só são extraídas proposições com votação registrada.
+- **DISCURSO → DISCURSOS_CHUNKS:** Relação obrigatória — um chunk só existe se seu discurso pai existir.
 
 ---
 
-## 3. Banco de Dados como Motor Ativo 
-Pra nao sobrecarregar a memória da aplicação, a nossa modelagem transfere a carga de processamento para o banco com duas abordagens:
+## 4. Banco de Dados como Motor Ativo
 
-* **Busca Inteligente de Contexto:** O sistema utiliza buscas semânticas para encontrar os trechos de discursos mais relacionados com cada proposta analisada.
+Para não sobrecarregar a memória da aplicação, a modelagem transfere a carga de processamento para o banco com duas abordagens:
 
-* **Separação entre Processamento e Consulta (CQRS):** O processamento pesado da IA acontece de forma isolada no Worker NLP, enquanto a API principal apenas consulta dados já processados e prontos para exibição. Isso garante que a interface continue rápida mesmo durante análises complexas.
+- **Busca Semântica (RAG):** Buscas vetoriais via `pgvector` localizam os trechos de discurso mais relevantes para cada proposição analisada, usando o índice HNSW para alta performance.
+- **Separação CQRS:** O processamento pesado da IA ocorre isolado no Worker NLP. A FastAPI consulta apenas dados já consolidados — sem cálculos vetoriais em tempo de request do usuário.

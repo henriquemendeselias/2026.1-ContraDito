@@ -1,36 +1,70 @@
 # Metodologia e Processo de Desenvolvimento
 
-Este documento descreve as práticas ágeis, os ritos e as políticas de engenharia de software adotadas pela **Squad 09** para o desenvolvimento do ContraDito. Nosso processo foi desenhado para garantir entregas contínuas e alinhamento constante com os objetivos da disciplina de MDS.
+Este documento descreve as práticas ágeis, os ritos e as políticas de engenharia de software adotadas pela **Squad 09** para o desenvolvimento do ContraDito.
+
+---
 
 ## 1. Framework Ágil
-A equipe adota uma abordagem híbrida baseada em **Scrum** e **Extreme Programming (XP)**. Utilizamos o Scrum para cadência, ritos e planejamento das Sprints, enquanto os valores do XP guiam nossas práticas de engenharia de software e nosso foco na qualidade técnica do código.
+
+A equipe adota uma abordagem híbrida baseada em **Scrum** e **Extreme Programming (XP)**. O Scrum estrutura a cadência e o planejamento das Sprints, enquanto os valores do XP guiam as práticas de engenharia e o foco na qualidade técnica do código.
+
+---
 
 ## 2. Papéis da Equipe
-Para garantir o desenvolvimento de habilidades em todas as áreas e uma boa divisão de carga, a equipe adotou a seguinte distribuição de papéis:
 
-* **Scrum Master:** @henriquemendeselias - Responsável por remover impedimentos e garantir a execução e qualidade dos ritos ágeis.
-* **Product Owner (PO):** @jot4-ge - Responsável por refinar e priorizar o Backlog, definir o escopo e validar as entregas junto às expectativas do projeto.
-* **Desenvolvedores Backend e DevOps:** @luizhtmoreira @lucasaraujoszz @matheus0346 - Responsáveis pelo pipeline ETL, motor NLP, modelagem do banco de dados vetorial, infraestrutura e documentação.
-* **Desenvolvedores Frontend:** @G2SBiell - Responsáveis pela construção da interface do usuário (Next.js/React), integração com a API e fidelidade ao escopo de UX.
+| Papel | Responsável | Responsabilidades |
+|---|---|---|
+| **Scrum Master** | @henriquemendeselias | Remover impedimentos e garantir a execução dos ritos ágeis. |
+| **Product Owner** | @jot4-ge | Refinar e priorizar o Backlog, definir escopo e validar entregas. |
+| **Backend e DevOps** | @luizhtmoreira, @lucasaraujoszz, @matheus0346 | Pipeline ETL, motor NLP, modelagem do banco vetorial e infraestrutura. |
+| **Frontend** | @G2SBiell | Interface do usuário (Next.js/React), integração com a API e fidelidade ao UX. |
+
+---
 
 ## 3. Ritos e Cadência
-Trabalhamos com **Sprints com duração de 1 semana**. Nossos ritos oficiais ocorrem da seguinte forma:
 
-* **Planning:** Realizada às terças-feiras, onde priorizamos as *Issues* do Épico atual e estimamos o esforço.
-* **Dailies:** Realizadas de forma assíncrona via Discord/WhatsApp, para alinhamento rápido do time.
-* **Review e Retrospectiva:** Realizadas ao final da Sprint, para consolidar o que foi entregue e debater pontos de melhoria no processo da equipe.
+Trabalhamos com **Sprints de 1 semana**:
 
-## 4. Práticas de Engenharia (Extreme Programming - XP)
-Para manter a sustentabilidade do código a longo prazo, adotamos as seguintes práticas de XP. *(Nota: O fluxo de automação será progressivamente consolidado em direção à Release 2).*
+- **Planning:** Terças-feiras — priorização de Issues e estimativa de esforço.
+- **Dailies:** Assíncronas via Discord/WhatsApp.
+- **Review e Retrospectiva:** Ao final de cada Sprint.
 
-* **Code Review:** Nenhum código entra na branch `develop` sem passar por revisão. Pull Requests (PRs) exigem a aprovação de pelo menos um outro membro da equipe, garantindo propriedade coletiva do código.
-* **Integração Contínua (CI) [Foco R2]:** Planejamento e configuração de pipelines no GitHub Actions para rodar linters (ex: `black`) e testes automatizados a cada novo commit, garantindo a integridade da build.
-* **Programação em Par (Pair Programming):** Prática utilizada em tarefas de alta complexidade ou decisões arquiteturais sensíveis (como configuração inicial de infraestrutura) para mitigar gargalos e principalmente compartilhar conhecimento técnico.
+---
 
-## 5. Política de Repositório e Versionamento
-O fluxo de versionamento segue o padrão GitFlow simplificado, focado em revisões rápidas:
+## 4. Práticas de Engenharia (XP)
 
-* `main`: Código em produção (versões estáveis, prontas para release).
-* `develop`: Código em integração (ambiente de homologação da equipe).
-* `feature/[nome-da-tarefa]`: Branches efêmeras criadas a partir da `develop` para desenvolver novas funcionalidades.
-* `fix/[nome-do-bug]`: Branches específicas para correção de erros.
+- **Code Review:** Nenhum código entra na branch `develop` sem revisão. PRs exigem aprovação de ao menos um outro membro da equipe.
+- **Integração Contínua (CI):** Pipelines no GitHub Actions para rodar linters (`black`) e testes automatizados a cada commit.
+- **Pair Programming:** Utilizado em tarefas de alta complexidade ou decisões arquiteturais sensíveis, para mitigar gargalos e compartilhar conhecimento técnico.
+
+---
+
+## 5. Política de Repositório (GitFlow)
+
+```mermaid
+gitGraph
+   commit id: "init"
+   branch develop
+   checkout develop
+   commit id: "base"
+   branch feature/nova-funcionalidade
+   checkout feature/nova-funcionalidade
+   commit id: "feat"
+   commit id: "feat2"
+   checkout develop
+   merge feature/nova-funcionalidade id: "merge feat"
+   branch fix/correcao-bug
+   checkout fix/correcao-bug
+   commit id: "fix"
+   checkout develop
+   merge fix/correcao-bug id: "merge fix"
+   checkout main
+   merge develop id: "release"
+```
+
+| Branch | Finalidade |
+|---|---|
+| `main` | Código em produção (versões estáveis). |
+| `develop` | Código em integração (ambiente de homologação). |
+| `feature/[nome]` | Branches efêmeras para novas funcionalidades. |
+| `fix/[nome]` | Branches específicas para correção de erros. |

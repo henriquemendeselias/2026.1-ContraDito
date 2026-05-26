@@ -1,38 +1,45 @@
 # Escopo e Visão Geral do Produto
 
-Para garantir a entrega de uma Prova de Conceito (PoC) funcional, testável e de alto valor agregado dentro do semestre letivo, o **ContraDito** delimitou um escopo de atuação rigoroso.
+Para garantir a entrega de uma Prova de Conceito (PoC) funcional e de alto valor dentro do semestre letivo, o **ContraDito** delimitou um escopo de atuação rigoroso.
+
+---
 
 ## 1. Visão Geral
-O sistema funciona como um "motor de auditoria contínua". Ele coleta o histórico legislativo (fala e voto) de políticos, processa o texto semanticamente através de Inteligência Artificial e exibe um **Score de Coerência** ao eleitor. 
 
-A interface central do produto concentra a barra de pesquisa de políticos, o ranking dos parlamentares mais coerentes e as principais funcionalidades do sistema. A partir dela, o usuário pode navegar entre o Face-to-Face, focado na comparação direta entre dois políticos distintos, e o Dossiê, uma página de perfil detalhada para cada parlamentar.
+O sistema funciona como um **motor de auditoria contínua**. Ele coleta o histórico legislativo (fala e voto) de políticos, processa o texto semanticamente por meio de Inteligência Artificial e exibe um **Score de Coerência** ao eleitor.
 
-## 2. O que ESTÁ no escopo:
+A interface central concentra a barra de pesquisa, o ranking de parlamentares mais coerentes e as funcionalidades principais. A partir dela, o usuário navega entre:
 
-* **Recorte Político e Temporal:** Análise restrita a Deputados Federais e Senadores pertencentes ao ciclo legislativo de **2023 a 2026**.
+- **Face-to-Face:** comparação direta entre dois políticos.
+- **Dossiê:** página de perfil detalhada de cada parlamentar.
 
-* **Filtro de Proposições e Votos:** Avaliação exclusiva de Projetos de Lei (PLs) e Propostas de Emenda à Constituição (PECs) que **foram a votação nominal**. 
-    * Apenas o voto registrado no **texto-base** da proposição é considerado.
+---
 
-* **Fontes de Dados (Discursos):** Extração limitada a Notas Taquigráficas de Plenário ou Comissões, consumidas diretamente da API oficial do governo.
+## 2. O que ESTÁ no Escopo
 
-* **Processamento de Inteligência Artificial:**
-    * **Resumo Executivo:** Geração obrigatória de um resumo das ementas legislativas para respeitar o limite arquitetural de vetorização do modelo SBERT (máximo de 512 tokens).
-    * **Fragmentação (*Chunking*):** Envio de *chunks* do discurso para avaliação do modelo, em vez do texto integral, prevenindo o esgotamento da janela de contexto e alucinações.
-    * **Stack de Inferência:** Utilização restrita do modelo local **Llama 3.1 8B** para determinar a coerência.
+- **Recorte Político e Temporal:** Análise restrita a Deputados Federais e Senadores, legislatura de **2023 a 2026**.
+- **Filtro de Proposições e Votos:** Apenas PLs e PECs que foram a votação nominal. Somente o voto no **texto-base** é considerado.
+- **Fontes de Dados (Discursos):** Notas Taquigráficas de Plenário ou Comissões, consumidas da API oficial do governo.
+- **Processamento de IA:**
+    - **Resumo Executivo:** Gerado obrigatoriamente para respeitar o limite de vetorização do BGE-M3 (máx. 512 tokens).
+    - **Chunking:** Discursos enviados em fragmentos ao modelo, prevenindo esgotamento de janela de contexto e alucinações.
+    - **Inferência:** Uso restrito do **Llama 3.1 8B** para determinar a coerência.
 
+---
 
-## 3. O que NÃO ESTÁ no escopo:
+## 3. O que NÃO ESTÁ no Escopo
 
-O sistema foca exclusivamente no mérito principal da lei. Estão sumariamente excluídos da análise os votos em **destaques, emendas, pedidos de urgência**, bem como projetos menores (moções de aplauso, homenagens e requerimentos procedimentais).
+!!! warning "Limitações Deliberadas"
+    O sistema foca no mérito principal da lei. Estão excluídos: votos em **destaques, emendas e pedidos de urgência**, além de projetos menores (moções, homenagens e requerimentos procedimentais).
 
-* **Atores Políticos Não-Federais:** Deputados Distritais, Deputados Estaduais, Vereadores, Prefeitos, Governadores, além de membros do Poder Executivo (Presidente, Ministros) e Judiciário.
-* **Análise de Redes Sociais e Mídia:** O motor vetorial ignora completamente postagens do X (Twitter), Instagram, Facebook, TikTok ou entrevistas concedidas à imprensa. A validação exige o registro taquigráfico oficial.
-* **Tempo Real (*Real-time*):** O portal não é um *feed* em tempo real. Votos computados na Câmara não aparecerão instantaneamente na plataforma, dependendo do ciclo agendado de extração.
+- **Atores Não-Federais:** Deputados Distritais, Estaduais, Vereadores, Prefeitos, Governadores e membros dos Poderes Executivo e Judiciário.
+- **Redes Sociais e Mídia:** O motor vetorial ignora postagens em X (Twitter), Instagram, Facebook, TikTok ou entrevistas à imprensa. É exigido o registro taquigráfico oficial.
+- **Tempo Real:** O portal não é um *feed* em tempo real — os dados dependem do ciclo agendado de extração.
 
-* **Exceções Matemáticas e Regras de Negócio:**
-    Para garantir a integridade do cálculo do *Score* de Coerência, os seguintes cenários são descartados pelo motor de IA:
-    
-    1. **Anacronismo de Discurso:** Discursos proferidos em datas *posteriores* à votação da lei não entram no cálculo para aquela matéria específica.
-    2. **Ausências e Abstenções:** Não entram no cálculo matemático penalizador ou bonificador da coerência.
-    3. **Dados Insuficientes (Cold Start):** Políticos com um número irrisório de discursos ou votações catalogadas não terão seu perfil avaliado para evitar distorções estatísticas.
+### Exceções Matemáticas
+
+Para garantir a integridade do Score de Coerência, os seguintes cenários são descartados pelo motor:
+
+1. **Anacronismo de Discurso:** Discursos proferidos *após* a data de votação não entram no cálculo para aquela matéria.
+2. **Ausências e Abstenções:** Não compõem o denominador do cálculo.
+3. **Cold Start:** Políticos com dados insuficientes não terão o perfil avaliado, evitando distorções estatísticas.

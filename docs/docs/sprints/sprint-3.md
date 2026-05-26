@@ -2,10 +2,14 @@
 
 **Período:** 07/04/2026 a 14/04/2026
 
-## Descrição
+---
+
+## 1. Descrição
 Com o esqueleto arquitetural validado na Sprint anterior, a Sprint 03 teve como foco o desenvolvimento principal do Produto Mínimo Viável (MVP). O objetivo foi aplicar o padrão *Pipe and Filter* na prática: automatizar a extração dos dados (seeding), rodar a Inteligência Artificial em lote para calcular o Score de Coerência e expor essas informações através de rotas consumidas por um Front-end funcional.
 
-## Objetivos e Requisitos do MVP
+---
+
+## 2. Objetivos e Requisitos do MVP
 Durante a reunião de planejamento, a equipe fechou o escopo dos requisitos essenciais a serem entregues:
 
 * **Descoberta:** Barra de busca global (incluindo o "nome de urna" oficial) e filtros de listagem por Partido, Cargo e Estado.
@@ -17,7 +21,9 @@ url câmara: https://dadosabertos.camara.leg.br/api/v2
 
 url senado: https://legis.senado.leg.br/dadosabertos
 
-## Backlog e Responsabilidades
+---
+
+## 3. Backlog e Responsabilidades
 | Tarefa | Responsável | Status |
 | :--- | :--- | :--- |
 | **API Backend:** Atualização de Pydantic/Supabase (Contrato) e implementação das rotas GET `/politicos` (com paginação/filtros) e `/politicos/{id}`. | @henriquemendeselias | [x] Concluído |
@@ -27,7 +33,9 @@ url senado: https://legis.senado.leg.br/dadosabertos
 | **Infraestrutura:** Docker-compose simultâneo (FastAPI + Front) e automação de Linter (Flake8/Black) no GitHub Actions para os PRs. | @lucasaraujoszz | [x] Concluído |
 | **Documentação:** Criação das páginas de Arquitetura (Pipe and Filter) e LGPD/Cálculo do Score no MkDocs. | @matheus0346 | [x] Concluído |
 
-## Cronograma de Execução (6 Dias)
+---
+
+## 4. Cronograma de Execução (6 Dias)
 Para garantir que as dependências não bloqueassem o time, o Scrum Master estabeleceu a seguinte esteira de execução:
 
 * **Dias 1-2:** O Contrato de API (JSON) foi selado; Banco atualizado e a carga inicial de deputados foi realizada no Supabase.
@@ -35,7 +43,9 @@ Para garantir que as dependências não bloqueassem o time, o Scrum Master estab
 * **Dia 5:** Integração final — validação do clique da busca para a abertura do perfil com o score real.
 * **Dia 6:** Finalização do Docker para demonstração e polimento da documentação no MkDocs.
 
-## Reuniões
+---
+
+## 5. Reuniões
 
 ### Ata de Reunião (Planejamento da Sprint 03)
 * **Data:** 07/04/2026

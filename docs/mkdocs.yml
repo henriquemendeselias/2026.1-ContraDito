@@ -3,6 +3,7 @@ site_description: Documentação do projeto da disciplina de MDS
 
 theme:
   name: material
+  custom_dir: overrides
   palette:
     - scheme: default
       primary: custom # Cor da barra superior 
@@ -70,8 +71,12 @@ nav:
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/landing.css
 
 markdown_extensions:
+  - toc:
+      toc_depth: 0
+    
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
