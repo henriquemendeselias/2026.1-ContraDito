@@ -1,293 +1,467 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation"; 
+
+interface Politico {
+  id: number;
+  nome_urna?: string;
+  nome?: string;
+  partido: string;
+  uf: string;
+  cargo: string;
+  score?: number | null;
+  score_coerencia?: number;
+  foto_url?: string;
+}
+
+const PER_PAGE = 10;
+
+const fuzzyMatch = (str: string, query: string) => {
+  if (!str) return false;
+
+  const s = str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  const q = query
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  return s.includes(q);
+};
+
+const getInitials = (name: string) => {
+  if (!name) return "";
+
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+};
 
 export default function Home() {
-  const [politicos, setPoliticos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  
-  const [textoBusca, setTextoBusca] = useState("");
-  const [partidoSelecionado, setPartidoSelecionado] = useState("");
-  const [ufSelecionada, setUfSelecionada] = useState("");
-  const [ordemSelecionada, setOrdemSelecionada] = useState("");
-
-  const [filtrosAtivos, setFiltrosAtivos] = useState({
-    busca: "",
-    partido: "",
-    uf: "",
-    ordem: ""
-  });
-
   const router = useRouter();
 
+  const [politicosApi, setPoliticosApi] = useState<Politico[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [erroApi, setErroApi] = useState(false);
+
+  const [query, setQuery] = useState("");
+  const [partido, setPartido] = useState("");
+  const [estado, setEstado] = useState("");
+  const [ordem, setOrdem] = useState("score_desc");
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
-    setCarregando(true);
-    
-    const params = new URLSearchParams();
-    if (filtrosAtivos.busca) params.append("busca", filtrosAtivos.busca);
-    if (filtrosAtivos.partido) params.append("partido", filtrosAtivos.partido);
-    if (filtrosAtivos.uf) params.append("uf", filtrosAtivos.uf);
-    if (filtrosAtivos.ordem) params.append("ordem", filtrosAtivos.ordem);
+    const buscarPoliticos = async () => {
+      try {
+        setLoading(true);
+        setErroApi(false);
 
-    const url = `http://localhost:8000/api/politicos?${params.toString()}`;
+        const response = await fetch(
+          "http://localhost:8001/api/politicos"
+        );
 
-    fetch(url)
-      .then((resposta) => resposta.json())
-      .then((dados) => {
-        // CORREÇÃO: Verifica dinamicamente o formato de resposta da API
-        const lista = Array.isArray(dados) ? dados : (dados.itens || []);
-        setPoliticos(lista);
-        setCarregando(false);
-      })
-      .catch((erro) => {
-        console.error("Erro ao buscar políticos:", erro);
-        setCarregando(false);
-      });
-  }, [filtrosAtivos]);
+        if (!response.ok) {
+          throw new Error("Erro ao buscar API");
+        }
 
-  const executarBusca = () => {
-    setFiltrosAtivos({
-      busca: textoBusca,
-      partido: partidoSelecionado,
-      uf: ufSelecionada,
-      ordem: ordemSelecionada
+        const data = await response.json();
+
+        let lista: Politico[] = [];
+
+        if (Array.isArray(data)) {
+          lista = data;
+        } else if (Array.isArray(data.itens)) {
+          lista = data.itens;
+        } else if (Array.isArray(data.politicos)) {
+          lista = data.politicos;
+        } else if (Array.isArray(data.data)) {
+          lista = data.data;
+        }
+
+        setPoliticosApi(lista);
+
+        console.log("DADOS API:", lista);
+      } catch (error) {
+        console.error("Erro API:", error);
+        setErroApi(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    buscarPoliticos();
+  }, []);
+
+  const normalizedData = useMemo(() => {
+    return politicosApi.map((p) => {
+      const nome = p.nome_urna || p.nome || "Sem nome";
+
+      let score = 0;
+
+      if (typeof p.score === "number") {
+        score = p.score;
+      } else if (typeof p.score_coerencia === "number") {
+        score =
+          p.score_coerencia <= 1
+            ? p.score_coerencia * 100
+            : p.score_coerencia;
+      }
+
+      return {
+        ...p,
+        nome,
+        score,
+      };
     });
+  }, [politicosApi]);
+
+  const filteredData = useMemo(() => {
+    let result = normalizedData.filter((p: any) => {
+      if (query && !fuzzyMatch(p.nome, query)) return false;
+
+      if (partido && p.partido !== partido) return false;
+
+      if (estado && p.uf !== estado) return false;
+
+      return true;
+    });
+
+    result.sort((a: any, b: any) => {
+      if (ordem === "score_desc") return b.score - a.score;
+
+      if (ordem === "score_asc") return a.score - b.score;
+
+      if (ordem === "nome_asc")
+        return a.nome.localeCompare(b.nome);
+
+      if (ordem === "nome_desc")
+        return b.nome.localeCompare(a.nome);
+
+      return 0;
+    });
+
+    return result;
+  }, [normalizedData, query, partido, estado, ordem]);
+
+  const maxPage =
+    Math.ceil(filteredData.length / PER_PAGE) || 1;
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * PER_PAGE,
+    currentPage * PER_PAGE
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, partido, estado, ordem]);
+
+  const handleReset = () => {
+    setQuery("");
+    setPartido("");
+    setEstado("");
+    setOrdem("score_desc");
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      
-      {/* 1. NOVA CAPA IMERSIVA (HERO SECTION) */}
-      <div className="relative bg-slate-900 text-white rounded-2xl overflow-hidden mb-8 shadow-2xl">
-        <div className="absolute inset-0">
-          <img 
-            src="https://images.unsplash.com/photo-1620662736427-b8a198f52a4d?q=80&w=2070&auto=format&fit=crop" 
-            alt="Congresso Nacional" 
-            className="w-full h-full object-cover opacity-20"
+    <div className="min-h-screen bg-[#0d1117] text-[#e6edf3] font-sans">
+      {/* NAVBAR */}
+      <nav className="sticky top-0 z-50 flex items-center justify-between px-6 h-[60px] bg-[#0d1117]/90 backdrop-blur border-b border-white/10">
+        <a
+          href="/"
+          className="text-xl font-bold uppercase tracking-wider"
+        >
+          Contra
+          <span className="text-[#39d98a]">Dito</span>
+        </a>
+
+          {/* NOVO BOTÃO FUNCIONAL */}
+          <button
+           onClick={() => router.push("/comparacao")}
+            className="px-4 py-2 border border-[#39d98a]/50 rounded-lg text-white hover:bg-[#39d98a]/10 transition">
+            Ringue
+            </button>
+
+        <a
+          href="#diretorio"
+          className="px-4 py-2 border border-[#39d98a] rounded-lg text-[#39d98a] hover:bg-[#39d98a] hover:text-black transition"
+        >
+          Diretório
+        </a>
+      </nav>
+
+      {/* HERO */}
+      <header className="text-center px-6 pt-20 pb-12">
+        <h1 className="text-4xl sm:text-5xl font-extrabold">
+          O que foi dito{" "}
+          <span className="text-[#39d98a]">
+            vs.
+          </span>{" "}
+          realidade
+        </h1>
+
+        <p className="mt-4 text-[#8b949e] uppercase tracking-[0.2em] text-sm">
+          Transparência com Inteligência Artificial
+        </p>
+      </header>
+
+      {/* MAIN */}
+      <main
+        id="diretorio"
+        className="max-w-5xl mx-auto px-5 pb-20"
+      >
+        {/* ERRO */}
+        {erroApi && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl p-4 mb-6 text-center">
+            Erro ao carregar API.
+          </div>
+        )}
+
+        {/* FILTROS */}
+        <div className="flex flex-wrap gap-3 bg-[#161b22] border border-white/10 rounded-2xl p-4 mb-6">
+          <input
+            type="search"
+            placeholder="Buscar político..."
+            value={query}
+            onChange={(e) =>
+              setQuery(e.target.value)
+            }
+            className="flex-1 min-w-[180px] bg-[#0d1117] border border-white/10 rounded-lg px-4 py-2 outline-none"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/90"></div>
+
+          <select
+            value={partido}
+            onChange={(e) =>
+              setPartido(e.target.value)
+            }
+            className="bg-[#0d1117] border border-white/10 rounded-lg px-3 py-2"
+          >
+            <option value="">Partido</option>
+            <option value="PL">PL</option>
+            <option value="PT">PT</option>
+            <option value="MDB">MDB</option>
+            <option value="PP">PP</option>
+            <option value="PSOL">PSOL</option>
+          </select>
+
+          <select
+            value={estado}
+            onChange={(e) =>
+              setEstado(e.target.value)
+            }
+            className="bg-[#0d1117] border border-white/10 rounded-lg px-3 py-2"
+          >
+            <option value="">UF</option>
+            <option value="SP">SP</option>
+            <option value="RJ">RJ</option>
+            <option value="MG">MG</option>
+            <option value="DF">DF</option>
+          </select>
+
+          <select
+            value={ordem}
+            onChange={(e) =>
+              setOrdem(e.target.value)
+            }
+            className="bg-[#0d1117] border border-white/10 rounded-lg px-3 py-2"
+          >
+            <option value="score_desc">
+              Maior score
+            </option>
+
+            <option value="score_asc">
+              Menor score
+            </option>
+
+            <option value="nome_asc">
+              Nome A-Z
+            </option>
+
+            <option value="nome_desc">
+              Nome Z-A
+            </option>
+          </select>
         </div>
 
-        <div className="relative z-10 px-8 py-24 flex flex-col items-start max-w-4xl mx-auto text-center md:text-left">
-          <div className="inline-block bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-6">
-            Transparência Política com IA
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight tracking-tight text-white">
-            O que foi dito <br/>
-            <span className="text-emerald-400 italic font-serif">vs.</span> o que foi votado.
-          </h1>
-          
-          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mb-10 leading-relaxed">
-            O <strong className="text-white">ContraDito</strong> usa Inteligência Artificial para cruzar discursos e votos de deputados e senadores, gerando um <strong className="text-emerald-400">Score de Coerência</strong> real.
-          </p>
+        {/* TABELA */}
+        <div className="bg-[#161b22] border border-white/10 rounded-2xl overflow-hidden">
+          <table className="w-full table-fixed">
+            <thead>
+              <tr>
+                <th className="p-4 text-left text-xs uppercase text-[#8b949e]">
+                  Político
+                </th>
 
-          <div className="flex flex-wrap gap-4">
-            <button 
-              onClick={() => window.scrollTo({ top: 600, behavior: 'smooth' })}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-full font-medium transition-all shadow-lg shadow-emerald-900/20"
-            >
-              Ver Políticos
-            </button>
-            <button className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-8 py-3 rounded-full font-medium transition-all">
-              Entender a Metodologia
-            </button>
-          </div>
-        </div>
-      </div>
+                <th className="p-4 text-left text-xs uppercase text-[#8b949e]">
+                  Partido
+                </th>
 
-      {/* 2. FAIXA DE ESTATÍSTICAS GERAIS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        <div className="bg-slate-900 rounded-2xl p-8 flex flex-col items-center justify-center border border-slate-800 shadow-xl transition-transform hover:-translate-y-1">
-          <span className="text-emerald-400 text-4xl mb-3">🏛️</span>
-          <h3 className="text-4xl font-bold text-white tracking-tight">513</h3>
-          <p className="text-slate-400 text-sm mt-2 uppercase tracking-wider font-medium text-center">Deputados Federais</p>
-        </div>
+                <th className="hidden sm:table-cell p-4 text-left text-xs uppercase text-[#8b949e]">
+                  Cargo
+                </th>
 
-        <div className="bg-slate-900 rounded-2xl p-8 flex flex-col items-center justify-center border border-slate-800 shadow-xl transition-transform hover:-translate-y-1">
-          <span className="text-emerald-400 text-4xl mb-3">🏛️</span>
-          <h3 className="text-4xl font-bold text-white tracking-tight">81</h3>
-          <p className="text-slate-400 text-sm mt-2 uppercase tracking-wider font-medium text-center">Senadores</p>
-        </div>
+                <th className="p-4 text-right text-xs uppercase text-[#8b949e]">
+                  Coerência
+                </th>
+              </tr>
+            </thead>
 
-        <div className="bg-slate-900 rounded-2xl p-8 flex flex-col items-center justify-center border border-slate-800 shadow-xl transition-transform hover:-translate-y-1">
-          <span className="text-emerald-400 text-4xl mb-3">🎙️</span>
-          <h3 className="text-4xl font-bold text-white tracking-tight">48.720</h3>
-          <p className="text-slate-400 text-sm mt-2 uppercase tracking-wider font-medium text-center">Discursos Analisados</p>
-        </div>
+            <tbody>
+              {loading ? (
+                Array.from({ length: 6 }).map(
+                  (_, i) => (
+                    <tr
+                      key={i}
+                      className="border-t border-white/10"
+                    >
+                      <td className="p-4">
+                        Carregando...
+                      </td>
+                    </tr>
+                  )
+                )
+              ) : paginatedData.length > 0 ? (
+                paginatedData.map((p: any) => {
+                  const scoreColor =
+                    p.score >= 70
+                      ? "text-[#39d98a]"
+                      : p.score >= 50
+                      ? "text-yellow-400"
+                      : "text-red-400";
 
-        <div className="bg-slate-900 rounded-2xl p-8 flex flex-col items-center justify-center border border-slate-800 shadow-xl transition-transform hover:-translate-y-1">
-          <span className="text-emerald-400 text-4xl mb-3">📊</span>
-          <h3 className="text-4xl font-bold text-white tracking-tight">71%</h3>
-          <p className="text-slate-400 text-sm mt-2 uppercase tracking-wider font-medium text-center">Média de Coerência</p>
-        </div>
-      </div>
+                  return (
+                    <tr
+                      key={p.id}
+                      onClick={() => router.push(`/politico/${p.id}`)} // 3. ADICIONAMOS A AÇÃO DE CLIQUE E ROTEAMENTO AQUI
+                      className="border-t border-white/10 hover:bg-[#1c2333] transition cursor-pointer" // E O CURSOR-POINTER AQUI
+                    >
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          {p.foto_url ? (
+                            <img
+                              src={p.foto_url}
+                              alt={p.nome}
+                              className="w-10 h-10 rounded-full object-cover border border-white/10"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-[#1c2333] flex items-center justify-center text-xs">
+                              {getInitials(p.nome)}
+                            </div>
+                          )}
 
-      {/* 3. ÁREA DE BUSCA E TABELA */}
-      <main className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h2 className="text-xl font-semibold text-slate-800 mb-4">
-          Diretório de Políticos
-        </h2>
-        
-        <div className="bg-slate-100 p-4 rounded-lg mb-6 border border-slate-200 flex flex-col gap-4">
-          <div className="flex gap-4">
-            <input 
-              type="text" 
-              placeholder="Buscar por nome de urna..." 
-              className="flex-1 p-2 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
-              value={textoBusca}
-              onChange={(e) => setTextoBusca(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && executarBusca()}
-            />
-            <button 
-              onClick={executarBusca}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-8 rounded transition-colors"
-            >
-              Pesquisar
-            </button>
-          </div>
+                          <span className="font-medium">
+                            {p.nome}
+                          </span>
+                        </div>
+                      </td>
 
-          <div className="flex gap-4">
-            <select 
-              className="p-2 rounded border border-slate-300 bg-white text-slate-700 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={partidoSelecionado}
-              onChange={(e) => setPartidoSelecionado(e.target.value)}
-            >
-              <option value="">Todos os Partidos</option>
-              <option value="PL">PL</option>
-              <option value="PT">PT</option>
-              <option value="MDB">MDB</option>
-              <option value="PSDB">PSDB</option>
-              <option value="NOVO">NOVO</option>
-              <option value="PSOL">PSOL</option>
-            </select>
+                      <td className="p-4 text-[#8b949e]">
+                        {p.partido}
+                      </td>
 
-            <select 
-              className="p-2 rounded border border-slate-300 bg-white text-slate-700 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={ufSelecionada}
-              onChange={(e) => setUfSelecionada(e.target.value)}
-            >
-              <option value="">Todos os Estados</option>
-              <option value="SP">São Paulo (SP)</option>
-              <option value="RJ">Rio de Janeiro (RJ)</option>
-              <option value="MG">Minas Gerais (MG)</option>
-              <option value="BA">Bahia (BA)</option>
-              <option value="DF">Distrito Federal (DF)</option>
-            </select>
+                      <td className="hidden sm:table-cell p-4 text-[#8b949e]">
+                        {p.cargo}
+                      </td>
 
-            <select 
-              className="p-2 rounded border border-slate-300 bg-white text-slate-700 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-              value={ordemSelecionada}
-              onChange={(e) => setOrdemSelecionada(e.target.value)}
-            >
-              <option value="">Ordenar de A a Z</option>
-              <option value="menos_coerentes">Menos Coerentes Primeiro 🚨</option>
-              <option value="mais_coerentes">Mais Coerentes Primeiro ✅</option>
-            </select>
-          </div>
-        </div>
+                      <td className="p-4">
+                        <div className="flex items-center justify-end gap-3">
+                          <div className="w-[80px] h-[6px] bg-[#0d1117] rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${
+                                p.score >= 70
+                                  ? "bg-[#39d98a]"
+                                  : p.score >= 50
+                                  ? "bg-yellow-400"
+                                  : "bg-red-400"
+                              }`}
+                              style={{
+                                width: `${p.score}%`,
+                              }}
+                            />
+                          </div>
 
-        <div className="overflow-x-auto">
-          {carregando ? (
-            <p className="text-center text-slate-500 py-8 animate-pulse">Buscando dados no servidor...</p>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                  <th className="p-3 font-medium">Nome</th>
-                  <th className="p-3 font-medium">Partido</th>
-                  <th className="p-3 font-medium">UF</th>
-                  <th className="p-3 font-medium">Cargo</th>
-                  <th className="p-3 font-medium text-right">Score de Coerência</th>
-                </tr>
-              </thead>
-              <tbody>
-                {politicos.map((politico: any) => (
-                  <tr 
-                    key={politico.id} 
-                    onClick={() => router.push(`/politico/${politico.id}`)}
-                    className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
+                          <span
+                            className={`font-bold min-w-[55px] text-right ${scoreColor}`}
+                          >
+                            {p.score.toFixed(1)}%
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="text-center py-16"
                   >
-                    <td className="p-3 font-medium text-slate-800">{politico.nome_urna}</td>
-                    <td className="p-3 text-slate-600">{politico.partido}</td>
-                    <td className="p-3 text-slate-600">{politico.uf}</td>
-                    <td className="p-3 text-slate-600">{politico.cargo}</td>
-                    <td className="p-3 text-right">
-                      <span className={`px-2 py-1 rounded text-sm font-semibold ${politico.score_coerencia > 70 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {politico.score_coerencia}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                
-                {politicos.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="text-center p-8 text-slate-500">
-                      Nenhum político encontrado com os filtros selecionados.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+                    <p className="text-[#8b949e] mb-4">
+                      Nenhum político encontrado.
+                    </p>
+
+                    <button
+                      onClick={handleReset}
+                      className="px-4 py-2 border border-white/10 rounded-lg hover:bg-[#1c2333]"
+                    >
+                      Limpar filtros
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          {/* PAGINAÇÃO */}
+          {!loading &&
+            filteredData.length > 0 && (
+              <div className="flex items-center justify-between p-4 border-t border-white/10">
+                <span className="text-sm text-[#8b949e]">
+                  Página {currentPage} de {maxPage}
+                </span>
+
+                <div className="flex gap-2">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() =>
+                      setCurrentPage(
+                        (prev) => prev - 1
+                      )
+                    }
+                    className="px-3 py-1 border border-white/10 rounded disabled:opacity-40"
+                  >
+                    ←
+                  </button>
+
+                  <button
+                    disabled={
+                      currentPage === maxPage
+                    }
+                    onClick={() =>
+                      setCurrentPage(
+                        (prev) => prev + 1
+                      )
+                    }
+                    className="px-3 py-1 border border-white/10 rounded disabled:opacity-40"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+            )}
         </div>
       </main>
 
-      {/* 4. RODAPÉ (FOOTER) */}
-      <footer className="mt-16 border-t border-slate-200 pt-10 pb-6 text-slate-600">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 max-w-6xl mx-auto">
-          {/* Coluna 1: Marca e Info */}
-          <div className="col-span-1 md:col-span-1">
-            <h3 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">
-              Contra<span className="text-emerald-600">Dito</span>
-            </h3>
-            <p className="text-sm text-slate-500 mb-4 leading-relaxed">
-              Transparência política movida por Inteligência Artificial. Acompanhe a coerência de seus representantes.
-            </p>
-            <p className="text-xs text-slate-400 font-medium">
-              © 2026 ContraDito.<br/>Squad 09 - UnB / FCTE.<br/>Licença MIT.
-            </p>
-          </div>
-
-          {/* Coluna 2: Navegação */}
-          <div>
-            <h4 className="font-semibold text-slate-800 mb-4 uppercase text-xs tracking-widest">Navegação</h4>
-            <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-emerald-600 transition-colors">Home</a></li>
-              <li><a href="#" className="hover:text-emerald-600 transition-colors">Deputados</a></li>
-              <li><a href="#" className="hover:text-emerald-600 transition-colors">Senadores</a></li>
-            </ul>
-          </div>
-
-          {/* Coluna 3: Plataforma */}
-          <div>
-            <h4 className="font-semibold text-slate-800 mb-4 uppercase text-xs tracking-widest">Plataforma</h4>
-            <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-emerald-600 transition-colors">Coerência</a></li>
-              <li><a href="#" className="hover:text-emerald-600 transition-colors">Sobre o Projeto</a></li>
-            </ul>
-          </div>
-
-          {/* Coluna 4: Projeto */}
-          <div>
-            <h4 className="font-semibold text-slate-800 mb-4 uppercase text-xs tracking-widest">Projeto</h4>
-            <ul className="space-y-3 text-sm">
-              <li><a href="https://github.com" target="_blank" className="hover:text-emerald-600 transition-colors">GitHub</a></li>
-              <li><a href="#" className="hover:text-emerald-600 transition-colors">UnB - FCTE</a></li>
-              <li><a href="#" className="hover:text-emerald-600 transition-colors">Squad 09 - MDS</a></li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Linha fina no final com os créditos dos dados */}
-        <div className="border-t border-slate-200 pt-6 text-center md:text-right max-w-6xl mx-auto">
-          <p className="text-xs text-slate-400">
-            Dados extraídos da API Aberta da Câmara dos Deputados e do Senado Federal. Modelos LLM utilizados para análise imparcial.
-          </p>
-        </div>
+      {/* FOOTER */}
+      <footer className="text-center py-8 border-t border-white/10 text-xs text-[#8b949e] uppercase tracking-widest">
+        Contradito — Transparência e Dados Abertos
       </footer>
-
     </div>
   );
 }
