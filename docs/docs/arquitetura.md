@@ -186,3 +186,17 @@ Para o processamento interno do Worker NLP, a arquitetura abandona abstrações 
 4. **Filtro 4 — Vetorização:** Transformação em *embeddings* vetoriais via SBERT (modelo `BAAI/bge-m3`), parametrizando tanto os fragmentos de discurso quanto o resumo legislativo.
 5. **Filtro 5 — Recuperação Contextual (RAG):** Busca espacial no Supabase via distância de cosseno — apenas fragmentos discursivos semanticamente próximos à proposição avaliada são selecionados.
 6. **Filtro 6 — Inferência e Veredito:** Orquestração dos dados filtrados para envio ao LLM, determinando a coerência ou incoerência do voto e armazenando os scores consolidados no banco.
+
+---
+
+## 4. Stack Tecnológica
+
+A tabela a seguir consolida as principais tecnologias que compõem o ecossistema do **ContraDito**, agrupadas por camada de atuação:
+
+| Camada / Componente | Tecnologia | Função |
+| :--- | :--- | :--- |
+| **Front-end** | React, Next.js, Tailwind CSS | Interface interativa, roteamento da aplicação web e estilização visual. |
+| **API de Leitura** | FastAPI | Camada REST para entrega rápida e cacheada dos dados (CQRS - *Query*). |
+| **Banco de Dados** | Supabase, PostgreSQL, HNSW, `pgvector` | Persistência relacional, indexação avançada e suporte estrutural à busca vetorial. |
+| **Extração (ETL)** | Regex, BeautifulSoup4, `pdfplumber`, Celery, Redis | Coleta governamental, limpeza textual rigorosa, extração de PDFs e orquestração de rotinas automatizadas em *background*. |
+| **Inteligência Artificial** | Llama 3.1 8B, `BAAI/bge-m3`, LangChain| Processamento e vetorização de textos, busca semântica, orquestração do fluxo RAG e inferência contextual.|
