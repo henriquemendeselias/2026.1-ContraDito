@@ -32,6 +32,9 @@ A carga inicial (Backfill) consumirá janelas de 1 semestre, e a carga contínua
 9. Como **analista de dados (NLP)**, quero que os textos passem pelo Estágio 3, normalizando duplos espaços, quebras de linha e executando `strip()`, para enxugar o texto bruto final.
 10. Como **engenheiro de dados**, quero um comportamento de *Fallback* que garanta a completude: se a Regex do Estágio 2 falhar em fatiar o texto, o sistema não deve descartar o discurso; ele deve salvar o texto do Estágio 1 + 3 (sem HTML, com cabeçalho original) e disparar um `logger.warning`, garantindo retenção de 100% dos dados da câmara na tabela.
 11. Como **desenvolvedor**, quero que o contrato de dados gerado para o Bulk Upsert no banco siga estritamente as colunas acordadas no schema relacional da IA.
+12. Como **engenheiro de dados**, quero que o lote de discursos extraídos seja deduplicado em memória antes do envio ao banco, para evitar falhas de transação por colisão de chave primária (Erro 21000) no PostgreSQL.
+13. Como **engenheiro de software**, quero que o sistema detecte vazamentos binários (arquivos DOCX crus) vindos da API antes de tentar processar o HTML, descartando a sujeira pesada para evitar estouro de memória e crashes.
+14. Como **analista de dados (NLP)**, quero que notas taquigráficas curtas e reações da plateia (ex: `(Risos)`, `[Palmas]`) sejam normalizadas para um padrão único com chaves (`{Risos}`), facilitando o manuseio futuro pelos modelos de linguagem.
 
 ---
 
@@ -46,13 +49,16 @@ A carga inicial (Backfill) consumirá janelas de 1 semestre, e a carga contínua
 ### Idempotência e Checkpointing
 - **UUID v5 Sintético:** Implementar no módulo de transformação uma lógica baseada na biblioteca `uuid` que receba os identificadores unívocos do contexto da câmara.
   - **Fórmula rígida de concatenação:** `id_deputado` + `dataHoraInicio` + `faseEvento`.
+- **Deduplicação em Memória:** Antes da inserção no banco, o script realiza um filtro em memória no array gerado para reter apenas valores únicos (por chave ID), impedindo que dados duplicados devolvidos erroneamente no payload da API quebrem o *Bulk Upsert*.
 - O *Bulk Upsert* resolverá os conflitos com base nesse UUID `id` pelo método oficial do Supabase em Python.
 - O UPDATE no `watermarker` dentro da tabela `etl_logs` só rodará no final da execução bem-sucedida do loop principal, garantindo que "janelas caídas pela metade" refaçam todo o seu conteúdo na próxima vez através de sobreposições limpas (Upsert).
 
 ### Higienização de Texto e Fallback
 - Criar uma função dedicada (ex: `limpar_transcricao`) no pacote/módulo de transformação isolado (Pipe and Filter).
+- **Vazamento Binário (Pré-estágio):** Interceptação imediata de strings que contenham assinaturas de arquivos DOCX/ZIP (ex: `PK!`, `[Content_Types].xml`), substituindo-as por uma flag de arquivo corrompido para não quebrar o parser HTML.
 - **Estágio 1:** `BeautifulSoup(texto, "html.parser").get_text(separator=" ", strip=True)` e `html.unescape`.
-- **Estágio 2:** Aplicação de expressões regulares focadas no primeiro travessão/traço pós-identificação do orador.
+- **Estágio 2:** Aplicação de expressões regulares avançadas (uso de *lookahead* para parar cortes imediatamente antes de saudações como "Senhor Presidente", suporte flexível a chaves/colchetes e tolerância a erros ortográficos como `PRONUN?CIAMENTO`) para extirpar cabeçalhos protocolares.
+- **Normalização Taquigráfica:** Aplicação de regex secundária para padronizar reações breves em parênteses ou colchetes convertendo-as para chaves `{}`.
 - **Estágio 3:** Substituição de `\s+` por `" "` usando regex e aplicação do `strip()`.
 - **Plano B:** Bloqueio transacional `try/except` local ou checagem de match na Regex. Falhando a expressão, loga-se usando a biblioteca de logging (`logger.warning("Regex falhou no discurso ID...")`) e retorna o texto contendo o cabeçalho bruto da Câmara preservado e sem HTML.
 
@@ -75,10 +81,12 @@ O modelo do dicionário final para a lista inserida em lote no Supabase deverá 
 - Testar a função de sanitização em isolamento:
   - **Caminho Feliz:** Enviar um *dummy text* com tags HTML sujas e um cabeçalho padrão simulado. Assert de que o texto final retornado perdeu o HTML, perdeu o cabeçalho, e de que não perdeu o conteúdo útil.
   - **Caminho Excepcional (Fallback):** Enviar um *dummy text* onde não há formatação reconhecível de orador. Assert de que a função limpa as sujeiras HTML, devolve o texto íntegro (com o cabeçalho irregular mantido) e não levanta nenhuma `Exception` ou descarte.
+  - **Anomalias de Regex:** Testar resiliência contra lixo binário, erros de digitação da taquigrafia (ex: esquecimento de fechar parênteses) e injeção direta de ofícios ou palavras indevidas como "CÂMARA DOS DEPUTADOS".
 
 ### Comportamento e Mocks
 - Mocagem (mock) da API para simular a resposta de um array vazio no semestre e garantir que o iterador avança para o próximo deputado graciosamente.
 - Mocagem para simular paginação extra (presença da chave `rel="next"`), atestando que a recursividade/loop do script consome todas as ramificações de páginas de discursos.
+- Mocagem para atestar que discursos duplicados entregues pela API em uma mesma requisição não atinjam a camada de Upsert do banco de dados (deduplicação no cliente ETL).
 
 ---
 
