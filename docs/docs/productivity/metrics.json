@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-05T04:39:58Z",
+  "generated_at": "2026-06-06T04:13:32Z",
   "repository": "unb-mds/2026.1-ContraDito",
   "issues_per_week": [
     {
@@ -49,7 +49,7 @@
     },
     {
       "week": "2026-W23",
-      "opened": 1,
+      "opened": 3,
       "closed": 7
     }
   ],
@@ -554,19 +554,19 @@
       "prs_opened": 12
     },
     {
+      "username": "luizhtmoreira",
+      "name": "luizhtmoreira",
+      "prs_opened": 10
+    },
+    {
       "username": "jot4-ge",
       "name": "jot4-ge",
       "prs_opened": 10
     },
     {
-      "username": "luizhtmoreira",
-      "name": "luizhtmoreira",
-      "prs_opened": 9
-    },
-    {
       "username": "lucasaraujoszz",
       "name": "lucasaraujoszz",
-      "prs_opened": 7
+      "prs_opened": 8
     },
     {
       "username": "G2SBiell",
@@ -592,9 +592,9 @@
     {
       "username": "luizhtmoreira",
       "name": "luizhtmoreira",
-      "opened": 10,
+      "opened": 11,
       "closed": 8,
-      "total": 18
+      "total": 19
     },
     {
       "username": "matheus0346",
@@ -613,9 +613,9 @@
     {
       "username": "lucasaraujoszz",
       "name": "lucasaraujoszz",
-      "opened": 9,
+      "opened": 10,
       "closed": 1,
-      "total": 10
+      "total": 11
     },
     {
       "username": "gpaulovit",
@@ -818,10 +818,10 @@
       "username": "luizhtmoreira",
       "name": "luizhtmoreira",
       "commits": 21,
-      "prs_opened": 9,
+      "prs_opened": 10,
       "prs_reviewed": 0,
       "prs_merged": 9,
-      "issues_opened": 10,
+      "issues_opened": 11,
       "issues_closed": 8
     },
     {
@@ -838,10 +838,10 @@
       "username": "lucasaraujoszz",
       "name": "lucasaraujoszz",
       "commits": 9,
-      "prs_opened": 7,
+      "prs_opened": 8,
       "prs_reviewed": 0,
       "prs_merged": 0,
-      "issues_opened": 9,
+      "issues_opened": 10,
       "issues_closed": 1
     },
     {
