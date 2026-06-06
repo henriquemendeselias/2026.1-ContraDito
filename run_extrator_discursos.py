@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import time
 from datetime import datetime, timedelta
@@ -25,11 +26,17 @@ if not url or not key:
 supabase: Client = create_client(url, key)
 
 if __name__ == "__main__":
-    data_inicio = "2023-01-01"
-    data_fim = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    # Permite passar as datas via linha de comando. 
+    if len(sys.argv) >= 3:
+        data_inicio = sys.argv[1]
+        data_fim = sys.argv[2]
+    else:
+        # Padrão amostral de 1 mês para testes
+        data_inicio = "2024-01-01"
+        data_fim = "2024-01-31"
     
     logging.info(f"Iniciando extração histórica de discursos da Câmara ({data_inicio} a {data_fim})...")
-    executar_pipeline_camara(supabase, data_inicio, data_fim)
+    ##executar_pipeline_camara(supabase, data_inicio, data_fim)
     
     logging.info(f"Iniciando extração histórica de discursos do Senado ({data_inicio} a {data_fim})...")
     executar_pipeline_senado(supabase, data_inicio, data_fim)

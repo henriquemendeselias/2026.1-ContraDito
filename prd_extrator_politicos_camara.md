@@ -6,7 +6,7 @@
 
 ## Problem Statement
 
-O sistema necessita de uma rotina automatizada e isolada para popular a tabela `politicos` com os dados atualizados dos deputados federais em exercício.
+O sistema necessita de uma rotina automatizada e isolada para popular a tabela `camara_politicos` com os dados atualizados dos deputados federais em exercício.
 
 A fonte primária (API de Dados Abertos da Câmara) possui rate-limits estritos e payloads com excesso de dados irrelevantes, enquanto o banco de dados destino (Supabase) possui limites transacionais que penalizam inserções unitárias sucessivas.
 
@@ -46,7 +46,7 @@ O status da rotina será persistido na tabela `etl_logs`.
 
 - Como **analista de qualidade de dados**, quero que, se um deputado falhar as 3 tentativas de detalhamento, ele seja ignorado e não entre no lote da página (gerando apenas um registro no logging nativo), para impedir que registros pela metade sejam salvos no banco.
 
-- Como **engenheiro de dados**, quero que as propriedades recebidas da API passem por um filtro e transformação estritos (descartando o payload original) antes de irem para memória, para garantir conformidade exata com as regras da tabela `politicos` e evitar vazamento de lixo de dados.
+- Como **engenheiro de dados**, quero que as propriedades recebidas da API passem por um filtro e transformação estritos (descartando o payload original) antes de irem para memória, para garantir conformidade exata com as regras da tabela `camara_politicos` e evitar vazamento de lixo de dados.
 
 - Como **administrador de banco de dados**, quero que o script realize um único envio transacional (Bulk Upsert) por página para o Supabase usando a SDK Oficial do Python (`supabase-py`), para otimizar conexões HTTP/REST.
 
@@ -116,7 +116,7 @@ Será necessário implementar uma lógica que traduza os status retornados pela 
 O array processado de dicionários Python será enviado via:
 
 ```python
-supabase.table('politicos').upsert(lista_deputados).execute()
+supabase.table('camara_politicos').upsert(lista_deputados).execute()
 ```
 
 ---

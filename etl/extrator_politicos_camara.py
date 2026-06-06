@@ -103,7 +103,7 @@ def executar_extracao_pagina(url: str, supabase_client, ids_processados: set) ->
                 print(f"Falha ao extrair deputado ID: {id_deputado}")
                 
     if lote_deputados:
-        supabase_client.table("politicos").upsert(lote_deputados).execute()
+        supabase_client.table("camara_politicos").upsert(lote_deputados).execute()
         
     return next_url, len(lote_deputados)
 

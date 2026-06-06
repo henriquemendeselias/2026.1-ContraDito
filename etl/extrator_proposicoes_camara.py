@@ -171,7 +171,7 @@ async def executar_pipeline_completo(supabase_client: Any, data_inicio: str, dat
         if lote_completo:
             lote_deduplicado = deduplicar_lote(lote_completo)
             try:
-                supabase_client.table("proposicoes").upsert(lote_deduplicado).execute()
+                supabase_client.table("camara_proposicoes").upsert(lote_deduplicado).execute()
                 total_linhas = len(lote_deduplicado)
                 logger.info(f"Upsert concluído! {total_linhas} proposições salvas com sucesso no banco de dados.")
             except Exception as erro_db:

@@ -111,7 +111,7 @@ def test_orquestracao_extracao_upsert(mock_sleep):
     
     # Verificações
     assert linhas == 2
-    mock_supabase.table.assert_called_with("discurso")
+    mock_supabase.table.assert_called_with("camara_discursos")
     mock_supabase.table().upsert.assert_called_once()
     
     args, _ = mock_supabase.table().upsert.call_args
@@ -171,7 +171,7 @@ def test_orquestracao_pipeline_completo(mock_sleep):
     """
     mock_supabase = MagicMock()
     # Simulando o banco retornando 2 deputados
-    mock_supabase.table().select().eq().execute.return_value = MagicMock(
+    mock_supabase.table().select().execute.return_value = MagicMock(
         data=[{"id": 1}, {"id": 2}]
     )
     

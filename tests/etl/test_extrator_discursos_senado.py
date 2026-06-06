@@ -14,8 +14,8 @@ from etl.extrator_discursos_senado import (
 @patch("etl.extrator_discursos_senado.httpx.get")
 def test_api_offset_e_headers(mock_get):
     """
-    Garante que o id_senador da base (ex: 1000150) tenha seu offset de 1.000.000
-    subtraído para o roteamento correto na API, e que o header JSON seja injetado.
+    Garante que o id_senador da base é passado para o roteamento 
+    correto na API, e que o header JSON seja injetado.
     """
     # Simulamos um retorno 200 HTTP com JSON vazio para avaliar apenas a URL/Requisição
     mock_response = MagicMock()
@@ -23,7 +23,7 @@ def test_api_offset_e_headers(mock_get):
     mock_response.json.return_value = {}
     mock_get.return_value = mock_response
 
-    id_senador_banco = 1000150
+    id_senador_banco = 150
     data_inicio = "2023-01-01"
     data_fim = "2023-12-31"
 
@@ -55,7 +55,7 @@ def test_api_retry_falhas(mock_get):
     # Simula 2 falhas (500 e 429) seguidas de 1 sucesso (200)
     mock_get.side_effect = [mock_resp_500, mock_resp_429, mock_resp_200]
     
-    status_code, payload = obter_discursos_senador_api(1000150, "2023-01-01", "2023-12-31")
+    status_code, payload = obter_discursos_senador_api(150, "2023-01-01", "2023-12-31")
     
     assert mock_get.call_count == 3
     assert status_code == 200
@@ -111,7 +111,7 @@ def test_html_falha_rede_critica(mock_get):
             }
         })
         
-        executar_extracao_senador(1000150, "2023-01-01", "2023-12-31", mock_supabase)
+        executar_extracao_senador(150, "2023-01-01", "2023-12-31", mock_supabase)
         
         args, _ = mock_supabase.table().upsert.call_args
         lote_enviado = args[0]
@@ -148,16 +148,16 @@ def test_orquestracao_extracao_senador(mock_api, mock_html, mock_sleep):
     # 3. Mock do Supabase
     mock_supabase = MagicMock()
     
-    linhas = executar_extracao_senador(1000150, "2023-01-01", "2023-12-31", mock_supabase)
+    linhas = executar_extracao_senador(150, "2023-01-01", "2023-12-31", mock_supabase)
     
     # Verifica orquestração (chamadas e rate limit)
-    mock_api.assert_called_once_with(1000150, "2023-01-01", "2023-12-31")
+    mock_api.assert_called_once_with(150, "2023-01-01", "2023-12-31")
     mock_html.assert_called_once_with("http://legis.senado.leg.br/texto")
     mock_sleep.assert_called()
     
     # Verifica o Upsert e a conformidade final
     assert linhas == 1
-    mock_supabase.table.assert_called_with("discurso")
+    mock_supabase.table.assert_called_with("senado_discursos")
     mock_supabase.table().upsert.assert_called_once()
     
     args, _ = mock_supabase.table().upsert.call_args
@@ -177,10 +177,10 @@ def test_orquestracao_pipeline_completo(mock_executar):
     
     # Mock do retorno da busca de senadores
     mock_response_politicos = MagicMock()
-    mock_response_politicos.data = [{"id": 1000150}, {"id": 1000151}]
+    mock_response_politicos.data = [{"id": 150}, {"id": 151}]
     
-    # Encadeamento do Supabase: table("politicos").select("id").eq("cargo", "Senador").execute()
-    mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_response_politicos
+    # Encadeamento do Supabase: table("senado_politicos").select("id").execute()
+    mock_supabase.table.return_value.select.return_value.execute.return_value = mock_response_politicos
     
     # Simulamos que a extração de cada senador rendeu 5 discursos (total 10)
     mock_executar.return_value = 5
@@ -189,8 +189,8 @@ def test_orquestracao_pipeline_completo(mock_executar):
     
     # Verifica se rodou para os 2 senadores
     assert mock_executar.call_count == 2
-    mock_executar.assert_any_call(1000150, "2023-01-01", "2023-12-31", mock_supabase)
-    mock_executar.assert_any_call(1000151, "2023-01-01", "2023-12-31", mock_supabase)
+    mock_executar.assert_any_call(150, "2023-01-01", "2023-12-31", mock_supabase)
+    mock_executar.assert_any_call(151, "2023-01-01", "2023-12-31", mock_supabase)
     
     # Verifica o Watermarker (Registro de Log)
     mock_supabase.table().insert.assert_called_once()

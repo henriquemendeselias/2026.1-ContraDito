@@ -138,7 +138,7 @@ def test_transformar_proposicao_sucesso_data_contract():
     
     chaves_exigidas = {
         "id", "proposicao_id", "id_camara", "id_votacao_camara", 
-        "id_senado", "id_votacao_senado", "tipo", "numero", "ano", 
+        "tipo", "numero", "ano", 
         "ementa", "data_votacao", "url_texto_inteiro", 
         "resumo_executivo", "embedding_resumo_executivo"
     }
@@ -146,4 +146,3 @@ def test_transformar_proposicao_sucesso_data_contract():
     
     assert resultado["proposicao_id"] == "pec_45_2019"
     assert resultado["id_camara"] == 2265213
-    assert resultado["id_senado"] is None, "A coluna do Senado deve nascer nula preparando o terreno."

@@ -9,8 +9,7 @@ def test_api_offset_e_schema():
     """
     Testa a requisição à API do Senado garantindo que:
     1. O header 'Accept: application/json' seja respeitado.
-    2. O ID retornado sofra o offset de +1.000.000 (ex: 500 vira 1000500).
-    3. Os campos básicos sejam mapeados para o schema correto do banco.
+    2. Os campos básicos sejam mapeados para o schema correto do banco.
     """
     url = "https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/57.json"
     
@@ -46,8 +45,8 @@ def test_api_offset_e_schema():
     resultado = extrair_senadores(url)
     
     assert len(resultado) == 1
-    # Garante o Offset de +1.000.000 no ID
-    assert resultado[0]["id"] == 1000500
+    # Garante o ID original da API
+    assert resultado[0]["id"] == 500
     # Garante a formatação do Schema
     assert resultado[0]["nome_civil"] == "Senador Teste Completo"
     assert resultado[0]["nome_urna"] == "Senador Teste"
@@ -92,7 +91,7 @@ def test_anomalia_dict_unico():
     
     resultado = extrair_senadores(url)
     assert len(resultado) == 1
-    assert resultado[0]["id"] == 1000099
+    assert resultado[0]["id"] == 99
 
 
 @respx.mock
@@ -275,6 +274,7 @@ def test_orquestracao_pipeline_completo(mock_sleep):
     executar_pipeline_senadores(mock_supabase)
     
     # Garante que o Supabase recebeu a inserção em lote e o log
+    mock_supabase.table.assert_any_call("senado_politicos")
     mock_supabase.table().upsert.assert_called_once()
     args_log, _ = mock_supabase.table().insert.call_args
     assert args_log[0]["linhas_afetadas"] == 1

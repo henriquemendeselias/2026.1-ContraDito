@@ -220,8 +220,8 @@ def test_orquestracao_pagina_upsert(mock_sleep):
     # Garante que ele leu a página corretamente e achou a próxima
     assert proxima_url == "https://dadosabertos.camara.leg.br/api/v2/deputados?idLegislatura=57&pagina=2"
     
-    # Garante que ele tentou salvar na tabela 'politicos' realizando um upsert
-    mock_supabase.table.assert_called_once_with("politicos")
+    # Garante que ele tentou salvar na tabela 'camara_politicos' realizando um upsert
+    mock_supabase.table.assert_called_once_with("camara_politicos")
     mock_supabase.table().upsert.assert_called_once()
     
     assert linhas == 1

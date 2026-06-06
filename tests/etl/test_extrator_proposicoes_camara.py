@@ -238,7 +238,7 @@ async def test_executar_pipeline_completo_integracao(mock_sleep):
     await executar_pipeline_completo(mock_supabase, data_inicio, data_fim)
     
     # Verifica se fez o upsert na tabela de proposições
-    mock_supabase.table.assert_any_call("proposicoes")
+    mock_supabase.table.assert_any_call("camara_proposicoes")
     mock_supabase.table().upsert.assert_called_once()
     
     # Verifica se os logs de auditoria foram salvos corretamente

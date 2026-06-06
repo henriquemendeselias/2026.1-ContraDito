@@ -56,7 +56,7 @@ def test_id_deterministico():
     O Hash precisa ser consistente sempre que rodar com os mesmos parâmetros
     para evitar duplicação no Bulk Upsert (idempotência garantida via UUID v5).
     """
-    id_senador = 1000150
+    id_senador = 150
     codigo_pronunciamento = "999888"
     
     hash_1 = gerar_id_discurso_senado(id_senador, codigo_pronunciamento)
@@ -82,7 +82,7 @@ def test_mapear_fallback_parser(mock_logger):
     }
     html_invalido = "<html><body><div class='layout-mudou'>Nada aqui</div></body></html>"
     
-    resultado = mapear_discurso_senado(id_senador=1000150, discurso_raw=raw_api, html_bruto=html_invalido)
+    resultado = mapear_discurso_senado(id_senador=150, discurso_raw=raw_api, html_bruto=html_invalido)
     
     # Asserts do Fallback
     assert resultado["texto_bruto"] == "[FALHA NO PARSER HTML]"
@@ -116,7 +116,7 @@ def test_mapear_sucesso_higienizacao():
     </html>
     """
     
-    resultado = mapear_discurso_senado(id_senador=1000150, discurso_raw=raw_api, html_bruto=html_valido)
+    resultado = mapear_discurso_senado(id_senador=150, discurso_raw=raw_api, html_bruto=html_valido)
     
     texto_esperado = "Sr. Presidente, defendo a aprovação da pauta de hoje. Muito obrigado."
     assert resultado["texto_bruto"] == texto_esperado
@@ -160,17 +160,17 @@ def test_mapear_fallback_estrategias():
     
     # 1. Teste da Estratégia 1 (ID textoIntegral)
     html_1 = "<html><body><div id='textoIntegral'>O SR. TESTE (PL - SP) - Este é o primeiro texto de teste longo.</div></body></html>"
-    resultado_1 = mapear_discurso_senado(1000150, raw_api, html_1)
+    resultado_1 = mapear_discurso_senado(150, raw_api, html_1)
     assert resultado_1["texto_bruto"] == "Este é o primeiro texto de teste longo."
 
     # 2. Teste da Estratégia 2 (Âncora de título)
     html_2 = "<html><body><div><h2>Texto integral</h2><p>O SR. TESTE - Este é o segundo texto longo.</p><p>Continuando.</p></div></body></html>"
-    resultado_2 = mapear_discurso_senado(1000150, raw_api, html_2)
+    resultado_2 = mapear_discurso_senado(150, raw_api, html_2)
     assert resultado_2["texto_bruto"] == "Este é o segundo texto longo. Continuando."
     
     # 3. Teste da Estratégia 3 (Varredura de parágrafos)
     html_3 = "<html><body><p>Menu Inútil</p><p>O SR. TESTE (PL - SP) - Este é o terceiro texto longo para validar.</p><p>Final.</p></body></html>"
-    resultado_3 = mapear_discurso_senado(1000150, raw_api, html_3)
+    resultado_3 = mapear_discurso_senado(150, raw_api, html_3)
     assert resultado_3["texto_bruto"] == "Este é o terceiro texto longo para validar. Final."
 
 

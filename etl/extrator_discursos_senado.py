@@ -31,10 +31,9 @@ def _fetch_api_senado_com_retry(url: str, headers: dict = None) -> httpx.Respons
 def obter_discursos_senador_api(id_senador_banco: int, data_inicio: str, data_fim: str) -> Tuple[int, Dict[str, Any]]:
     """
     Busca os discursos de um senador na API do Senado em uma janela de tempo.
-    Subtrai o offset de 1.000.000 do ID local e injeta o header para forçar o retorno em JSON.
+    Injeta o header para forçar o retorno em JSON.
     """
-    id_api = id_senador_banco - 1000000
-    url = f"https://legis.senado.leg.br/dadosabertos/senador/{id_api}/discursos?dataInicio={data_inicio}&dataFim={data_fim}"
+    url = f"https://legis.senado.leg.br/dadosabertos/senador/{id_senador_banco}/discursos?dataInicio={data_inicio}&dataFim={data_fim}"
     
     try:
         response = _fetch_api_senado_com_retry(url)
@@ -93,7 +92,7 @@ def executar_extracao_senador(id_senador_banco: int, data_inicio: str, data_fim:
         
     if lote_discursos:
         lote_deduplicado = list({d["id"]: d for d in lote_discursos}.values())
-        supabase_client.table("discurso").upsert(lote_deduplicado).execute()
+        supabase_client.table("senado_discursos").upsert(lote_deduplicado).execute()
         return len(lote_deduplicado)
         
     return 0
@@ -108,7 +107,7 @@ def executar_pipeline_completo(supabase_client: Any, data_inicio: str, data_fim:
     """
     total_linhas = 0
     try:
-        resposta = supabase_client.table("politicos").select("id").eq("cargo", "Senador").execute()
+        resposta = supabase_client.table("senado_politicos").select("id").execute()
         senadores = resposta.data or []
         
         for senador in senadores:

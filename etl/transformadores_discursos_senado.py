@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
-# Usamos o mesmo namespace da Câmara, já que os dados irão para a mesma tabela
+# Usamos o mesmo namespace da Câmara para manter o padrão de geração de UUID do projeto, embora agora os dados fiquem isolados.
 NAMESPACE_SENADO = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 def normalizar_payload_senado(status_code: int, dados_json: dict) -> list:

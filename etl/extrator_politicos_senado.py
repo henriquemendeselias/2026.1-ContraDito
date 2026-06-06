@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 def extrair_senadores(url: str) -> List[dict]:
     """
     Busca a lista de senadores na API do Senado (forçando JSON), processa os dados 
-    e aplica o offset no ID para evitar colisão com a Câmara dos Deputados.
     """
     dados_json = _fetch_com_retry(url, headers={"Accept": "application/json"})
     if not dados_json:
@@ -26,8 +25,7 @@ def extrair_senadores(url: str) -> List[dict]:
     resultados = []
     for senador in lista_parlamentares:
         identificacao = senador.get("IdentificacaoParlamentar", {})
-        id_original = int(identificacao.get("CodigoParlamentar", 0))
-        id_banco = id_original + 1000000
+        id_banco = int(identificacao.get("CodigoParlamentar", 0))
         
         status_mandato = "Inativo"
         eh_suplente = False
@@ -89,7 +87,7 @@ def executar_pipeline_senadores(supabase_client) -> None:
     try:
         resultados = extrair_senadores(url)
         if resultados:
-            supabase_client.table("politicos").upsert(resultados).execute()
+            supabase_client.table("senado_politicos").upsert(resultados).execute()
             total_linhas = len(resultados)
             print(f"Lote de {total_linhas} senadores enviado ao Supabase com sucesso.")
             

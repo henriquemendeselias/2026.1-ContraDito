@@ -8,7 +8,7 @@
 
 O sistema precisa extrair em massa Projetos de Lei (PLs) e Projetos de Emenda à Constituição (PECs) da Câmara dos Deputados que tiveram a sua primeira votação de mérito (texto-base) a partir de 01/01/2023. Essa extração é o pré-requisito fundamental para a futura coleta de votos nominais dos parlamentares.
 A API de Dados Abertos da Câmara não possui uma flag ou endpoint que filtre diretamente "proposições votadas no mérito" ou que cruze facilmente com o texto-base que foi de fato à votação. O uso ingênuo dos endpoints pode gerar o gargalo do "N+1" (requisições excessivas de histórico para dezenas de milhares de projetos), o que estoura o rate-limit do governo e inviabiliza cargas diárias incrementais (D-1). 
-Além disso, os projetos que tramitam nas duas Casas (Câmara e Senado) ganham IDs diferentes, criando um risco severo de duplicação ou orfandade de dados se não houver um design relacional inteligente e idempotente desde o momento zero.
+Além disso, os projetos que tramitam nas duas Casas (Câmara e Senado) ganham IDs diferentes, por isso salvaremos em tabelas diferentes. 
 
 ---
 
@@ -16,7 +16,7 @@ Além disso, os projetos que tramitam nas duas Casas (Câmara e Senado) ganham I
 
 Criar um script Python autônomo (Worker) focado em extrair estritamente PLs e PECs da Câmara. O script contornará as limitações da API usando duas vias de busca otimizadas: uma varredura ampla em janelas (Backfill) e uma busca cirúrgica pelas proposições movimentadas ontem (Incremental D-1).
 Para descobrir se o projeto foi à votação do mérito, o script adotará um "Ponto Cego Calculado": varrerá o endpoint cronológico `/tramitacoes` em busca de uma *whitelist* engessada de IDs de eventos (`codTipoTramitacao`: 231, 232, 233 e 1231). 
-O script salvará o metadado estruturado e o link estático original do PDF (`url_texto_inteiro`) em um banco Supabase utilizando Bulk Upsert e um UUID v5 sintético derivado da chave de negócio (ex: `pec_45_2019`). Esse modelo garante a rastreabilidade bicameral futura (preparando o terreno para o extrator do Senado) e blindagem contra duplicatas. Nenhuma extração do conteúdo do PDF ou parse de texto ocorrerá nesta etapa.
+O script salvará o metadado estruturado e o link estático original do PDF (`url_texto_inteiro`) na tabela `camara_proposicoes` do Supabase utilizando Bulk Upsert e um UUID v5 sintético derivado da chave de negócio (ex: `pec_45_2019`). Esse modelo garante a blindagem contra duplicatas em processamentos repetitivos do pipeline. Nenhuma extração do conteúdo do PDF ou parse de texto ocorrerá nesta etapa.
 
 ---
 
@@ -29,9 +29,8 @@ O script salvará o metadado estruturado e o link estático original do PDF (`ur
 5. Como **engenheiro de dados**, quero que, ao encontrar a data desse evento de votação principal, o script descarte silenciosamente a proposição se a data for anterior a 01/01/2023, mantendo apenas as de interesse.
 6. Como **arquiteto de software**, quero gerar a chave primária (`id`) utilizando um Hash Determinístico (UUID v5) baseado na concatenação exata do tipo, número e ano da proposição (ex: `"pec_45_2019"`), consolidando a Chave de Negócio Universal.
 7. Como **administrador de banco de dados**, quero salvar o `id_camara` (ID numérico interno, ex: 2265213) e o `id_votacao_camara` (ID da sessão) em colunas de restrição UNIQUE, provendo rastreabilidade para o futuro extrator de votos.
-8. Como **arquiteto de software**, quero que o schema já preveja as colunas `id_senado` e `id_votacao_senado` preenchidas como `NULL`, preparando a arquitetura de banco para a integração do extrator do Senado que fará upsert na mesma linha baseada no UUID.
-9. Como **analista de NLP**, quero que a URL original proveniente do endpoint primário da proposição seja extraída e salva como string na coluna `url_texto_inteiro`, servindo de metadado cru para download posterior em outro pipeline.
-10. Como **engenheiro de dados**, quero que o campo `ementa` seja obrigatoriamente coletado e inserido no banco de dados, funcionando como fallback de contexto textual seguro caso a extração do PDF falhe futuramente.
+8. Como **analista de NLP**, quero que a URL original proveniente do endpoint primário da proposição seja extraída e salva como string na coluna `url_texto_inteiro`, servindo de metadado cru para download posterior em outro pipeline.
+9. Como **engenheiro de dados**, quero que o campo `ementa` seja obrigatoriamente coletado e inserido no banco de dados, funcionando como fallback de contexto textual seguro caso a extração do PDF falhe futuramente.
 11. Como **engenheiro de dados**, quero que as requisições HTTP sejam encapsuladas com resiliência utilizando a biblioteca `tenacity` e `time.sleep`, para suportar instabilidades, timeouts e Erros 500 recorrentes da API governamental.
 12. Como **administrador do sistema**, quero que a inserção no Supabase seja feita via `Bulk Upsert` após a deduplicação em memória do lote de proposições, evitando falhas transacionais no banco (Erro 21000).
 13. Como **engenheiro de dados**, quero que o `watermarker` e o log de status na tabela `etl_logs` só sejam atualizados *após* a confirmação de sucesso do lote inteiro no Upsert, protegendo a integridade da carga em caso de crash do Worker.
@@ -56,8 +55,6 @@ O script salvará o metadado estruturado e o link estático original do PDF (`ur
   - `proposicao_id` (String, UNIQUE)
   - `id_camara` (Integer, UNIQUE, ID da API)
   - `id_votacao_camara` (String, UNIQUE, ID da sessão que validou o evento)
-  - `id_senado` (Integer, Nullable, preenchido como NULL neste escopo)
-  - `id_votacao_senado` (String, Nullable, preenchido como NULL neste escopo)
   - `tipo` (String)
   - `numero` (Integer)
   - `ano` (Integer)
@@ -83,7 +80,7 @@ O script salvará o metadado estruturado e o link estático original do PDF (`ur
 ### Integração e Comportamento
 - **Mocking da API:** Simular a resposta inicial do D-1 onde nenhuma PEC/PL foi movimentada (lista vazia). Validar se o Worker encerra graciosamente registrando "0 linhas afetadas" no log.
 - **Mocking de Rate-Limit:** Simular a resposta HTTP 503 e 429 do endpoint de tramitações. Assegurar que o algoritmo de backoff retenta a chamada antes de estourar a exceção geral do pipeline.
-- **Supabase Upsert Mock:** Simular a chamada ao cliente Supabase assegurando que o dicionário enviado contém a coluna `url_texto_inteiro` preservada como string simples e que os campos relativos ao Senado chegam explícitos com `None/null`.
+- **Supabase Upsert Mock:** Simular a chamada ao cliente Supabase assegurando que o dicionário enviado contém a coluna `url_texto_inteiro` preservada como string simples.
 
 ---
 

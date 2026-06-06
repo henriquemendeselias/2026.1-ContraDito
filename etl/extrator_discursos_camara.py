@@ -69,7 +69,7 @@ def executar_extracao_deputado(id_deputado: int, data_inicio: str, data_fim: str
     if lote_discursos:
         # Deduplicação: Mantém apenas um discurso por ID (evita erro 21000 ON CONFLICT do PostgreSQL)
         lote_deduplicado = list({d["id"]: d for d in lote_discursos}.values())
-        supabase.table("discurso").upsert(lote_deduplicado).execute()
+        supabase.table("camara_discursos").upsert(lote_deduplicado).execute()
         return len(lote_deduplicado)
 
     return 0
@@ -82,7 +82,7 @@ def executar_pipeline_completo(supabase: Any, data_inicio: str, data_fim: str) -
     2. Extrai os discursos de cada um na janela de tempo especificada (Backfill ou Incremental).
     3. Grava o log final de execução (Watermarker).
     """
-    resposta = supabase.table("politicos").select("id").eq("cargo", "Deputado Federal").execute()
+    resposta = supabase.table("camara_politicos").select("id").execute()
     deputados = resposta.data or []
     
     total_linhas = 0

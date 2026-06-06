@@ -30,7 +30,7 @@ A carga inicial (Backfill) consumirá janelas de 1 semestre, e a carga contínua
 7. Como **analista de dados (NLP)**, quero que os textos passem pelo Estágio 1 de higienização (BeautifulSoup), para remover marcações e decodificar qualquer entidade HTML (como `&#x97;`).
 8. Como **analista de dados (NLP)**, quero que os textos passem pelo Estágio 2 de higienização (Regex agressivo), para decepar cabeçalhos protocolares que não agregam valor (ex: `"O SR. AÉCIO NEVES (Bloco/PSDB - MG. Para discursar...) - Sr. Presidente..."`).
 9. Como **analista de dados (NLP)**, quero que os textos passem pelo Estágio 3, normalizando duplos espaços, quebras de linha e executando `strip()`, para enxugar o texto bruto final.
-10. Como **engenheiro de dados**, quero um comportamento de *Fallback* que garanta a completude: se a Regex do Estágio 2 falhar em fatiar o texto, o sistema não deve descartar o discurso; ele deve salvar o texto do Estágio 1 + 3 (sem HTML, com cabeçalho original) e disparar um `logger.warning`, garantindo retenção de 100% dos dados da câmara na tabela.
+10. Como **engenheiro de dados**, quero um comportamento de *Fallback* que garanta a completude: se a Regex do Estágio 2 falhar em fatiar o texto, o sistema não deve descartar o discurso; ele deve salvar o texto do Estágio 1 + 3 (sem HTML, com cabeçalho original) e disparar um `logger.warning`, garantindo retenção de 100% dos dados da câmara na tabela `camara_discursos`.
 11. Como **desenvolvedor**, quero que o contrato de dados gerado para o Bulk Upsert no banco siga estritamente as colunas acordadas no schema relacional da IA.
 12. Como **engenheiro de dados**, quero que o lote de discursos extraídos seja deduplicado em memória antes do envio ao banco, para evitar falhas de transação por colisão de chave primária (Erro 21000) no PostgreSQL.
 13. Como **engenheiro de software**, quero que o sistema detecte vazamentos binários (arquivos DOCX crus) vindos da API antes de tentar processar o HTML, descartando a sujeira pesada para evitar estouro de memória e crashes.
@@ -43,7 +43,7 @@ A carga inicial (Backfill) consumirá janelas de 1 semestre, e a carga contínua
 ## Implementation Decisions
 
 ### Eixo de Extração e Janelas Temporais
-- O script acessará inicialmente a tabela interna `politicos` do Supabase para coletar a lista de IDs oficiais a serem percorridos.
+- O script acessará inicialmente a tabela interna `camara_politicos` do Supabase para coletar a lista de IDs oficiais a serem percorridos.
 - Para cada deputado, a consulta à Câmara (`GET /discursos`) conterá os parâmetros `dataInicio` e `dataFim`.
 - Se no payload original houver paginação na tag `links`, o script deve seguir recursivamente as URLs em `rel="next"` até esgotar a página daquele deputado dentro do semestre/dia.
 - A execução será semestral para backfill e em D-1 contínuo via cron para o incremental diário.
@@ -103,7 +103,7 @@ O modelo do dicionário final para a lista inserida em lote no Supabase deverá 
 - O fatiamento pragmático deste texto em trechos de análise (Chunking).
 - A geração de Embeddings via IA baseada nesse discurso (OpenAI/Gemini/etc).
 - Inserção dos Embeddings na infraestrutura vetorial nativa (`pgvector`).
-- Alterações de schema das tabelas originais `politicos` ou scripts já validados de extração do perfil dos deputados/senadores.
+- Alterações de schema das tabelas originais `camara_politicos` ou scripts já validados de extração do perfil dos deputados.
 
 ---
 

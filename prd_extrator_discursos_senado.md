@@ -6,7 +6,7 @@
 
 ## Problem Statement
 
-O sistema precisa extrair em massa os discursos (pronunciamentos) dos senadores, seguindo o exato mesmo schema de dados (Data Contract) já validado para a Câmara dos Deputados, populando a mesma tabela `discursos` no Supabase.
+O sistema precisa extrair em massa os discursos (pronunciamentos) dos senadores, seguindo o exato mesmo schema de dados (Data Contract) já validado para a Câmara dos Deputados, populando a tabela específica `senado_discursos` no Supabase.
 A API de Dados Abertos do Senado Federal apresenta gargalos e comportamentos radicalmente diferentes da Câmara: o payload dos endpoints não entrega o texto integral do discurso (exigindo um Web Scraping complementar em N+1 requisições), a paginação é inexistente dentro de fatias de datas, a API frequentemente ignora os filtros de data passados na URL, as respostas JSON sofrem anomalias de formatação vindas do parser nativo de XML (além de comportamentos legados em janelas sem discursos, retornando cascas vazias ou HTTP 404), e o padrão de taquigrafia requer lógica de higienização própria.
 
 ---
@@ -14,14 +14,13 @@ A API de Dados Abertos do Senado Federal apresenta gargalos e comportamentos rad
 ## Solution
 
 Criar um script Python autônomo (Worker) irmão ao da Câmara (`extrator_discursos_senado.py`), mantendo a inversão do eixo de extração (iteração sobre senadores locais na janela de tempo). 
-O pipeline exigirá requisições N+1 para a raspagem em HTML das páginas do Senado, utilizando `tenacity` e `time.sleep` para proteção contra bloqueios de rede (WAF). Devido à anomalia da API, o script deverá filtrar manualmente as datas dos discursos antes de iniciar a raspagem. A inserção em banco continuará sendo via Bulk Upsert idempotente na tabela `discurso`, utilizando o `CodigoPronunciamento` nativo da API do Senado como semente do UUID v5. O pipeline de transformação isolará uma lógica dedicada de Regex e BeautifulSoup para a Casa.
+O pipeline exigirá requisições N+1 para a raspagem em HTML das páginas do Senado, utilizando `tenacity` e `time.sleep` para proteção contra bloqueios de rede (WAF). Devido à anomalia da API, o script deverá filtrar manualmente as datas dos discursos antes de iniciar a raspagem. A inserção em banco continuará sendo via Bulk Upsert idempotente na tabela `senado_discursos`, utilizando o `CodigoPronunciamento` nativo da API do Senado como semente do UUID v5. O pipeline de transformação isolará uma lógica dedicada de Regex e BeautifulSoup para a Casa.
 
 ---
 
 ## User Stories
 
 1. Como **engenheiro de dados**, quero manter o eixo invertido de busca, iterando apenas sobre os senadores mapeados na base local, consultando seus pronunciamentos em fatias temporais (Semestre para Backfill, D-1 para Incremental).
-2. Como **engenheiro de software**, quero que o script subtraia o offset de `1.000.000` do `politico_id` local durante a montagem da URL, garantindo o roteamento correto para a API governamental do Senado.
 3. Como **engenheiro de dados**, quero forçar o header `Accept: application/json` nas requisições HTTP, mas desejo que o código aplique um tratamento defensivo para garantir que chaves com um único discurso vindo do Senado (que retornam como `Dict` em vez de `List`) sejam sempre normalizadas para `List` antes da iteração.
 4. Como **arquiteto de dados**, quero que a chave primária (UUID v5) seja garantida determinística e sem colisões mediante a concatenação do `id_senador` com o `CodigoPronunciamento` fornecido pela API.
 5. Como **engenheiro de dados**, quero realizar uma segunda requisição HTTP (Scraping N+1) apontando para a `UrlTexto` de cada pronunciamento, a fim de extrair o `texto_bruto`, limitando a concorrência e respeitando pausas para não agredir a rede governamental.
@@ -40,8 +39,8 @@ O pipeline exigirá requisições N+1 para a raspagem em HTML das páginas do Se
 ## Implementation Decisions
 
 ### Eixo de Extração e Integração
-- Consulta base à tabela `politicos` (com filtro para 'Senador').
-- Geração da URL da API: `https://legis.senado.leg.br/dadosabertos/senador/{id_api}/discursos?dataInicio={inicio}&dataFim={fim}`. Onde `id_api = politico_id - 1000000`.
+- Consulta base à tabela `senado_politicos`.
+- Geração da URL da API: `https://legis.senado.leg.br/dadosabertos/senador/{id_senador}/discursos?dataInicio={inicio}&dataFim={fim}`.
 - Sem lógica de links `rel="next"`, uma vez que o Senado não pagina os retornos atrelados a blocos de data.
 - Anomalia JSON/XML (Root Keys): Devido a mudanças estruturais da API, a normalização deve prever tanto a raiz `"PesquisaPronunciamentos"` quanto o fallback legado `"DiscursosParlamentar" -> "Parlamentar"`. Além disso, implementar verificação `if isinstance(pronunciamentos, dict): pronunciamentos = [pronunciamentos]`.
 - Cenários sem Discursos: Capturar explicitamente HTTP 404/204 ou JSONs vazios na chave principal e retornar `[]` ignorando falhas, assegurando avanço do loop.
@@ -90,4 +89,4 @@ O pipeline exigirá requisições N+1 para a raspagem em HTML das páginas do Se
 
 ## Further Notes
 
-- O código-fonte acompanhará o mesmo esqueleto e assinaturas do pipeline irmão, injetando ao final na tabela `discurso` e finalizando o ciclo gravando métricas de orquestração na tabela `etl_logs` (registrando `status`, a somatória de `linhas_afetadas` processadas e o `detalhe_erro` caso o processo aborte).
+- O código-fonte acompanhará o mesmo esqueleto e assinaturas do pipeline irmão, injetando ao final na tabela `senado_discursos` e finalizando o ciclo gravando métricas de orquestração na tabela `etl_logs` (registrando `status`, a somatória de `linhas_afetadas` processadas e o `detalhe_erro` caso o processo aborte).
