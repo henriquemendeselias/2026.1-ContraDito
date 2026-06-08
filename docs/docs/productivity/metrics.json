@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-07T04:49:19Z",
+  "generated_at": "2026-06-08T04:54:54Z",
   "repository": "unb-mds/2026.1-ContraDito",
   "issues_per_week": [
     {
@@ -49,7 +49,7 @@
     },
     {
       "week": "2026-W23",
-      "opened": 3,
+      "opened": 4,
       "closed": 7
     }
   ],
@@ -585,9 +585,9 @@
     {
       "username": "jot4-ge",
       "name": "jot4-ge",
-      "opened": 13,
+      "opened": 14,
       "closed": 7,
-      "total": 20
+      "total": 21
     },
     {
       "username": "luizhtmoreira",
@@ -811,7 +811,7 @@
       "prs_opened": 10,
       "prs_reviewed": 5,
       "prs_merged": 9,
-      "issues_opened": 13,
+      "issues_opened": 14,
       "issues_closed": 7
     },
     {
