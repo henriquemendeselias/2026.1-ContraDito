@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-10T04:38:15Z",
+  "generated_at": "2026-06-11T04:50:29Z",
   "repository": "unb-mds/2026.1-ContraDito",
   "issues_per_week": [
     {
@@ -64,7 +64,7 @@
     },
     {
       "range": "51-100",
-      "count": 110
+      "count": 112
     },
     {
       "range": "101-200",
@@ -111,9 +111,27 @@
     {
       "week": "2026-W22",
       "count": 0
+    },
+    {
+      "week": "2026-W23",
+      "count": 1
+    },
+    {
+      "week": "2026-W24",
+      "count": 0
     }
   ],
   "commit_heatmap": [
+    {
+      "day": 3,
+      "hour": 1,
+      "count": 2
+    },
+    {
+      "day": 4,
+      "hour": 21,
+      "count": 3
+    },
     {
       "day": 1,
       "hour": 20,
@@ -212,11 +230,6 @@
     {
       "day": 5,
       "hour": 1,
-      "count": 2
-    },
-    {
-      "day": 4,
-      "hour": 21,
       "count": 2
     },
     {
@@ -475,11 +488,6 @@
       "count": 4
     },
     {
-      "day": 3,
-      "hour": 1,
-      "count": 1
-    },
-    {
       "day": 2,
       "hour": 10,
       "count": 1
@@ -504,7 +512,7 @@
     {
       "username": "henriquemendeselias",
       "name": "henriquemendeselias",
-      "commits": 80
+      "commits": 81
     },
     {
       "username": "matheus0346",
@@ -522,14 +530,14 @@
       "commits": 21
     },
     {
-      "username": "G2SBiell",
-      "name": "G2SBiell",
+      "username": "lucasaraujoszz",
+      "name": "lucasaraujoszz",
       "commits": 10
     },
     {
-      "username": "lucasaraujoszz",
-      "name": "lucasaraujoszz",
-      "commits": 9
+      "username": "G2SBiell",
+      "name": "G2SBiell",
+      "commits": 10
     },
     {
       "username": "github-actions[bot]",
@@ -657,9 +665,18 @@
     {
       "week": "2026-W22",
       "avg_hours": 2.4
+    },
+    {
+      "week": "2026-W24",
+      "avg_hours": 123.6
     }
   ],
   "code_review_matrix": [
+    {
+      "reviewer": "henriquemendeselias",
+      "author": "lucasaraujoszz",
+      "approved_prs": 1
+    },
     {
       "reviewer": "jot4-ge",
       "author": "henriquemendeselias",
@@ -688,8 +705,8 @@
   "code_churn_per_week": [
     {
       "week": "2026-W20",
-      "additions": 1740,
-      "deletions": 145,
+      "additions": 334,
+      "deletions": 142,
       "modifications": 0
     },
     {
@@ -703,12 +720,28 @@
       "additions": 16891,
       "deletions": 4427,
       "modifications": 0
+    },
+    {
+      "week": "2026-W23",
+      "additions": 150,
+      "deletions": 68,
+      "modifications": 0
+    },
+    {
+      "week": "2026-W24",
+      "additions": 150,
+      "deletions": 68,
+      "modifications": 0
     }
   ],
   "commit_types_distribution": [
     {
       "type": "other",
-      "count": 114
+      "count": 115
+    },
+    {
+      "type": "chore",
+      "count": 6
     },
     {
       "type": "docs",
@@ -717,10 +750,6 @@
     {
       "type": "fix",
       "count": 9
-    },
-    {
-      "type": "chore",
-      "count": 5
     },
     {
       "type": "feat",
@@ -787,10 +816,10 @@
     {
       "username": "henriquemendeselias",
       "name": "henriquemendeselias",
-      "commits": 80,
+      "commits": 81,
       "prs_opened": 19,
-      "prs_reviewed": 0,
-      "prs_merged": 35,
+      "prs_reviewed": 1,
+      "prs_merged": 36,
       "issues_opened": 21,
       "issues_closed": 54
     },
@@ -825,6 +854,16 @@
       "issues_closed": 8
     },
     {
+      "username": "lucasaraujoszz",
+      "name": "lucasaraujoszz",
+      "commits": 10,
+      "prs_opened": 8,
+      "prs_reviewed": 0,
+      "prs_merged": 0,
+      "issues_opened": 10,
+      "issues_closed": 1
+    },
+    {
       "username": "G2SBiell",
       "name": "G2SBiell",
       "commits": 10,
@@ -832,16 +871,6 @@
       "prs_reviewed": 0,
       "prs_merged": 1,
       "issues_opened": 11,
-      "issues_closed": 1
-    },
-    {
-      "username": "lucasaraujoszz",
-      "name": "lucasaraujoszz",
-      "commits": 9,
-      "prs_opened": 8,
-      "prs_reviewed": 0,
-      "prs_merged": 0,
-      "issues_opened": 10,
       "issues_closed": 1
     },
     {
@@ -925,6 +954,16 @@
       "week": "2026-W22",
       "avg_chars": 54.7,
       "total_commits": 19
+    },
+    {
+      "week": "2026-W23",
+      "avg_chars": 62.0,
+      "total_commits": 1
+    },
+    {
+      "week": "2026-W24",
+      "avg_chars": 64.0,
+      "total_commits": 1
     }
   ]
 }
