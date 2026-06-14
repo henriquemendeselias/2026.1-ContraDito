@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-13T04:41:35Z",
+  "generated_at": "2026-06-14T02:38:58Z",
   "repository": "unb-mds/2026.1-ContraDito",
   "issues_per_week": [
     {
@@ -854,16 +854,6 @@
       "issues_closed": 8
     },
     {
-      "username": "lucasaraujoszz",
-      "name": "lucasaraujoszz",
-      "commits": 10,
-      "prs_opened": 8,
-      "prs_reviewed": 0,
-      "prs_merged": 0,
-      "issues_opened": 10,
-      "issues_closed": 1
-    },
-    {
       "username": "G2SBiell",
       "name": "G2SBiell",
       "commits": 10,
@@ -871,6 +861,16 @@
       "prs_reviewed": 0,
       "prs_merged": 1,
       "issues_opened": 11,
+      "issues_closed": 1
+    },
+    {
+      "username": "lucasaraujoszz",
+      "name": "lucasaraujoszz",
+      "commits": 10,
+      "prs_opened": 8,
+      "prs_reviewed": 0,
+      "prs_merged": 0,
+      "issues_opened": 10,
       "issues_closed": 1
     },
     {
