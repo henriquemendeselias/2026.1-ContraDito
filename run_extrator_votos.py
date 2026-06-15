@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 from etl.extrator_votos_camara import executar_pipeline_votos_camara
-# from etl.extrator_votos_senado import executar_pipeline_votos_senado
+from etl.extrator_votos_senado import executar_pipeline_votos_senado
 
 # Força o logger do terminal a exibir o horário em UTC (Internacional)
 logging.Formatter.converter = time.gmtime
@@ -25,15 +25,17 @@ if not url or not key:
 
 supabase: Client = create_client(url, key)
 
-if __name__ == "__main__":
+async def main():
     # Permite passar um limite via linha de comando para testes. Ex: python run_extrator_votos.py 10
     limite = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else None
     msg_limite = f" (Amostra de {limite} registros)" if limite else " (Carga Completa)"
     
     logging.info(f"Iniciando extração de votos nominais da Câmara{msg_limite}...")
-    asyncio.run(executar_pipeline_votos_camara(supabase, limite_amostral=limite))
+    await executar_pipeline_votos_camara(supabase, limite_amostral=limite)
     
-    # logging.info("Iniciando extração de votos nominais do Senado...")
-    # executar_pipeline_votos_senado(supabase)
+    logging.info(f"Iniciando extração de votos nominais do Senado{msg_limite}...")
+    await executar_pipeline_votos_senado(supabase, limite_amostral=limite)
     
+if __name__ == "__main__":
+    asyncio.run(main())
     logging.info("Extração de Votos do Congresso Nacional finalizada! Verifique as tabelas de votos e 'etl_logs' no Supabase.")
