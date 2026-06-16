@@ -1,12 +1,7 @@
 {
-  "generated_at": "2026-06-15T05:19:47Z",
+  "generated_at": "2026-06-16T05:23:14Z",
   "repository": "unb-mds/2026.1-ContraDito",
   "issues_per_week": [
-    {
-      "week": "2026-W15",
-      "opened": 12,
-      "closed": 13
-    },
     {
       "week": "2026-W16",
       "opened": 6,
@@ -51,6 +46,11 @@
       "week": "2026-W24",
       "opened": 1,
       "closed": 1
+    },
+    {
+      "week": "2026-W25",
+      "opened": 3,
+      "closed": 2
     }
   ],
   "commit_message_histogram": [
@@ -590,9 +590,9 @@
     {
       "username": "henriquemendeselias",
       "name": "henriquemendeselias",
-      "opened": 21,
-      "closed": 54,
-      "total": 75
+      "opened": 24,
+      "closed": 56,
+      "total": 80
     },
     {
       "username": "jot4-ge",
@@ -772,11 +772,6 @@
   ],
   "velocity": [
     {
-      "week": "2026-W15",
-      "issues_closed": 13,
-      "rolling_avg": 7.0
-    },
-    {
       "week": "2026-W16",
       "issues_closed": 6,
       "rolling_avg": 6.8
@@ -820,6 +815,11 @@
       "week": "2026-W24",
       "issues_closed": 1,
       "rolling_avg": 3.8
+    },
+    {
+      "week": "2026-W25",
+      "issues_closed": 2,
+      "rolling_avg": 2.5
     }
   ],
   "individual_stats": [
@@ -830,8 +830,8 @@
       "prs_opened": 19,
       "prs_reviewed": 1,
       "prs_merged": 36,
-      "issues_opened": 21,
-      "issues_closed": 54
+      "issues_opened": 24,
+      "issues_closed": 56
     },
     {
       "username": "matheus0346",
