@@ -3,7 +3,9 @@ import sys
 import logging
 import time
 import argparse
+
 from dotenv import load_dotenv
+from qdrant_client import QdrantClient
 from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
 
@@ -14,20 +16,30 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 load_dotenv()
 
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+QDRANT_URL = os.getenv("QDRANT_URL")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 
-if not url or not key:
-    raise ValueError("Variáveis SUPABASE_URL e SUPABASE_KEY não encontradas no ambiente.")
+for var, nome in [
+    (SUPABASE_URL, "SUPABASE_URL"),
+    (SUPABASE_KEY, "SUPABASE_KEY"),
+    (QDRANT_URL, "QDRANT_URL"),
+    (QDRANT_API_KEY, "QDRANT_API_KEY"),
+]:
+    if not var:
+        logging.error(f"{nome} precisa estar definida no .env")
+        sys.exit(1)
 
-supabase: Client = create_client(url, key)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Chunking e vetorização de discursos da Câmara.")
     parser.add_argument("--chunk_size", type=int, default=1000, help="Tamanho máximo de cada chunk em caracteres.")
     parser.add_argument("--overlap", type=int, default=200, help="Sobreposição entre chunks consecutivos em caracteres.")
-    parser.add_argument("--limite", type=int, default=None, help="Processar no máximo N discursos (útil para testes).")
+    parser.add_argument("--limite", type=int, default=None, help="Processar no máximo N discursos.")
     return parser.parse_args()
 
 
@@ -43,6 +55,7 @@ if __name__ == "__main__":
     total = executar_pipeline_chunking(
         supabase=supabase,
         modelo=modelo,
+        qdrant_client=qdrant_client,
         chunk_size=args.chunk_size,
         chunk_overlap=args.overlap,
         limite=args.limite,
