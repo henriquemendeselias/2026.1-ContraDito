@@ -6,4 +6,5 @@ langchain-text-splitters
 fastapi
 uvicorn
 pdfplumber
-groq
+google-genai
+qdrant-client

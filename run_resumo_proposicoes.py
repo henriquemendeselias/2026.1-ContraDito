@@ -4,13 +4,11 @@ import asyncio
 import logging
 import time
 import argparse
-
 from dotenv import load_dotenv
-from groq import Groq
-from supabase import create_client, Client
-from qdrant_client import QdrantClient
 from google import genai
-
+from groq import Groq
+from qdrant_client import QdrantClient
+from supabase import create_client, Client
 from etl.pipeline_resumo_proposicoes import executar_pipeline_resumo
 from etl.pipeline_resumo_senado import executar_pipeline_resumo_senado
 from utils.motor_nlp import MotorNLP
@@ -56,7 +54,6 @@ async def main():
         if not groq_key:
             logging.error("GROQ_API_KEY precisa estar definida para processar a Câmara.")
             sys.exit(1)
-            
         groq_client = Groq(api_key=groq_key)
         logging.info(f"--- Iniciando pipeline da Câmara (limite={args.limite}) ---")
         total_camara = await executar_pipeline_resumo(supabase, motor_nlp, groq_client, limite=args.limite)
@@ -70,7 +67,13 @@ async def main():
         gemini_client = genai.Client(api_key=gemini_key)
         qdrant_client = obter_qdrant_client()
         logging.info(f"--- Iniciando pipeline do Senado [Dual-Write] (limite={args.limite}) ---")
-        total_senado = await executar_pipeline_resumo_senado(supabase, qdrant_client, motor_nlp, gemini_client, limite=args.limite)
+        total_senado = await executar_pipeline_resumo_senado(
+            supabase_client=supabase,
+            qdrant_client=qdrant_client,
+            motor_nlp=motor_nlp,
+            gemini_client=gemini_client,
+            limite=args.limite
+        )
 
     logging.info(f"Pipelines finalizados! Câmara: {total_camara} | Senado: {total_senado} proposições processadas.")
 

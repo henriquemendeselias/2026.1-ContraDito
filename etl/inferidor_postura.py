@@ -3,10 +3,13 @@ import json
 import logging
 import re
 
-from groq import Groq
+from google import genai
+from google.genai import types
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger(__name__)
+
+_MODEL = "gemini-2.5-flash-lite"
 
 _VOTOS_INVALIDOS = {"AUSENTE", "ABSTENÇÃO", "NÃO COMPARECEU", "ART. 17", "OBSTRUÇÃO"}
 
@@ -29,6 +32,8 @@ Analise se os discursos indicam que o parlamentar deveria ser FAVORÁVEL ou CONT
   "justificativa": "Explicação objetiva em 2-3 frases baseada nos discursos acima."
 }}"""
 
+_CONFIG = types.GenerateContentConfig(temperature=0.1)
+
 
 def _parsear_json(texto: str) -> dict:
     match = re.search(r"\{.*?\}", texto, re.DOTALL)
@@ -42,20 +47,20 @@ def _parsear_json(texto: str) -> dict:
     wait=wait_exponential(multiplier=1, min=2, max=10),
     reraise=True,
 )
-def _chamar_groq(groq_client: Groq, resumo: str, chunks_texto: str) -> dict:
-    response = groq_client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": _PROMPT.format(resumo=resumo, chunks=chunks_texto)}],
-        temperature=0.1,
-        max_tokens=300,
+def _chamar_gemini(gemini_client: genai.Client, resumo: str, chunks_texto: str) -> dict:
+    prompt = _PROMPT.format(resumo=resumo, chunks=chunks_texto)
+    response = gemini_client.models.generate_content(
+        model=_MODEL,
+        contents=prompt,
+        config=_CONFIG,
     )
-    return _parsear_json(response.choices[0].message.content)
+    return _parsear_json(response.text)
 
 
 async def inferir_postura(
     resumo_proposicao: str,
     chunks: list[str],
-    groq_client: Groq,
+    gemini_client: genai.Client,
 ) -> dict | None:
     """
     Infere a postura esperada do parlamentar (FAVORÁVEL/CONTRÁRIO) com base
@@ -66,7 +71,7 @@ async def inferir_postura(
         return None
 
     chunks_texto = "\n\n---\n\n".join(f"[{i+1}] {c}" for i, c in enumerate(chunks))
-    return await asyncio.to_thread(_chamar_groq, groq_client, resumo_proposicao, chunks_texto)
+    return await asyncio.to_thread(_chamar_gemini, gemini_client, resumo_proposicao, chunks_texto)
 
 
 def calcular_coerencia(voto_oficial: str, postura_inferida: str) -> bool | None:
