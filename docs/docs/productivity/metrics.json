@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-16T05:23:14Z",
+  "generated_at": "2026-06-17T05:02:32Z",
   "repository": "unb-mds/2026.1-ContraDito",
   "issues_per_week": [
     {
@@ -49,7 +49,7 @@
     },
     {
       "week": "2026-W25",
-      "opened": 3,
+      "opened": 4,
       "closed": 2
     }
   ],
@@ -60,11 +60,11 @@
     },
     {
       "range": "21-50",
-      "count": 59
+      "count": 66
     },
     {
       "range": "51-100",
-      "count": 113
+      "count": 126
     },
     {
       "range": "101-200",
@@ -114,7 +114,7 @@
     },
     {
       "week": "2026-W23",
-      "count": 1
+      "count": 7
     },
     {
       "week": "2026-W24",
@@ -127,8 +127,43 @@
   ],
   "commit_heatmap": [
     {
+      "day": 2,
+      "hour": 2,
+      "count": 2
+    },
+    {
+      "day": 2,
+      "hour": 1,
+      "count": 4
+    },
+    {
+      "day": 1,
+      "hour": 17,
+      "count": 5
+    },
+    {
+      "day": 1,
+      "hour": 16,
+      "count": 6
+    },
+    {
+      "day": 1,
+      "hour": 14,
+      "count": 2
+    },
+    {
+      "day": 1,
+      "hour": 13,
+      "count": 2
+    },
+    {
       "day": 0,
       "hour": 1,
+      "count": 3
+    },
+    {
+      "day": 6,
+      "hour": 22,
       "count": 3
     },
     {
@@ -143,18 +178,43 @@
     },
     {
       "day": 1,
-      "hour": 20,
+      "hour": 18,
+      "count": 15
+    },
+    {
+      "day": 4,
+      "hour": 4,
       "count": 1
     },
     {
-      "day": 1,
-      "hour": 14,
-      "count": 1
+      "day": 3,
+      "hour": 4,
+      "count": 4
     },
     {
-      "day": 1,
+      "day": 2,
       "hour": 13,
       "count": 1
+    },
+    {
+      "day": 2,
+      "hour": 12,
+      "count": 3
+    },
+    {
+      "day": 2,
+      "hour": 11,
+      "count": 1
+    },
+    {
+      "day": 2,
+      "hour": 4,
+      "count": 3
+    },
+    {
+      "day": 1,
+      "hour": 20,
+      "count": 2
     },
     {
       "day": 1,
@@ -209,11 +269,6 @@
     {
       "day": 6,
       "hour": 23,
-      "count": 2
-    },
-    {
-      "day": 6,
-      "hour": 22,
       "count": 2
     },
     {
@@ -258,11 +313,6 @@
     },
     {
       "day": 3,
-      "hour": 4,
-      "count": 3
-    },
-    {
-      "day": 3,
       "hour": 0,
       "count": 3
     },
@@ -298,38 +348,8 @@
     },
     {
       "day": 2,
-      "hour": 12,
-      "count": 2
-    },
-    {
-      "day": 2,
       "hour": 3,
       "count": 2
-    },
-    {
-      "day": 2,
-      "hour": 2,
-      "count": 1
-    },
-    {
-      "day": 2,
-      "hour": 1,
-      "count": 3
-    },
-    {
-      "day": 1,
-      "hour": 18,
-      "count": 9
-    },
-    {
-      "day": 1,
-      "hour": 17,
-      "count": 4
-    },
-    {
-      "day": 1,
-      "hour": 16,
-      "count": 5
     },
     {
       "day": 1,
@@ -389,11 +409,6 @@
     {
       "day": 2,
       "hour": 16,
-      "count": 2
-    },
-    {
-      "day": 2,
-      "hour": 4,
       "count": 2
     },
     {
@@ -516,22 +531,22 @@
     {
       "username": "henriquemendeselias",
       "name": "henriquemendeselias",
-      "commits": 81
+      "commits": 83
     },
     {
       "username": "matheus0346",
       "name": "matheus0346",
+      "commits": 33
+    },
+    {
+      "username": "luizhtmoreira",
+      "name": "luizhtmoreira",
       "commits": 30
     },
     {
       "username": "jot4-ge",
       "name": "jot4-ge",
-      "commits": 22
-    },
-    {
-      "username": "luizhtmoreira",
-      "name": "luizhtmoreira",
-      "commits": 21
+      "commits": 24
     },
     {
       "username": "lucasaraujoszz",
@@ -542,6 +557,11 @@
       "username": "G2SBiell",
       "name": "G2SBiell",
       "commits": 10
+    },
+    {
+      "username": "actions-user",
+      "name": "actions-user",
+      "commits": 4
     },
     {
       "username": "github-actions[bot]",
@@ -566,13 +586,13 @@
       "prs_opened": 13
     },
     {
-      "username": "luizhtmoreira",
-      "name": "luizhtmoreira",
-      "prs_opened": 10
-    },
-    {
       "username": "jot4-ge",
       "name": "jot4-ge",
+      "prs_opened": 12
+    },
+    {
+      "username": "luizhtmoreira",
+      "name": "luizhtmoreira",
       "prs_opened": 10
     },
     {
@@ -597,9 +617,9 @@
     {
       "username": "jot4-ge",
       "name": "jot4-ge",
-      "opened": 14,
+      "opened": 15,
       "closed": 7,
-      "total": 21
+      "total": 22
     },
     {
       "username": "luizhtmoreira",
@@ -673,6 +693,10 @@
     {
       "week": "2026-W24",
       "avg_hours": 123.6
+    },
+    {
+      "week": "2026-W25",
+      "avg_hours": 105.0
     }
   ],
   "code_review_matrix": [
@@ -708,62 +732,60 @@
   ],
   "code_churn_per_week": [
     {
-      "week": "2026-W20",
-      "additions": 331,
-      "deletions": 139,
-      "modifications": 0
-    },
-    {
       "week": "2026-W21",
-      "additions": 11033,
-      "deletions": 792,
+      "additions": 4225,
+      "deletions": 125,
       "modifications": 0
     },
     {
       "week": "2026-W22",
-      "additions": 16891,
-      "deletions": 4427,
+      "additions": 27584,
+      "deletions": 5443,
       "modifications": 0
     },
     {
       "week": "2026-W23",
-      "additions": 150,
-      "deletions": 68,
+      "additions": 3547,
+      "deletions": 2241,
       "modifications": 0
     },
     {
       "week": "2026-W24",
-      "additions": 150,
+      "additions": 181,
       "deletions": 68,
       "modifications": 0
     },
     {
       "week": "2026-W25",
-      "additions": 28,
-      "deletions": 17,
+      "additions": 4069,
+      "deletions": 2285,
       "modifications": 0
     }
   ],
   "commit_types_distribution": [
     {
-      "type": "docs",
-      "count": 26
-    },
-    {
       "type": "other",
-      "count": 115
+      "count": 121
     },
     {
       "type": "chore",
-      "count": 6
+      "count": 15
+    },
+    {
+      "type": "test",
+      "count": 1
+    },
+    {
+      "type": "docs",
+      "count": 27
+    },
+    {
+      "type": "feat",
+      "count": 25
     },
     {
       "type": "fix",
       "count": 9
-    },
-    {
-      "type": "feat",
-      "count": 22
     },
     {
       "type": "refactor",
@@ -826,17 +848,17 @@
     {
       "username": "henriquemendeselias",
       "name": "henriquemendeselias",
-      "commits": 81,
+      "commits": 83,
       "prs_opened": 19,
       "prs_reviewed": 1,
-      "prs_merged": 36,
+      "prs_merged": 38,
       "issues_opened": 24,
       "issues_closed": 56
     },
     {
       "username": "matheus0346",
       "name": "matheus0346",
-      "commits": 30,
+      "commits": 33,
       "prs_opened": 13,
       "prs_reviewed": 0,
       "prs_merged": 6,
@@ -844,24 +866,24 @@
       "issues_closed": 4
     },
     {
-      "username": "jot4-ge",
-      "name": "jot4-ge",
-      "commits": 22,
-      "prs_opened": 10,
-      "prs_reviewed": 5,
-      "prs_merged": 9,
-      "issues_opened": 14,
-      "issues_closed": 7
-    },
-    {
       "username": "luizhtmoreira",
       "name": "luizhtmoreira",
-      "commits": 21,
+      "commits": 30,
       "prs_opened": 10,
       "prs_reviewed": 0,
       "prs_merged": 9,
       "issues_opened": 11,
       "issues_closed": 8
+    },
+    {
+      "username": "jot4-ge",
+      "name": "jot4-ge",
+      "commits": 24,
+      "prs_opened": 12,
+      "prs_reviewed": 5,
+      "prs_merged": 10,
+      "issues_opened": 15,
+      "issues_closed": 7
     },
     {
       "username": "lucasaraujoszz",
@@ -882,6 +904,16 @@
       "prs_merged": 1,
       "issues_opened": 12,
       "issues_closed": 1
+    },
+    {
+      "username": "actions-user",
+      "name": "actions-user",
+      "commits": 4,
+      "prs_opened": 0,
+      "prs_reviewed": 0,
+      "prs_merged": 0,
+      "issues_opened": 0,
+      "issues_closed": 0
     },
     {
       "username": "github-actions[bot]",
@@ -962,23 +994,23 @@
     },
     {
       "week": "2026-W22",
-      "avg_chars": 54.7,
-      "total_commits": 19
+      "avg_chars": 51.2,
+      "total_commits": 26
     },
     {
       "week": "2026-W23",
-      "avg_chars": 62.0,
-      "total_commits": 1
+      "avg_chars": 56.6,
+      "total_commits": 7
     },
     {
       "week": "2026-W24",
-      "avg_chars": 64.0,
-      "total_commits": 1
+      "avg_chars": 62.0,
+      "total_commits": 2
     },
     {
       "week": "2026-W25",
-      "avg_chars": 70.0,
-      "total_commits": 1
+      "avg_chars": 61.4,
+      "total_commits": 7
     }
   ]
 }
