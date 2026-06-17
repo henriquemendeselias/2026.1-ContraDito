@@ -50,15 +50,70 @@ export default function HomePage() {
     <div className="pt-14 min-h-screen">
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-10 text-center">
-        <h1 className="font-display font-bold text-bright leading-[1.05] text-5xl sm:text-6xl md:text-[5.5rem]">
+        <div className="inline-flex flex-col items-center gap-2 mb-8">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-dim">
+            Câmara · Senado · Brasil
+          </p>
+          <div className="font-display font-black text-[3.5rem] sm:text-[5rem] md:text-[7rem] leading-none tracking-tight">
+            <span className="text-bright">CONTRA</span><span className="text-coherent italic font-normal">dito</span>
+          </div>
+          <div className="flex items-center gap-3 mt-1">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-rim" />
+            <p className="text-[10px] uppercase tracking-[0.3em] text-dim">
+              transparência parlamentar via IA
+            </p>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-rim" />
+          </div>
+        </div>
+
+        <h1 className="font-display font-bold text-bright leading-[1.05] text-4xl sm:text-5xl md:text-[4.5rem]">
           O que foi{" "}
           <span className="italic font-normal text-mid">dito</span>{" "}
           <span className="text-coherent">vs.</span>{" "}
           realidade
         </h1>
-        <p className="mt-4 text-[11px] tracking-[0.25em] uppercase text-dim">
-          Transparência com Inteligência Artificial
-        </p>
+      </section>
+
+      {/* How it works */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="glass rounded-xl p-6 space-y-3">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-pulse">01</p>
+            <h3 className="font-display text-lg font-bold text-bright leading-snug">
+              Discurso<br />
+              <span className="italic font-normal text-mid">encontra</span> voto
+            </h3>
+            <p className="text-sm text-mid leading-relaxed">
+              A IA compara o que cada parlamentar declarou em plenário com o voto
+              que registrou nas mesmas proposições — cruzando texto e dado oficial.
+            </p>
+          </div>
+
+          <div className="glass rounded-xl p-6 space-y-3">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-coherent">02</p>
+            <h3 className="font-display text-lg font-bold text-bright leading-snug">
+              Score de<br />
+              <span className="italic font-normal text-mid">Coerência</span>
+            </h3>
+            <p className="text-sm text-mid leading-relaxed">
+              Calculado sobre os votos válidos — ausências e abstenções ficam de
+              fora. Cada votação analisada conta: votos alinhados ao discurso
+              sobem o score, contradições o reduzem.
+            </p>
+          </div>
+
+          <div className="glass rounded-xl p-6 space-y-3">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-aurum">03</p>
+            <h3 className="font-display text-lg font-bold text-bright leading-snug">
+              Transparência,<br />
+              <span className="italic font-normal text-mid">não veredicto</span>
+            </h3>
+            <p className="text-sm text-mid leading-relaxed">
+              O ContraDito organiza informação pública num só lugar. O julgamento
+              é seu — a plataforma apenas torna o contraste visível.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Directory */}
