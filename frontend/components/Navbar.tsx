@@ -14,7 +14,7 @@ export function Navbar() {
             href="/comparacao"
             className="px-4 py-1.5 text-sm text-mid hover:text-bright border border-white/10 rounded-full transition-colors hover:border-white/20"
           >
-            Ringue
+            Comparação
           </Link>
           <Link
             href="/"
