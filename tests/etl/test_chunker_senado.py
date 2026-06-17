@@ -68,7 +68,7 @@ def test_executar_pipeline_chunking_senado_dupla_escrita_feliz():
     
     # Mock DB: 1. Tabela de chunks (Watermarker: retorna nenhum id processado)
     chunks_table_mock = MagicMock()
-    chunks_table_mock.select.return_value.execute.return_value.data = []
+    chunks_table_mock.select.return_value.range.return_value.execute.return_value.data = []
     
     # Mock DB: 2. Tabela de discursos (retorna 1 discurso cru)
     discursos_table_mock = MagicMock()
@@ -79,10 +79,9 @@ def test_executar_pipeline_chunking_senado_dupla_escrita_feliz():
         "politico_id": 150,
         "data_discurso": "2023-05-10"
     }]
+    db_empty = MagicMock(data=[])
     
-    discursos_table_mock.select.return_value.execute.return_value = db_response
-    discursos_table_mock.select.return_value.limit.return_value.execute.return_value = db_response
-    discursos_table_mock.select.return_value.not_.in_.return_value.limit.return_value.execute.return_value = db_response
+    discursos_table_mock.select.return_value.range.return_value.execute.side_effect = [db_response, db_empty]
     
     # Roteador de tabelas (Side effect)
     supabase_mock.table.side_effect = lambda name: chunks_table_mock if name == "senado_discurso_chunks" else discursos_table_mock
@@ -114,7 +113,7 @@ def test_executar_pipeline_chunking_senado_falha_qdrant_aborta_execucao():
     modelo_mock.encode.return_value = [0.1] * 1024
     
     chunks_table_mock = MagicMock()
-    chunks_table_mock.select.return_value.execute.return_value.data = []
+    chunks_table_mock.select.return_value.range.return_value.execute.return_value.data = []
     
     discursos_table_mock = MagicMock()
     db_response = MagicMock()
@@ -122,8 +121,9 @@ def test_executar_pipeline_chunking_senado_falha_qdrant_aborta_execucao():
         {"id": "11111111-1111-1111-1111-111111111111", "texto_bruto": "Discurso 1", "politico_id": 1, "data_discurso": "2023-01-01"},
         {"id": "22222222-2222-2222-2222-222222222222", "texto_bruto": "Discurso 2", "politico_id": 2, "data_discurso": "2023-01-02"}
     ]
+    db_empty = MagicMock(data=[])
     
-    discursos_table_mock.select.return_value.execute.return_value = db_response
+    discursos_table_mock.select.return_value.range.return_value.execute.side_effect = [db_response, db_empty]
     supabase_mock.table.side_effect = lambda name: chunks_table_mock if name == "senado_discurso_chunks" else discursos_table_mock
     
     # Força a falha no Qdrant
@@ -144,32 +144,47 @@ def test_executar_pipeline_chunking_senado_falha_qdrant_aborta_execucao():
 
 def test_executar_pipeline_chunking_senado_watermarker_filtra_processados():
     """
-    Ciclo 5: Busca Incremental e Watermarker em Memória.
-    Testa se o filtro not_.in_ é aplicado corretamente quando há IDs já processados,
-    garantindo que o script não busque discursos que já foram fatiados.
+    Ciclo 2: Filtro em Memória e Paginação de Discursos.
+    Testa se o filtro de processados ocorre na memória (evitando erro de URL gigante no banco)
+    e se a busca de discursos usa paginação (.range()), aplicando o limite APENAS aos inéditos.
     """
     supabase_mock = MagicMock()
     qdrant_mock = MagicMock()
     modelo_mock = MagicMock()
+    modelo_mock.encode.return_value = [0.1] * 1024
     
-    # 1. Mock do Watermarker (Tabela filha retorna 1 ID já processado)
+    # 1. Mock do Watermarker paginado (Tabela filha)
     chunks_table_mock = MagicMock()
-    chunks_table_mock.select.return_value.execute.return_value.data = [{"discurso_id": "uuid-processado-1"}]
+    chunks_page_1 = MagicMock(data=[{"discurso_id": "uuid-processado-1"}])
+    chunks_page_2 = MagicMock(data=[])
+    chunks_table_mock.select.return_value.range.return_value.execute.side_effect = [chunks_page_1, chunks_page_2]
     
-    # 2. Mock da busca (Tabela pai de discursos)
+    # 2. Mock da Tabela pai de discursos paginada
     discursos_table_mock = MagicMock()
-    query_mock = MagicMock()
-    query_mock.execute.return_value.data = [] # Não retorna nada pra não processar
-    
-    discursos_table_mock.select.return_value = query_mock
-    query_mock.not_.in_.return_value = query_mock
+    # Página 1 tem um já processado e um inédito
+    disc_page_1 = MagicMock(data=[
+        {"id": "uuid-processado-1", "texto_bruto": "Velho", "politico_id": 1, "data_discurso": "2023-01-01"},
+        {"id": "uuid-inedito-1", "texto_bruto": "Novo 1", "politico_id": 2, "data_discurso": "2023-01-02"}
+    ])
+    # Página 2 tem mais um inédito
+    disc_page_2 = MagicMock(data=[
+        {"id": "uuid-inedito-2", "texto_bruto": "Novo 2", "politico_id": 3, "data_discurso": "2023-01-03"}
+    ])
+    disc_page_3 = MagicMock(data=[]) # Fim da paginação
+    discursos_table_mock.select.return_value.range.return_value.execute.side_effect = [disc_page_1, disc_page_2, disc_page_3]
     
     supabase_mock.table.side_effect = lambda name: chunks_table_mock if name == "senado_discurso_chunks" else discursos_table_mock
     
-    executar_pipeline_chunking_senado(supabase_mock, qdrant_mock, modelo_mock)
+    # Com limite=1 e 2 inéditos no banco, ele deve processar estritamente o uuid-inedito-1
+    executar_pipeline_chunking_senado(supabase_mock, qdrant_mock, modelo_mock, limite=1)
     
-    # Verifica se o filtro not_.in_ foi acionado repassando o ID na lista de exclusão
-    query_mock.not_.in_.assert_called_once_with("id", ["uuid-processado-1"])
+    # 1. Garante que .not_.in_ NÃO foi chamado em nenhum momento
+    discursos_table_mock.select.return_value.not_.in_.assert_not_called()
+    
+    # 2. Garante que o Supabase recebeu o upsert do chunk APENAS para o uuid-inedito-1
+    lote_upsertado = chunks_table_mock.upsert.call_args[0][0]
+    assert len(lote_upsertado) == 1
+    assert lote_upsertado[0]["discurso_id"] == "uuid-inedito-1"
 
 
 def test_processar_discurso_senado_ignora_falhas_extracao():
@@ -199,3 +214,39 @@ def test_processar_discurso_senado_ignora_falhas_extracao():
         assert lote_qdrant == []
         
     modelo_mock.encode.assert_not_called()
+
+
+def test_executar_pipeline_chunking_senado_watermarker_paginado():
+    """
+    Ciclo 1: Watermarker Paginado.
+    Garante que a busca pelos IDs já processados utiliza paginação (.range) 
+    para burlar o limite de 1000 linhas do Supabase.
+    """
+    supabase_mock = MagicMock()
+    qdrant_mock = MagicMock()
+    modelo_mock = MagicMock()
+    
+    chunks_table_mock = MagicMock()
+    select_mock = chunks_table_mock.select.return_value
+    
+    # Simula 3 páginas: 1000 itens, 1000 itens, e 0 itens
+    page_1 = MagicMock(data=[{"discurso_id": f"id-{i}"} for i in range(1000)])
+    page_2 = MagicMock(data=[{"discurso_id": f"id-{i}"} for i in range(1000, 2000)])
+    page_3 = MagicMock(data=[])
+    
+    range_mock = select_mock.range.return_value
+    range_mock.execute.side_effect = [page_1, page_2, page_3]
+    
+    # Mock para a tabela de discursos retornar vazio e encerrar o script rápido
+    discursos_table_mock = MagicMock()
+    discursos_table_mock.select.return_value.range.return_value.execute.return_value.data = []
+    
+    supabase_mock.table.side_effect = lambda name: chunks_table_mock if name == "senado_discurso_chunks" else discursos_table_mock
+    
+    executar_pipeline_chunking_senado(supabase_mock, qdrant_mock, modelo_mock)
+    
+    # Verifica se .range() foi chamado para paginar os resultados com os offsets corretos
+    assert select_mock.range.call_count == 3
+    select_mock.range.assert_any_call(0, 999)
+    select_mock.range.assert_any_call(1000, 1999)
+    select_mock.range.assert_any_call(2000, 2999)

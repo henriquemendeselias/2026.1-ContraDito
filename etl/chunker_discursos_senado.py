@@ -84,21 +84,39 @@ def executar_pipeline_chunking_senado(
     limite: int | None = None,
 ) -> int:
     """Executa a orquestração do pipeline de chunking com dupla escrita (Dual-Write)."""
-    # 1. Obtém IDs já processados (Watermarker em memória)
-    resp_chunks = supabase_client.table("senado_discurso_chunks").select("discurso_id").execute()
-    ids_processados = {row["discurso_id"] for row in (resp_chunks.data or [])}
+    # 1. Obtém IDs já processados paginando para burlar o limite de 1000 linhas
+    ids_processados = set()
+    offset = 0
+    while True:
+        resp_chunks = supabase_client.table("senado_discurso_chunks").select("discurso_id").range(offset, offset + 999).execute()
+        if not resp_chunks.data:
+            break
+        ids_processados.update(row["discurso_id"] for row in resp_chunks.data)
+        if len(resp_chunks.data) < 1000:
+            break
+        offset += 1000
 
-    # 2. Busca discursos pendentes
-    query = supabase_client.table("senado_discursos").select("id, texto_bruto, politico_id, data_discurso")
-    if ids_processados:
-        query = query.not_.in_("id", list(ids_processados))
-    if limite:
-        query = query.limit(limite)
+    # 2. Busca TODOS os discursos paginando e filtra os pendentes na memória (evita erro de URL enorme)
+    discursos_pendentes = []
+    offset = 0
+    while True:
+        resp_disc = supabase_client.table("senado_discursos").select("id, texto_bruto, politico_id, data_discurso").range(offset, offset + 999).execute()
+        if not resp_disc.data:
+            break
+            
+        for d in resp_disc.data:
+            if d["id"] not in ids_processados:
+                discursos_pendentes.append(d)
+                
+        if len(resp_disc.data) < 1000:
+            break
+        offset += 1000
         
-    discursos = query.execute().data or []
+    if limite:
+        discursos_pendentes = discursos_pendentes[:limite]
 
     total_inserido = 0
-    for discurso in discursos:
+    for discurso in discursos_pendentes:
         lote_supa, lote_qdrant = processar_discurso_senado(
             discurso_id=discurso["id"],
             texto_bruto=discurso.get("texto_bruto", ""),

@@ -18,20 +18,20 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 QDRANT_URL = os.getenv("QDRANT_URL")
-QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+QDRANT_KEY = os.getenv("QDRANT_KEY")
 
 for var, nome in [
     (SUPABASE_URL, "SUPABASE_URL"),
     (SUPABASE_KEY, "SUPABASE_KEY"),
     (QDRANT_URL, "QDRANT_URL"),
-    (QDRANT_API_KEY, "QDRANT_API_KEY"),
+    (QDRANT_KEY, "QDRANT_KEY"),
 ]:
     if not var:
         logging.error(f"{nome} precisa estar definida no .env")
         sys.exit(1)
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_KEY)
 
 
 def parse_args():
