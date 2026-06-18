@@ -99,7 +99,7 @@ async def test_pipeline_senado_caminho_feliz_qdrant_first(mock_sleep, mock_pdfpl
     assert tabela_mock.update.call_args[0][0]["resumo_executivo"] == "Resumo executivo do Senado"
     
     # 3. Valida se o cooldown (Rate Limit mitigation) foi aplicado para poupar a API
-    mock_sleep.assert_called_once_with(2)
+    mock_sleep.assert_called_once_with(5)
 
 
 @pytest.mark.asyncio

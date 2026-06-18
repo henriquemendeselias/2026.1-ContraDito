@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 
-from etl.resumidor_proposicoes import gerar_resumo_executivo, _MAX_CHUNK_CHARS
+from etl.resumidor_proposicoes import gerar_resumo_executivo
 
 
 def _mock_gemini_client(resumo: str = "Resumo da proposicao gerado pelo LLM."):
@@ -70,28 +70,19 @@ async def test_gerar_resumo_chama_generate_content_com_prompt():
 
 
 @pytest.mark.asyncio
-async def test_gerar_resumo_texto_longo_usa_map_reduce():
+async def test_gerar_resumo_texto_longo_chamada_unica():
     """
-    Textos maiores que _MAX_CHUNK_CHARS passam por map-reduce:
-    o modelo é chamado uma vez por chunk (extração de pontos) mais
-    uma chamada final de redução. O resultado é o resumo da redução.
+    Textos longos devem ser processados em uma chamada única ao Gemini
+    sem a necessidade de Map-Reduce, truncando em 100.000 caracteres.
     """
-    texto_longo = ("Artigo da proposição legislativa. " * 1000)[: _MAX_CHUNK_CHARS + 100]
-
-    def _make_resp(conteudo: str):
-        r = MagicMock()
-        r.text = conteudo
-        return r
-
-    cliente = MagicMock()
-    cliente.models.generate_content.side_effect = [
-        _make_resp("Pontos do trecho 1."),
-        _make_resp("Pontos do trecho 2."),
-        _make_resp("Resumo executivo final."),
-    ]
+    texto_longo = "Artigo da proposição legislativa. " * 5000
+    esperado = "Resumo da chamada única final."
+    cliente = _mock_gemini_client(esperado)
 
     resultado = await gerar_resumo_executivo(texto_longo, cliente)
 
-    assert resultado == "Resumo executivo final."
-    # 2 chamadas de map (uma por chunk) + 1 de reduce
-    assert cliente.models.generate_content.call_count == 3
+    assert resultado == esperado
+    cliente.models.generate_content.assert_called_once()
+    call_kwargs = cliente.models.generate_content.call_args
+    prompt_enviado = call_kwargs.kwargs.get("contents") or call_kwargs[1].get("contents", "")
+    assert len(prompt_enviado) <= 105_000

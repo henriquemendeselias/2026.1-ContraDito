@@ -33,25 +33,6 @@ PROPOSIÇÃO:
 
 RESUMO EXECUTIVO:"""
 
-_PROMPT_CHUNK = """\
-Extraia os pontos principais deste trecho de uma proposição legislativa.
-Inclua: objetivo do trecho, obrigações mencionadas e argumentos presentes.
-Seja conciso (máximo 150 palavras).
-
-TRECHO:
-{texto}"""
-
-_PROMPT_REDUCAO = """\
-Com base nos pontos extraídos dos trechos abaixo de uma mesma proposição legislativa,
-escreva um resumo executivo coeso abordando: o objetivo principal, as principais
-obrigações criadas e os argumentos centrais da justificativa.
-Linguagem objetiva, sem opiniões pessoais.
-
-PONTOS DOS TRECHOS:
-{pontos}"""
-
-_MAX_CHUNK_CHARS = 10_000
-
 _CONFIG = types.GenerateContentConfig(
     system_instruction=_SYSTEM,
     temperature=0.3,
@@ -76,25 +57,6 @@ _CONFIG = types.GenerateContentConfig(
 )
 
 
-def _chunkar_texto(texto: str, max_chars: int = _MAX_CHUNK_CHARS) -> list[str]:
-    """Divide o texto em partes de max_chars, quebrando em parágrafos quando possível."""
-    if len(texto) <= max_chars:
-        return [texto]
-    chunks = []
-    while texto:
-        if len(texto) <= max_chars:
-            chunks.append(texto)
-            break
-        corte = texto.rfind("\n\n", 0, max_chars)
-        if corte == -1:
-            corte = texto.rfind("\n", 0, max_chars)
-        if corte == -1:
-            corte = max_chars
-        chunks.append(texto[:corte].strip())
-        texto = texto[corte:].strip()
-    return [c for c in chunks if c]
-
-
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=30),
@@ -112,33 +74,15 @@ def _chamar_gemini(gemini_client: genai.Client, prompt: str) -> str:
 async def gerar_resumo_executivo(texto: str, gemini_client: genai.Client) -> str:
     """
     Gera um resumo executivo via Gemini Flash.
-    Textos curtos: uma única chamada. Textos longos: map-reduce (chunk → pontos → resumo final).
+    Envia o texto completo truncado em 100.000 caracteres para chamada única ao Gemini.
     Retorna string vazia se o texto de entrada for vazio.
     """
     if not texto or not texto.strip():
         return ""
 
-    chunks = _chunkar_texto(texto)
-
-    if len(chunks) == 1:
-        return await asyncio.to_thread(
-            _chamar_gemini, gemini_client, _PROMPT.format(texto=chunks[0])
-        )
-
-    # Map: extrai pontos de cada chunk individualmente
-    pontos = []
-    for chunk in chunks:
-        ponto = await asyncio.to_thread(
-            _chamar_gemini, gemini_client, _PROMPT_CHUNK.format(texto=chunk)
-        )
-        pontos.append(ponto)
-
-    # Reduce: combina os pontos num resumo final coeso
-    pontos_combinados = "\n\n".join(
-        f"[Trecho {i + 1}]\n{p}" for i, p in enumerate(pontos)
-    )
+    texto_truncado = texto[:100_000]
     return await asyncio.to_thread(
-        _chamar_gemini, gemini_client, _PROMPT_REDUCAO.format(pontos=pontos_combinados)
+        _chamar_gemini, gemini_client, _PROMPT.format(texto=texto_truncado)
     )
 
 

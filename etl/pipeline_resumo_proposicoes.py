@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import uuid
 
 import httpx
@@ -90,7 +91,9 @@ async def executar_pipeline_resumo(
                 }).eq("id", id_prop).execute()
 
                 total += 1
-                logger.info(f"Proposição {id_prop}: resumo salvo, embedding no Qdrant.")
+                logger.info(f"Proposição {id_prop}: resumo saved, embedding in Qdrant.")
+                
+                await asyncio.sleep(5)
 
             except Exception as e:
                 _registrar_erro(id_prop, str(e))

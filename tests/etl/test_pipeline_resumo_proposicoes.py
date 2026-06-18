@@ -1,7 +1,7 @@
 import pytest
 import respx
 import httpx
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock, AsyncMock, patch
 
 from etl.pipeline_resumo_proposicoes import executar_pipeline_resumo
 
@@ -97,7 +97,8 @@ async def test_pipeline_sem_proposicoes_pendentes_retorna_zero():
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_pipeline_processa_proposicao_e_salva_resumo_e_embedding():
+@patch("etl.pipeline_resumo_proposicoes.asyncio.sleep", new_callable=AsyncMock)
+async def test_pipeline_processa_proposicao_e_salva_resumo_e_embedding(mock_sleep):
     """
     Com uma proposição pendente, o pipeline deve:
     - baixar o PDF da url_texto_inteiro
@@ -142,6 +143,8 @@ async def test_pipeline_processa_proposicao_e_salva_resumo_e_embedding():
     assert point.payload["data_votacao"] == 1713916800
     assert point.payload["casa"] == "camara"
 
+    mock_sleep.assert_called_once_with(5)
+
 
 @pytest.mark.asyncio
 @respx.mock
@@ -175,7 +178,8 @@ async def test_pipeline_registra_erro_quando_pdf_sem_texto():
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_pipeline_continua_apos_falha_em_uma_proposicao():
+@patch("etl.pipeline_resumo_proposicoes.asyncio.sleep", new_callable=AsyncMock)
+async def test_pipeline_continua_apos_falha_em_uma_proposicao(mock_sleep):
     """
     Se uma proposição falhar (ex: PDF inacessível), o pipeline deve continuar
     processando as demais e não propagar a exceção.
@@ -202,3 +206,4 @@ async def test_pipeline_continua_apos_falha_em_uma_proposicao():
     assert total == 1
     # update chamado duas vezes: registra erro da proposição falha + salva sucesso da ok
     assert tabela.update.call_count == 2
+    mock_sleep.assert_called_once_with(5)
