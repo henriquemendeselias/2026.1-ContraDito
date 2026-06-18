@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-17T05:02:32Z",
+  "generated_at": "2026-06-18T04:52:05Z",
   "repository": "unb-mds/2026.1-ContraDito",
   "issues_per_week": [
     {
@@ -583,7 +583,7 @@
     {
       "username": "matheus0346",
       "name": "matheus0346",
-      "prs_opened": 13
+      "prs_opened": 14
     },
     {
       "username": "jot4-ge",
@@ -859,7 +859,7 @@
       "username": "matheus0346",
       "name": "matheus0346",
       "commits": 33,
-      "prs_opened": 13,
+      "prs_opened": 14,
       "prs_reviewed": 0,
       "prs_merged": 6,
       "issues_opened": 10,
