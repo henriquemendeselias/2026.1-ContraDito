@@ -42,23 +42,26 @@ def processar_discurso(
     qdrant_points = []
     data_discurso_ts = para_timestamp(data_discurso)
 
+    discurso_id_str = str(discurso_id)
+    politico_id_int = int(politico_id) if politico_id is not None else None
+
     for indice, texto_chunk in enumerate(chunks):
-        chunk_id = _gerar_id_chunk(discurso_id, indice)
+        chunk_id = _gerar_id_chunk(discurso_id_str, indice)
         embedding = modelo.encode(texto_chunk)
         if hasattr(embedding, "tolist"):
             embedding = embedding.tolist()
 
         resultado.append({
             "id": chunk_id,
-            "discurso_id": discurso_id,
+            "discurso_id": discurso_id_str,
             "texto_chunk": texto_chunk,
         })
         qdrant_points.append(
             PointStruct(
                 id=chunk_id,
                 payload={
-                    "politico_id": politico_id,
-                    "discurso_id": discurso_id,
+                    "politico_id": politico_id_int,
+                    "discurso_id": discurso_id_str,
                     "data_discurso": data_discurso_ts,
                 },
                 vector=embedding,

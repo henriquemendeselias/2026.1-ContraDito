@@ -204,6 +204,52 @@ def test_processar_discurso_envia_payload_correto_ao_qdrant():
     }
 
 
+def test_processar_discurso_casting_defensivo_tipos():
+    """
+    Verifica se processar_discurso realiza o casting defensivo correto dos
+    campos discurso_id (para str) e politico_id (para int ou None) tanto
+    no retorno (Supabase) quanto no payload do Qdrant.
+    """
+    qdrant = _qdrant_mock()
+
+    resultado = processar_discurso(
+        discurso_id=12345,  # int que deve virar str
+        politico_id="999",  # str que deve virar int
+        data_discurso=None,
+        texto_bruto="Discurso de teste para validar tipagem.",
+        modelo=_modelo_mock(),
+        qdrant_client=qdrant,
+        chunk_size=1000,
+        chunk_overlap=200,
+    )
+
+    # 1. Verifica no retorno para o Supabase
+    assert len(resultado) == 1
+    assert resultado[0]["discurso_id"] == "12345"
+
+    # 2. Verifica no payload para o Qdrant
+    qdrant.upsert.assert_called_once()
+    ponto = qdrant.upsert.call_args.kwargs["points"][0]
+    assert ponto.payload["discurso_id"] == "12345"
+    assert ponto.payload["politico_id"] == 999
+
+    # 3. Verifica se politico_id None é preservado sem causar erros
+    qdrant_none = _qdrant_mock()
+    resultado_none = processar_discurso(
+        discurso_id=12345,
+        politico_id=None,
+        data_discurso=None,
+        texto_bruto="Outro teste.",
+        modelo=_modelo_mock(),
+        qdrant_client=qdrant_none,
+        chunk_size=1000,
+        chunk_overlap=200,
+    )
+    ponto_none = qdrant_none.upsert.call_args.kwargs["points"][0]
+    assert ponto_none.payload["politico_id"] is None
+
+
+
 def test_pipeline_sem_discursos_pendentes_retorna_zero():
     """
     Quando não há discursos para processar, o pipeline retorna 0
