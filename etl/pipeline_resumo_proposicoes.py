@@ -77,6 +77,7 @@ async def executar_pipeline_resumo(
                             payload={
                                 "proposicao_id_string": proposicao.get("proposicao_id"),
                                 "data_votacao": para_timestamp(proposicao.get("data_votacao")),
+                                "casa": "camara",
                             },
                             vector=embedding,
                         )

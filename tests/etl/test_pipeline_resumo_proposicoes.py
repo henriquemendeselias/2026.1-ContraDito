@@ -140,6 +140,7 @@ async def test_pipeline_processa_proposicao_e_salva_resumo_e_embedding():
     point = upsert_call.kwargs["points"][0]
     assert point.payload["proposicao_id_string"] == "pl_9234_2017"
     assert point.payload["data_votacao"] == 1713916800
+    assert point.payload["casa"] == "camara"
 
 
 @pytest.mark.asyncio

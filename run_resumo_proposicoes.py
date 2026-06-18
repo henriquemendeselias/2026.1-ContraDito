@@ -6,7 +6,6 @@ import time
 import argparse
 from dotenv import load_dotenv
 from google import genai
-from groq import Groq
 from qdrant_client import QdrantClient
 from supabase import create_client, Client
 from etl.pipeline_resumo_proposicoes import executar_pipeline_resumo
@@ -50,13 +49,14 @@ async def main():
     total_senado = 0
 
     if args.casa in ["camara", "ambas"]:
-        groq_key = os.getenv("GROQ_API_KEY")
-        if not groq_key:
-            logging.error("GROQ_API_KEY precisa estar definida para processar a Câmara.")
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if not gemini_key:
+            logging.error("GEMINI_API_KEY precisa estar definida para processar a Câmara.")
             sys.exit(1)
-        groq_client = Groq(api_key=groq_key)
+        gemini_client = genai.Client(api_key=gemini_key)
+        qdrant_client = obter_qdrant_client()
         logging.info(f"--- Iniciando pipeline da Câmara (limite={args.limite}) ---")
-        total_camara = await executar_pipeline_resumo(supabase, motor_nlp, groq_client, limite=args.limite)
+        total_camara = await executar_pipeline_resumo(supabase, motor_nlp, gemini_client, qdrant_client, limite=args.limite)
 
     if args.casa in ["senado", "ambas"]:
         gemini_key = os.getenv("GEMINI_API_KEY")

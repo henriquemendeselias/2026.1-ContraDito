@@ -44,4 +44,4 @@ async def extrair_texto_de_url(url: str, client: httpx.AsyncClient) -> str:
     """
     response = await client.get(url, timeout=60.0)
     response.raise_for_status()
-    return _extrair_texto_de_bytes(response.content)
+    return _extrair_texto_de_bytes(response.content)[:100_000]

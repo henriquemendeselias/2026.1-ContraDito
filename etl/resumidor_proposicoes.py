@@ -16,12 +16,22 @@ _SYSTEM = (
 )
 
 _PROMPT = """\
-Resuma a proposição legislativa abaixo em no máximo 400 tokens, abordando:
-o objetivo principal, as principais obrigações criadas e os argumentos centrais \
-da justificativa. Linguagem objetiva, sem opiniões pessoais.
+Você é um assistente especializado em resumir proposições legislativas brasileiras.
+
+Crie um RESUMO EXECUTIVO em no máximo 400 tokens contendo:
+1. O que a proposição propõe (objetivo principal)
+2. Principais obrigações criadas
+3. Argumentos centrais da justificativa
+
+Regras:
+• Linguagem objetiva, sem opiniões pessoais, preservar o núcleo temático.
+• Escreva o resumo APENAS em parágrafos de texto corrido (prosa).
+• É ESTRITAMENTE PROIBIDO o uso de tópicos, marcadores (bullet points), negrito, asteriscos ou cabeçalhos com cerquilha.
 
 PROPOSIÇÃO:
-{texto}"""
+{texto}
+
+RESUMO EXECUTIVO:"""
 
 _PROMPT_CHUNK = """\
 Extraia os pontos principais deste trecho de uma proposição legislativa.
@@ -45,6 +55,24 @@ _MAX_CHUNK_CHARS = 10_000
 _CONFIG = types.GenerateContentConfig(
     system_instruction=_SYSTEM,
     temperature=0.3,
+    safety_settings=[
+        types.SafetySetting(
+            category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold=types.HarmBlockThreshold.BLOCK_NONE,
+        ),
+        types.SafetySetting(
+            category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold=types.HarmBlockThreshold.BLOCK_NONE,
+        ),
+        types.SafetySetting(
+            category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold=types.HarmBlockThreshold.BLOCK_NONE,
+        ),
+        types.SafetySetting(
+            category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold=types.HarmBlockThreshold.BLOCK_NONE,
+        ),
+    ],
 )
 
 
@@ -69,7 +97,7 @@ def _chunkar_texto(texto: str, max_chars: int = _MAX_CHUNK_CHARS) -> list[str]:
 
 @retry(
     stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10),
+    wait=wait_exponential(multiplier=1, min=2, max=30),
     reraise=True,
 )
 def _chamar_gemini(gemini_client: genai.Client, prompt: str) -> str:
