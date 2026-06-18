@@ -11,6 +11,8 @@ TEXTOS_INVALIDOS = {
     "[ARQUIVO CORROMPIDO NA ORIGEM]"
 }
 
+QDRANT_BATCH_SIZE = 50
+
 def gerar_id_deterministico_chunk(discurso_id: str, indice: int) -> str:
     """Gera um hash determinístico (UUID v5) para cada fragmento do discurso."""
     chave_base = f"{discurso_id}_chunk_{indice}"
@@ -129,7 +131,10 @@ def executar_pipeline_chunking_senado(
 
         if lote_supa and lote_qdrant:
             supabase_client.table("senado_discurso_chunks").upsert(lote_supa).execute()
-            qdrant_client.upsert(collection_name=qdrant_collection, points=lote_qdrant)
+            
+            for i in range(0, len(lote_qdrant), QDRANT_BATCH_SIZE):
+                qdrant_client.upsert(collection_name=qdrant_collection, points=lote_qdrant[i:i + QDRANT_BATCH_SIZE])
+                
             total_inserido += len(lote_supa)
 
     return total_inserido

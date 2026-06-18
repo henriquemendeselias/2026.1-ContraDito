@@ -250,3 +250,45 @@ def test_executar_pipeline_chunking_senado_watermarker_paginado():
     select_mock.range.assert_any_call(0, 999)
     select_mock.range.assert_any_call(1000, 1999)
     select_mock.range.assert_any_call(2000, 2999)
+
+
+def test_executar_pipeline_chunking_senado_qdrant_sub_lotes():
+    """
+    Ciclo 1: Sub-lotes Qdrant.
+    Garante que a inserção no Qdrant é fatiada em lotes menores (ex: 50 pontos)
+    para evitar timeout de rede em discursos muito longos.
+    """
+    supabase_mock = MagicMock()
+    qdrant_mock = MagicMock()
+    modelo_mock = MagicMock()
+    modelo_mock.encode.return_value = [0.1] * 1024
+    
+    chunks_table_mock = MagicMock()
+    chunks_table_mock.select.return_value.range.return_value.execute.return_value.data = []
+    
+    discursos_table_mock = MagicMock()
+    # Texto gigante sem espaços para forçar o splitter a quebrar exatamente a cada 1000 caracteres
+    texto_gigante = "A" * 120000 
+    
+    db_response = MagicMock()
+    db_response.data = [{
+        "id": "12345678-1234-5678-1234-567812345678",
+        "texto_bruto": texto_gigante,
+        "politico_id": 150,
+        "data_discurso": "2023-05-10"
+    }]
+    db_empty = MagicMock(data=[])
+    discursos_table_mock.select.return_value.range.return_value.execute.side_effect = [db_response, db_empty]
+    
+    supabase_mock.table.side_effect = lambda name: chunks_table_mock if name == "senado_discurso_chunks" else discursos_table_mock
+    
+    executar_pipeline_chunking_senado(
+        supabase_client=supabase_mock,
+        qdrant_client=qdrant_mock,
+        modelo=modelo_mock,
+        chunk_size=1000,
+        chunk_overlap=0
+    )
+    
+    # 120 chunks devem gerar 3 chamadas parciais no Qdrant (50, 50, 20)
+    assert qdrant_mock.upsert.call_count == 3
