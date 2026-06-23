@@ -9,7 +9,10 @@ from bs4 import BeautifulSoup
 # sejam únicos e não colidam com outras gerações de UUID v5 externas.
 NAMESPACE_DISCURSOS = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
-def gerar_hash_discurso(id_deputado: int, data_hora_inicio: str, fase_evento: str) -> str:
+
+def gerar_hash_discurso(
+    id_deputado: int, data_hora_inicio: str, fase_evento: str
+) -> str:
     """
     Gera um UUID v5 sintético e determinístico baseado na trinca que identifica
     de forma única um discurso na API da Câmara dos Deputados.
@@ -25,43 +28,62 @@ def limpar_transcricao(texto_bruto: str) -> str:
     """
     if not texto_bruto:
         return ""
-        
+
     # ANOMALIA 3: Vazamento Binário (Arquivos DOCX crus na API)
     # Deve rodar ANTES do BeautifulSoup para evitar estouro de memória ou crash
-    if "PK!" in texto_bruto and "[Content_Types].xml" in texto_bruto and "word/" in texto_bruto:
-        logging.warning("Vazamento binário de arquivo DOCX detectado na API. Descartando texto.")
+    if (
+        "PK!" in texto_bruto
+        and "[Content_Types].xml" in texto_bruto
+        and "word/" in texto_bruto
+    ):
+        logging.warning(
+            "Vazamento binário de arquivo DOCX detectado na API. Descartando texto."
+        )
         return "[ARQUIVO CORROMPIDO NA ORIGEM]"
 
     # Estágio 1: Remoção de HTML e decodificação de entidades (ex: &#x97; -> —)
-    texto = BeautifulSoup(texto_bruto, "html.parser").get_text(separator=" ", strip=True)
+    texto = BeautifulSoup(texto_bruto, "html.parser").get_text(
+        separator=" ", strip=True
+    )
     texto = html.unescape(texto)
-    
+
     # Estágio 2: Remoção do cabeçalho protocolar (Regex Agressivo)
     padroes_cabecalho = [
         # Padrão 5: Lixo de ofícios inseridos nos anais ou falsos cabeçalhos longos.
         # Usa lookahead ultra-específico para parar apenas nas saudações reais de abertura da fala.
-        re.compile(r"^[\.\s]*(?:Discurso feito|Discurso pronunciado|DISCURSO|CÂMARA DOS DEPUTADOS|A VOLTA|PRONUN?CIAMENTO).*?(?=\s*(?:(?:[Ee]xcelentíssimo\s+)?(?:[Ss]r[a]?\.\s+|[Ss]enhor[a]?\s+)?[Pp]residente\b|[Ss]ras?\.\s+e\s+[Ss]rs?\.|[Ss]enhoras\s+e\s+[Ss]enhores))", re.IGNORECASE),
-        
+        re.compile(
+            r"^[\.\s]*(?:Discurso feito|Discurso pronunciado|DISCURSO|CÂMARA DOS DEPUTADOS|A VOLTA|PRONUN?CIAMENTO).*?(?=\s*(?:(?:[Ee]xcelentíssimo\s+)?(?:[Ss]r[a]?\.\s+|[Ss]enhor[a]?\s+)?[Pp]residente\b|[Ss]ras?\.\s+e\s+[Ss]rs?\.|[Ss]enhoras\s+e\s+[Ss]enhores))",
+            re.IGNORECASE,
+        ),
         # Padrão 6: Fallback de ofícios e falsos cabeçalhos encabeçados quando não há saudação formal (corta no primeiro ponto final).
-        re.compile(r"^[\.\s]*(?:Discurso feito|Discurso pronunciado|DISCURSO|CÂMARA DOS DEPUTADOS|A VOLTA|PRONUN?CIAMENTO)[^()]*?\.\s+", re.IGNORECASE),
-        
+        re.compile(
+            r"^[\.\s]*(?:Discurso feito|Discurso pronunciado|DISCURSO|CÂMARA DOS DEPUTADOS|A VOLTA|PRONUN?CIAMENTO)[^()]*?\.\s+",
+            re.IGNORECASE,
+        ),
         # Padrão 1: Clássico com travessão, flexibilizado para aceitar 'Sra.', chaves {} ou colchetes [].
-        re.compile(r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+(?:[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"),
-        
+        re.compile(
+            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+(?:[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"
+        ),
         # Padrão 2: Discurso encaminhado.
-        re.compile(r"^[\.\s]*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SR[A]?\. DEPUTAD[OA] [A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+\.\s*"),
-        
-        # Padrão 3: Inserção nos anais ("pronuncia o seguinte discurso:"). 
+        re.compile(
+            r"^[\.\s]*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SR[A]?\. DEPUTAD[OA] [A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+\.\s*"
+        ),
+        # Padrão 3: Inserção nos anais ("pronuncia o seguinte discurso:").
         # Extremamente flexível pois a frase de gatilho é inconfundível.
-        re.compile(r"^[\.\s]*.*?(?:pronuncia|pronunciou|pronunciar) o seguinte discurso:\s*", re.IGNORECASE),
-        
+        re.compile(
+            r"^[\.\s]*.*?(?:pronuncia|pronunciou|pronunciar) o seguinte discurso:\s*",
+            re.IGNORECASE,
+        ),
         # Padrão 4: Clássico sem travessão (agora flexível para chaves e colchetes).
-        re.compile(r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+[({\[][^)}\]]+[)}\]]\s*"),
-        
+        re.compile(
+            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+[({\[][^)}\]]+[)}\]]\s*"
+        ),
         # Padrão 4b: Clássico faltando fechamento de parêntese, emendando direto no pronome de tratamento.
-        re.compile(r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+[({\[][^)}\]]*?(?=\s*(?:(?:[Ee]xcelentíssimo\s+)?(?:[Ss]r[a]?\.\s+|[Ss]enhor[a]?\s+)?[Pp]residente\b|[Ss]ras?\.\s+e\s+[Ss]rs?\.|[Ss]enhoras\s+e\s+[Ss]enhores))"),
+        re.compile(
+            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+[({\[][^)}\]]*?(?=\s*(?:(?:[Ee]xcelentíssimo\s+)?(?:[Ss]r[a]?\.\s+|[Ss]enhor[a]?\s+)?[Pp]residente\b|[Ss]ras?\.\s+e\s+[Ss]rs?\.|[Ss]enhoras\s+e\s+[Ss]enhores))"
+        ),
     ]
-    
+
     encontrou_padrao = False
     for padrao in padroes_cabecalho:
         texto_substituido, substituicoes = padrao.subn("", texto, count=1)
@@ -69,34 +91,36 @@ def limpar_transcricao(texto_bruto: str) -> str:
             texto = texto_substituido
             encontrou_padrao = True
             break
-            
+
     if not encontrou_padrao:
         # Plano B: Mantém o texto sujo retido e alerta a engenharia
-        trecho = texto[:100].replace('\n', ' ')
+        trecho = texto[:100].replace("\n", " ")
         logging.warning(f"Regex falhou. Trecho: {trecho}...")
-        
+
     # ANOMALIA 2: Normalizar Notas Taquigráficas (Reações curtas em parênteses ou colchetes)
-    texto = re.sub(r'[\(\[]([^()\[\]{}]{1,60})[\)\]]', r'{\1}', texto)
-    
+    texto = re.sub(r"[\(\[]([^()\[\]{}]{1,60})[\)\]]", r"{\1}", texto)
+
     # Estágio 3: Normalização de espaços duplos e remoção de espaços antes de pontuação deixados pelo HTML
     texto = re.sub(r"\s+", " ", texto)
-    texto = re.sub(r"\s+([.,?!;:])", r"\1", texto) # Junta "negrito ." para "negrito."
-    
+    texto = re.sub(r"\s+([.,?!;:])", r"\1", texto)  # Junta "negrito ." para "negrito."
+
     # Limpeza Final: Remove quaisquer pontos espúrios que sobraram soltos no início (ex: ". Excelentíssimo...")
     texto = re.sub(r"^[\.\s\-]+", "", texto)
     texto = texto.strip()
-    
+
     return texto
 
 
-def transformar_discurso(payload_camara: Dict[str, Any], id_deputado: int) -> Dict[str, Any]:
+def transformar_discurso(
+    payload_camara: Dict[str, Any], id_deputado: int
+) -> Dict[str, Any]:
     """
     Recebe o payload bruto de um discurso da Câmara e o ID do deputado,
     aplica as transformações necessárias e retorna um dicionário aderente
     ao Data Contract (Schema Estrito) acordado.
     """
     data_hora_inicio = payload_camara.get("dataHoraInicio", "")
-    
+
     # Tratamento defensivo pois faseEvento pode vir como dict/objeto em conversões da API
     fase_evento_raw = payload_camara.get("faseEvento", {})
     if isinstance(fase_evento_raw, dict):
@@ -113,5 +137,5 @@ def transformar_discurso(payload_camara: Dict[str, Any], id_deputado: int) -> Di
         "fase_evento": fase_evento,
         "sumario": payload_camara.get("sumario"),
         "texto_bruto": transcricao_limpa,
-        "url_video": payload_camara.get("urlVideo")
+        "url_video": payload_camara.get("urlVideo"),
     }

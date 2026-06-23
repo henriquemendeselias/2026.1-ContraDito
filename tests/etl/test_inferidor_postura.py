@@ -14,13 +14,16 @@ def _mock_gemini(resposta_texto: str):
 
 # --- inferir_postura ---
 
+
 @pytest.mark.asyncio
 async def test_inferir_postura_favoravel():
     """
     Tracer bullet: LLM retornando JSON válido com FAVORÁVEL deve ser
     parseado corretamente.
     """
-    gemini = _mock_gemini('{"postura": "FAVORÁVEL", "justificativa": "O parlamentar apoiou medidas similares."}')
+    gemini = _mock_gemini(
+        '{"postura": "FAVORÁVEL", "justificativa": "O parlamentar apoiou medidas similares."}'
+    )
 
     resultado = await inferir_postura(
         resumo_proposicao="Propõe acompanhante para mulheres em consultas.",
@@ -37,7 +40,9 @@ async def test_inferir_postura_contrario():
     """
     LLM retornando CONTRÁRIO deve ser parseado corretamente.
     """
-    gemini = _mock_gemini('{"postura": "CONTRÁRIO", "justificativa": "Discursos indicam oposição."}')
+    gemini = _mock_gemini(
+        '{"postura": "CONTRÁRIO", "justificativa": "Discursos indicam oposição."}'
+    )
 
     resultado = await inferir_postura(
         resumo_proposicao="Propõe aumento de impostos.",
@@ -86,17 +91,22 @@ async def test_inferir_postura_sem_chunks_retorna_none():
 
 # --- calcular_coerencia ---
 
+
 def test_coerencia_sim_favoravel():
     assert calcular_coerencia("Sim", "FAVORÁVEL") is True
+
 
 def test_coerencia_nao_contrario():
     assert calcular_coerencia("Não", "CONTRÁRIO") is True
 
+
 def test_coerencia_sim_contrario():
     assert calcular_coerencia("Sim", "CONTRÁRIO") is False
 
+
 def test_coerencia_nao_favoravel():
     assert calcular_coerencia("Não", "FAVORÁVEL") is False
+
 
 def test_coerencia_ausente_retorna_none():
     """Abstenções e ausências não entram no denominador (RF27)."""

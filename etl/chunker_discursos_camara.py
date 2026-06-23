@@ -52,11 +52,13 @@ def processar_discurso(
         if hasattr(embedding, "tolist"):
             embedding = embedding.tolist()
 
-        resultado.append({
-            "id": chunk_id,
-            "discurso_id": discurso_id_str,
-            "texto_chunk": texto_chunk,
-        })
+        resultado.append(
+            {
+                "id": chunk_id,
+                "discurso_id": discurso_id_str,
+                "texto_chunk": texto_chunk,
+            }
+        )
         qdrant_points.append(
             PointStruct(
                 id=chunk_id,
@@ -91,6 +93,7 @@ def executar_pipeline_chunking(
     ids_processados = set()
     offset = 0
     import sys
+
     is_test = "pytest" in sys.modules
     while True:
         query = supabase.table("camara_discurso_chunks").select("discurso_id")
@@ -146,6 +149,8 @@ def executar_pipeline_chunking(
             # Upsert para garantir idempotência e evitar erros de chave duplicada
             supabase.table("camara_discurso_chunks").upsert(chunks).execute()
             total += len(chunks)
-            logging.info(f"Discurso {discurso['id']}: {len(chunks)} chunk(s) inserido(s).")
+            logging.info(
+                f"Discurso {discurso['id']}: {len(chunks)} chunk(s) inserido(s)."
+            )
 
     return total

@@ -4,6 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from etl.extrator_politicos_senado import extrair_senadores, executar_pipeline_senadores
 
+
 @respx.mock
 def test_api_offset_e_schema():
     """
@@ -12,7 +13,7 @@ def test_api_offset_e_schema():
     2. Os campos básicos sejam mapeados para o schema correto do banco.
     """
     url = "https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/57.json"
-    
+
     mock_json = {
         "ListaParlamentarLegislatura": {
             "Parlamentares": {
@@ -24,26 +25,28 @@ def test_api_offset_e_schema():
                             "NomeParlamentar": "Senador Teste",
                             "SiglaPartidoParlamentar": "PART",
                             "UfParlamentar": "UF",
-                            "UrlFotoParlamentar": "http://foto.com/500.jpg"
+                            "UrlFotoParlamentar": "http://foto.com/500.jpg",
                         },
                         "Mandatos": {
                             "Mandato": [
                                 {
                                     "DescricaoParticipacao": "Titular",
-                                    "Exercicios": {"Exercicio": [{"DataInicio": "2023-02-01"}]} # Sem DataFim = Ativo
+                                    "Exercicios": {
+                                        "Exercicio": [{"DataInicio": "2023-02-01"}]
+                                    },  # Sem DataFim = Ativo
                                 }
                             ]
-                        }
+                        },
                     }
                 ]
             }
         }
     }
-    
+
     respx.get(url).respond(status_code=200, json=mock_json)
-    
+
     resultado = extrair_senadores(url)
-    
+
     assert len(resultado) == 1
     # Garante o ID original da API
     assert resultado[0]["id"] == 500
@@ -63,7 +66,7 @@ def test_anomalia_dict_unico():
     o script não quebre no laço 'for' e processe normalmente.
     """
     url = "https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/57.json"
-    
+
     mock_json = {
         "ListaParlamentarLegislatura": {
             "Parlamentares": {
@@ -75,20 +78,18 @@ def test_anomalia_dict_unico():
                             {
                                 "DescricaoParticipacao": "Titular",
                                 "Exercicios": {
-                                    "Exercicio": [
-                                        {"DataInicio": "2023-02-01"}
-                                    ]
-                                }
+                                    "Exercicio": [{"DataInicio": "2023-02-01"}]
+                                },
                             }
                         ]
-                    }
+                    },
                 }
             }
         }
     }
-    
+
     respx.get(url).respond(status_code=200, json=mock_json)
-    
+
     resultado = extrair_senadores(url)
     assert len(resultado) == 1
     assert resultado[0]["id"] == 99
@@ -103,7 +104,7 @@ def test_conversao_arvore_status():
     - Titular Afastado / Fora de Exercício -> Inativo
     """
     url = "https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/57.json"
-    
+
     mock_json = {
         "ListaParlamentarLegislatura": {
             "Parlamentares": {
@@ -112,38 +113,55 @@ def test_conversao_arvore_status():
                         "IdentificacaoParlamentar": {"CodigoParlamentar": "1"},
                         "Mandatos": {
                             "Mandato": [
-                                {"DescricaoParticipacao": "Titular", "Exercicios": {"Exercicio": [{"DataInicio": "2023-02-01"}]}}
+                                {
+                                    "DescricaoParticipacao": "Titular",
+                                    "Exercicios": {
+                                        "Exercicio": [{"DataInicio": "2023-02-01"}]
+                                    },
+                                }
                             ]
-                        }
+                        },
                     },
                     {
                         "IdentificacaoParlamentar": {"CodigoParlamentar": "2"},
                         "Mandatos": {
                             "Mandato": [
-                                {"DescricaoParticipacao": "1º Suplente", "Exercicios": {"Exercicio": [{"DataInicio": "2023-02-01"}]}}
+                                {
+                                    "DescricaoParticipacao": "1º Suplente",
+                                    "Exercicios": {
+                                        "Exercicio": [{"DataInicio": "2023-02-01"}]
+                                    },
+                                }
                             ]
-                        }
+                        },
                     },
                     {
                         "IdentificacaoParlamentar": {"CodigoParlamentar": "3"},
                         "Mandatos": {
                             "Mandato": [
                                 {
-                                    "DescricaoParticipacao": "Titular", 
-                                    "Exercicios": {"Exercicio": [{"DataInicio": "2019-02-01", "DataFim": "2020-10-21"}]} # Com DataFim = Inativo
+                                    "DescricaoParticipacao": "Titular",
+                                    "Exercicios": {
+                                        "Exercicio": [
+                                            {
+                                                "DataInicio": "2019-02-01",
+                                                "DataFim": "2020-10-21",
+                                            }
+                                        ]
+                                    },  # Com DataFim = Inativo
                                 }
                             ]
-                        }
-                    }
+                        },
+                    },
                 ]
             }
         }
     }
-    
+
     respx.get(url).respond(status_code=200, json=mock_json)
-    
+
     resultado = extrair_senadores(url)
-    
+
     assert resultado[0]["status_mandato"] == "Ativo"
     assert resultado[1]["status_mandato"] == "Ativo"
     assert resultado[2]["status_mandato"] == "Inativo"
@@ -157,36 +175,50 @@ def test_inclusao_suplentes_sem_exercicio():
     devem ser extraídos e marcados como Suplentes (aguardando) na lista final.
     """
     url = "https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/57.json"
-    
+
     mock_json = {
         "ListaParlamentarLegislatura": {
             "Parlamentares": {
                 "Parlamentar": [
                     {
-                        "IdentificacaoParlamentar": {"CodigoParlamentar": "1", "NomeParlamentar": "Senador Titular"},
+                        "IdentificacaoParlamentar": {
+                            "CodigoParlamentar": "1",
+                            "NomeParlamentar": "Senador Titular",
+                        },
                         "Mandatos": {
                             "Mandato": [
-                                {"DescricaoParticipacao": "Titular", "Exercicios": {"Exercicio": [{"DataInicio": "2023-02-01"}]}}
+                                {
+                                    "DescricaoParticipacao": "Titular",
+                                    "Exercicios": {
+                                        "Exercicio": [{"DataInicio": "2023-02-01"}]
+                                    },
+                                }
                             ]
-                        }
+                        },
                     },
                     {
-                        "IdentificacaoParlamentar": {"CodigoParlamentar": "2", "NomeParlamentar": "Suplente Fantasma"},
+                        "IdentificacaoParlamentar": {
+                            "CodigoParlamentar": "2",
+                            "NomeParlamentar": "Suplente Fantasma",
+                        },
                         "Mandatos": {
                             "Mandato": [
-                                {"DescricaoParticipacao": "1º Suplente", "Exercicios": {}}
+                                {
+                                    "DescricaoParticipacao": "1º Suplente",
+                                    "Exercicios": {},
+                                }
                             ]
-                        } # Sem exercício, nunca assumiu
-                    }
+                        },  # Sem exercício, nunca assumiu
+                    },
                 ]
             }
         }
     }
-    
+
     respx.get(url).respond(status_code=200, json=mock_json)
-    
+
     resultado = extrair_senadores(url)
-    
+
     # Deve retornar os 2, incluindo o "Suplente Fantasma" aguardando
     assert len(resultado) == 2
     assert resultado[0]["nome_urna"] == "Senador Titular"
@@ -198,40 +230,48 @@ def test_inclusao_suplentes_sem_exercicio():
 def test_busca_exercicio_ativo():
     """
     Testa a correção de Status Quebrado:
-    Garante que o script não pega cegamente o índice [0], mas varre a lista 
+    Garante que o script não pega cegamente o índice [0], mas varre a lista
     de exercícios para encontrar o atual, mapeando corretamente para 'Ativo'.
     """
     url = "https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/57.json"
-    
+
     mock_json = {
         "ListaParlamentarLegislatura": {
             "Parlamentares": {
                 "Parlamentar": [
                     {
-                        "IdentificacaoParlamentar": {"CodigoParlamentar": "1", "NomeParlamentar": "Senador Reeleito"},
+                        "IdentificacaoParlamentar": {
+                            "CodigoParlamentar": "1",
+                            "NomeParlamentar": "Senador Reeleito",
+                        },
                         "Mandatos": {
                             "Mandato": [
                                 {
                                     "DescricaoParticipacao": "Titular",
                                     "Exercicios": {
                                         "Exercicio": [
-                                            {"DataInicio": "2019-02-01", "DataFim": "2023-01-31"}, # Índice 0 antigo
-                                            {"DataInicio": "2023-02-01"}       # Índice 1 atual
+                                            {
+                                                "DataInicio": "2019-02-01",
+                                                "DataFim": "2023-01-31",
+                                            },  # Índice 0 antigo
+                                            {
+                                                "DataInicio": "2023-02-01"
+                                            },  # Índice 1 atual
                                         ]
-                                    }
+                                    },
                                 }
                             ]
-                        }
+                        },
                     }
                 ]
             }
         }
     }
-    
+
     respx.get(url).respond(status_code=200, json=mock_json)
-    
+
     resultado = extrair_senadores(url)
-    
+
     # O script deve achar o status "Exercício" e setar como Ativo, não como Inativo
     assert resultado[0]["status_mandato"] == "Ativo"
 
@@ -246,7 +286,7 @@ def test_orquestracao_pipeline_completo(mock_sleep):
     3. Upsert no Supabase e log final.
     """
     url = "https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/57.json"
-    
+
     mock_json = {
         "ListaParlamentarLegislatura": {
             "Parlamentares": {
@@ -255,24 +295,29 @@ def test_orquestracao_pipeline_completo(mock_sleep):
                         "IdentificacaoParlamentar": {"CodigoParlamentar": "500"},
                         "Mandatos": {
                             "Mandato": [
-                                {"DescricaoParticipacao": "Titular", "Exercicios": {"Exercicio": [{"DataInicio": "2023-02-01"}]}}
+                                {
+                                    "DescricaoParticipacao": "Titular",
+                                    "Exercicios": {
+                                        "Exercicio": [{"DataInicio": "2023-02-01"}]
+                                    },
+                                }
                             ]
-                        }
+                        },
                     }
                 ]
             }
         }
     }
-    
+
     # Simulando 1 falha e depois sucesso para provar que o Retry funciona!
     route = respx.get(url).side_effect = [
         httpx.Response(500),
-        httpx.Response(200, json=mock_json)
+        httpx.Response(200, json=mock_json),
     ]
-    
+
     mock_supabase = MagicMock()
     executar_pipeline_senadores(mock_supabase)
-    
+
     # Garante que o Supabase recebeu a inserção em lote e o log
     mock_supabase.table.assert_any_call("senado_politicos")
     mock_supabase.table().upsert.assert_called_once()

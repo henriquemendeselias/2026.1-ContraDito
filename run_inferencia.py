@@ -12,7 +12,9 @@ from supabase import create_client, Client
 from etl.pipeline_inferencia import executar_pipeline_inferencia
 
 logging.Formatter.converter = time.gmtime
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 load_dotenv()
 
@@ -42,6 +44,8 @@ if __name__ == "__main__":
 
     logging.info(f"Iniciando pipeline de inferência de postura (limite={limite})...")
     total = asyncio.run(
-        executar_pipeline_inferencia(supabase, gemini_client, qdrant_client, limite=limite)
+        executar_pipeline_inferencia(
+            supabase, gemini_client, qdrant_client, limite=limite
+        )
     )
     logging.info(f"Pipeline finalizado. {total} voto(s) processado(s).")

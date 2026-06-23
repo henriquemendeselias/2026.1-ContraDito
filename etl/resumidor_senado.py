@@ -56,7 +56,7 @@ def _chamar_gemini(client, texto: str) -> str:
         contents=_PROMPT.format(texto=texto),
         config=config,
     )
-    
+
     return response.text
 
 

@@ -71,7 +71,9 @@ async def inferir_postura(
         return None
 
     chunks_texto = "\n\n---\n\n".join(f"[{i+1}] {c}" for i, c in enumerate(chunks))
-    return await asyncio.to_thread(_chamar_gemini, gemini_client, resumo_proposicao, chunks_texto)
+    return await asyncio.to_thread(
+        _chamar_gemini, gemini_client, resumo_proposicao, chunks_texto
+    )
 
 
 def calcular_coerencia(voto_oficial: str, postura_inferida: str) -> bool | None:

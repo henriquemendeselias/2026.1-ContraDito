@@ -8,10 +8,11 @@ logger = logging.getLogger(__name__)
 TEXTOS_INVALIDOS = {
     "[FALHA NO PARSER HTML]",
     "[ERRO DE REDE]",
-    "[ARQUIVO CORROMPIDO NA ORIGEM]"
+    "[ARQUIVO CORROMPIDO NA ORIGEM]",
 }
 
 QDRANT_BATCH_SIZE = 50
+
 
 def gerar_id_deterministico_chunk(discurso_id: str, indice: int) -> str:
     """Gera um hash determinístico (UUID v5) para cada fragmento do discurso."""
@@ -38,7 +39,7 @@ def processar_discurso_senado(
         dt_obj = dt_obj.replace(tzinfo=timezone.utc)
     except (ValueError, TypeError):
         dt_obj = datetime.now(timezone.utc)
-        
+
     data_timestamp = int(dt_obj.timestamp())
 
     splitter = RecursiveCharacterTextSplitter(
@@ -52,26 +53,30 @@ def processar_discurso_senado(
 
     for i, texto_chunk in enumerate(chunks):
         chunk_id = gerar_id_deterministico_chunk(discurso_id, i)
-        
+
         embedding = modelo.encode(texto_chunk)
         if hasattr(embedding, "tolist"):
             embedding = embedding.tolist()
 
-        lote_supa.append({
-            "id": chunk_id,
-            "discurso_id": discurso_id,
-            "texto_chunk": texto_chunk,
-        })
-
-        lote_qdrant.append({
-            "id": chunk_id,
-            "vector": embedding,
-            "payload": {
-                "politico_id": int(politico_id),
-                "discurso_id": str(discurso_id),
-                "data_discurso": data_timestamp,
+        lote_supa.append(
+            {
+                "id": chunk_id,
+                "discurso_id": discurso_id,
+                "texto_chunk": texto_chunk,
             }
-        })
+        )
+
+        lote_qdrant.append(
+            {
+                "id": chunk_id,
+                "vector": embedding,
+                "payload": {
+                    "politico_id": int(politico_id),
+                    "discurso_id": str(discurso_id),
+                    "data_discurso": data_timestamp,
+                },
+            }
+        )
 
     return lote_supa, lote_qdrant
 
@@ -90,6 +95,7 @@ def executar_pipeline_chunking_senado(
     ids_processados = set()
     offset = 0
     import sys
+
     is_test = "pytest" in sys.modules
     while True:
         query = supabase_client.table("senado_discurso_chunks").select("discurso_id")
@@ -107,18 +113,23 @@ def executar_pipeline_chunking_senado(
     discursos_pendentes = []
     offset = 0
     while True:
-        resp_disc = supabase_client.table("senado_discursos").select("id, texto_bruto, politico_id, data_discurso").range(offset, offset + 999).execute()
+        resp_disc = (
+            supabase_client.table("senado_discursos")
+            .select("id, texto_bruto, politico_id, data_discurso")
+            .range(offset, offset + 999)
+            .execute()
+        )
         if not resp_disc.data:
             break
-            
+
         for d in resp_disc.data:
             if d["id"] not in ids_processados:
                 discursos_pendentes.append(d)
-                
+
         if len(resp_disc.data) < 1000:
             break
         offset += 1000
-        
+
     if limite:
         discursos_pendentes = discursos_pendentes[:limite]
 
@@ -136,10 +147,13 @@ def executar_pipeline_chunking_senado(
 
         if lote_supa and lote_qdrant:
             supabase_client.table("senado_discurso_chunks").upsert(lote_supa).execute()
-            
+
             for i in range(0, len(lote_qdrant), QDRANT_BATCH_SIZE):
-                qdrant_client.upsert(collection_name=qdrant_collection, points=lote_qdrant[i:i + QDRANT_BATCH_SIZE])
-                
+                qdrant_client.upsert(
+                    collection_name=qdrant_collection,
+                    points=lote_qdrant[i : i + QDRANT_BATCH_SIZE],
+                )
+
             total_inserido += len(lote_supa)
 
     return total_inserido
