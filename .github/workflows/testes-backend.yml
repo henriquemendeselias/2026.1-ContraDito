@@ -5,9 +5,8 @@ on:
     branches:
       - develop
       - main 
-
 jobs:
-  testes-api:
+  rodar-testes:
     name: Testes da API (FastAPI)
     runs-on: ubuntu-latest
 
