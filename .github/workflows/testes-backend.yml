@@ -7,9 +7,7 @@ on:
       - main 
 jobs:
   rodar-testes:
-    name: Testes da API (FastAPI)
     runs-on: ubuntu-latest
-
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
