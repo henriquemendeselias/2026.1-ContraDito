@@ -18,10 +18,21 @@
   --color-aurum: #f59e0b;
 }
 
+[data-theme="light"] {
+  --color-canvas:    #eef1f7;
+  --color-card:      #e4e9f2;
+  --color-card-alt:  #dae0ec;
+  --color-rim:       #bdc8d8;
+
+  --color-bright:    #0d1520;
+  --color-mid:       #4a5a70;
+  --color-dim:       #8a9ab0;
+}
+
 @layer base {
   body {
-    background-color: #05080f;
-    color: #e8edf5;
+    background-color: var(--color-canvas);
+    color: var(--color-bright);
     font-family: var(--font-dm-sans, "DM Sans", system-ui, sans-serif);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -48,17 +59,17 @@
   }
 
   .glass {
-    background: rgba(12, 18, 32, 0.75);
+    background: color-mix(in srgb, var(--color-card) 80%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid color-mix(in srgb, var(--color-rim) 30%, transparent);
   }
 
   .glass-elevated {
-    background: rgba(17, 25, 39, 0.88);
+    background: color-mix(in srgb, var(--color-card-alt) 90%, transparent);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.11);
+    border: 1px solid color-mix(in srgb, var(--color-rim) 40%, transparent);
   }
 
   .noise-overlay::before {

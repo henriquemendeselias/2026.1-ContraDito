@@ -24,7 +24,7 @@ const PARTIDOS = [
 ].sort();
 
 const SELECT_CLASS =
-  "h-10 px-3 bg-card border border-white/10 rounded-lg text-sm text-mid focus:outline-none focus:border-pulse/40 transition-colors cursor-pointer";
+  "h-10 px-3 bg-card border border-rim/30 rounded-lg text-sm text-mid focus:outline-none focus:border-pulse/40 transition-colors cursor-pointer";
 
 interface FilterBarProps {
   onChange: (f: Filters) => void;
@@ -37,13 +37,11 @@ export function FilterBar({ onChange }: FilterBarProps) {
 
   const update = useCallback(
     (key: keyof Filters, value: string | boolean) => {
-      setF((prev) => {
-        const next = { ...prev, [key]: value };
-        onChange(next);
-        return next;
-      });
+      const next = { ...f, [key]: value };
+      setF(next);
+      onChange(next);
     },
-    [onChange]
+    [f, onChange]
   );
 
   return (
@@ -55,7 +53,7 @@ export function FilterBar({ onChange }: FilterBarProps) {
           placeholder="Buscar parlamentar..."
           value={f.busca}
           onChange={(e) => update("busca", e.target.value)}
-          className="w-full h-10 pl-9 pr-9 bg-card border border-white/10 rounded-lg text-sm text-bright placeholder:text-dim focus:outline-none focus:border-pulse/40 transition-colors"
+          className="w-full h-10 pl-9 pr-9 bg-card border border-rim/30 rounded-lg text-sm text-bright placeholder:text-dim focus:outline-none focus:border-pulse/40 transition-colors"
         />
         {f.busca && (
           <button
@@ -90,7 +88,7 @@ export function FilterBar({ onChange }: FilterBarProps) {
         className={`h-10 px-3 rounded-lg border text-xs font-medium flex-shrink-0 transition-colors ${
           f.incluirSemDados
             ? "border-pulse/40 bg-pulse/10 text-pulse"
-            : "border-white/10 bg-card text-dim hover:text-mid"
+            : "border-rim/30 bg-card text-dim hover:text-mid"
         }`}
       >
         Sem dados

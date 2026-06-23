@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, X, Swords } from "lucide-react";
+import { Search, X, Swords, AlertTriangle } from "lucide-react";
 import { getParlamentares, getTimeline } from "@/lib/api";
 import { TendenciaRecente } from "@/components/TendenciaRecente";
 import { Avatar } from "@/components/ui/Avatar";
@@ -10,20 +10,37 @@ import { ComparisonChart } from "@/components/CoherenceChart";
 import { scoreHex } from "@/lib/utils";
 import type { Parlamentar, TimelinePoint } from "@/lib/types";
 
+const ESTADOS = [
+  "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT",
+  "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO",
+];
+
+const PARTIDOS = [
+  "AVANTE","DC","DEM","MDB","NOVO","PCdoB","PDT","PL","PMB","PMN",
+  "PP","PRD","PRTB","PSB","PSD","PSDB","PSol","PSC","PT","PTB","PTC",
+  "Podemos","REDE","Republicanos","SOLIDARIEDADE","UP","Agir",
+].sort();
+
 function ParlamentarSelector({
   selected,
   onSelect,
   excludeId,
   accent,
   label,
+  partido: partidoInicial = "",
+  estado: estadoInicial = "",
 }: {
   selected: Parlamentar | null;
   onSelect: (p: Parlamentar | null) => void;
   excludeId?: number;
   accent: string;
   label: string;
+  partido?: string;
+  estado?: string;
 }) {
   const [query, setQuery] = useState("");
+  const [partido, setPartido] = useState(partidoInicial);
+  const [estado, setEstado] = useState(estadoInicial);
   const [results, setResults] = useState<Parlamentar[]>([]);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -32,12 +49,12 @@ function ParlamentarSelector({
     if (query.length < 2) { setResults([]); return; }
     const t = setTimeout(async () => {
       try {
-        const d = await getParlamentares({ busca: query, tamanho: 8 });
+        const d = await getParlamentares({ busca: query, partido: partido || undefined, estado: estado || undefined, tamanho: 8 });
         setResults(d.itens.filter((p) => p.id !== excludeId));
       } catch { /* silent */ }
     }, 280);
     return () => clearTimeout(t);
-  }, [query, excludeId]);
+  }, [query, excludeId, partido, estado]);
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -57,7 +74,17 @@ function ParlamentarSelector({
           <p className="font-display text-xl font-bold text-bright">{selected.nome_urna}</p>
           <p className="text-xs text-dim mt-1">{selected.partido} · {selected.cargo} · {selected.estado}</p>
         </div>
-        <ScoreGauge score={selected.score_coerencia} size={80} />
+        {selected.dados_insuficientes ? (
+          <div className="flex flex-col items-center gap-1.5 py-1">
+            <AlertTriangle size={18} className="text-pending" />
+            <p className="font-data text-[11px] text-pending text-center leading-snug">
+              Dados insuficientes
+            </p>
+            <p className="text-[10px] text-dim">mín. 3 votos válidos (RF15)</p>
+          </div>
+        ) : (
+          <ScoreGauge score={selected.score_coerencia} size={80} />
+        )}
         <button
           onClick={() => onSelect(null)}
           className="text-xs text-dim hover:text-incoherent flex items-center gap-1 transition-colors"
@@ -85,8 +112,27 @@ function ParlamentarSelector({
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          className="w-full h-9 px-3 bg-card-alt rounded-lg border border-white/10 text-sm text-bright placeholder:text-dim focus:outline-none focus:border-pulse/40 transition-colors"
+          className="w-full h-9 px-3 bg-card-alt rounded-lg border border-rim/30 text-sm text-bright placeholder:text-dim focus:outline-none focus:border-pulse/40 transition-colors"
         />
+
+        <div className="flex gap-2 w-full">
+          <select
+            value={partido}
+            onChange={(e) => setPartido(e.target.value)}
+            className="flex-1 h-9 px-2 bg-card-alt border border-rim/30 rounded-lg text-sm text-mid focus:outline-none focus:border-pulse/40 transition-colors cursor-pointer"
+          >
+            <option value="">Partido</option>
+            {PARTIDOS.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <select
+            value={estado}
+            onChange={(e) => setEstado(e.target.value)}
+            className="w-24 h-9 px-2 bg-card-alt border border-rim/30 rounded-lg text-sm text-mid focus:outline-none focus:border-pulse/40 transition-colors cursor-pointer"
+          >
+            <option value="">UF</option>
+            {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+          </select>
+        </div>
       </div>
 
       {open && results.length > 0 && (
@@ -134,7 +180,7 @@ export default function ComparacaoPage() {
       <div className="pt-12 pb-10 text-center">
         <div className="inline-flex items-center gap-2 text-dim mb-3">
           <Swords size={14} />
-          <span className="text-[10px] uppercase tracking-[0.25em]">O Ringue</span>
+          <span className="text-[10px] uppercase tracking-[0.25em]">Comparação</span>
         </div>
         <h1 className="font-display text-5xl sm:text-6xl font-bold text-bright">
           Face a Face
@@ -189,7 +235,17 @@ export default function ComparacaoPage() {
                   <p className="font-display text-lg font-bold text-bright">{pol.nome_urna}</p>
                   <p className="text-xs text-dim mt-0.5">{pol.partido} · {pol.estado}</p>
                 </div>
-                <ScoreGauge score={pol.score_coerencia} size={72} />
+                {pol.dados_insuficientes ? (
+                  <div className="flex flex-col items-center gap-1.5 py-1">
+                    <AlertTriangle size={18} className="text-pending" />
+                    <p className="font-data text-[11px] text-pending text-center leading-snug">
+                      Dados insuficientes
+                    </p>
+                    <p className="text-[10px] text-dim">mín. 3 votos válidos (RF15)</p>
+                  </div>
+                ) : (
+                  <ScoreGauge score={pol.score_coerencia} size={72} />
+                )}
                 {tl.length > 0 && <TendenciaRecente points={tl} />}
               </div>
             ))}
