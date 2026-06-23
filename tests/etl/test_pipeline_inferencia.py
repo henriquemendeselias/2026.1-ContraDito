@@ -4,7 +4,9 @@ from unittest.mock import MagicMock
 from etl.pipeline_inferencia import executar_pipeline_inferencia
 
 
-def _mock_gemini(postura: str = "FAVORÁVEL", justificativa: str = "Justificativa teste."):
+def _mock_gemini(
+    postura: str = "FAVORÁVEL", justificativa: str = "Justificativa teste."
+):
     response = MagicMock()
     response.text = f'{{"postura": "{postura}", "justificativa": "{justificativa}"}}'
     cliente = MagicMock()
@@ -53,11 +55,15 @@ def _make_supabase_mock(votos: list, proposicao: dict, chunks: list):
         {"proposicao_id": pid} for pid in ids_props
     ]
     # select().eq().single().execute() — busca detalhes da proposição
-    props_tabela.select.return_value.eq.return_value.single.return_value.execute.return_value.data = proposicao
+    props_tabela.select.return_value.eq.return_value.single.return_value.execute.return_value.data = (
+        proposicao
+    )
 
     chunks_tabela = MagicMock()
     # select().in_().execute() — textos dos chunks encontrados no Qdrant
-    chunks_tabela.select.return_value.in_.return_value.execute.return_value.data = chunks
+    chunks_tabela.select.return_value.in_.return_value.execute.return_value.data = (
+        chunks
+    )
 
     def _table(nome: str):
         return {
@@ -108,7 +114,9 @@ async def test_pipeline_infere_e_salva_resultado():
     ]
 
     sb, votos_tabela = _make_supabase_mock([voto], proposicao, chunks)
-    qdrant = _make_qdrant_mock(vetor_proposicao=[0.1] * 8, chunk_ids=["chunk-1", "chunk-2"])
+    qdrant = _make_qdrant_mock(
+        vetor_proposicao=[0.1] * 8, chunk_ids=["chunk-1", "chunk-2"]
+    )
     gemini = _mock_gemini("FAVORÁVEL", "Consistente com discursos.")
 
     total = await executar_pipeline_inferencia(sb, gemini, qdrant)
@@ -126,7 +134,12 @@ async def test_pipeline_voto_incoerente():
     """
     Voto Não + postura FAVORÁVEL → eh_coerente deve ser False.
     """
-    voto = {"id": "v2", "proposicao_id": "pl_x", "politico_id": 1, "voto_oficial": "Não"}
+    voto = {
+        "id": "v2",
+        "proposicao_id": "pl_x",
+        "politico_id": 1,
+        "voto_oficial": "Não",
+    }
     proposicao = {"resumo_executivo": "Texto.", "data_votacao": "2023-01-01"}
     chunks = [{"texto_chunk": "Discurso favorável."}]
 
@@ -145,7 +158,12 @@ async def test_pipeline_pula_voto_sem_chunks():
     Se a busca no Qdrant não retornar chunks para aquele deputado, o voto
     é ignorado e não deve acionar o LLM nem fazer update.
     """
-    voto = {"id": "v3", "proposicao_id": "pl_x", "politico_id": 999, "voto_oficial": "Sim"}
+    voto = {
+        "id": "v3",
+        "proposicao_id": "pl_x",
+        "politico_id": 999,
+        "voto_oficial": "Sim",
+    }
     proposicao = {"resumo_executivo": "Texto.", "data_votacao": "2023-01-01"}
 
     sb, votos_tabela = _make_supabase_mock([voto], proposicao, chunks=[])
@@ -165,7 +183,12 @@ async def test_pipeline_pula_voto_sem_embedding_proposicao():
     Se a proposição não tiver embedding indexado no Qdrant, o voto é
     ignorado antes de buscar chunks ou acionar o LLM.
     """
-    voto = {"id": "v5", "proposicao_id": "pl_y", "politico_id": 1, "voto_oficial": "Sim"}
+    voto = {
+        "id": "v5",
+        "proposicao_id": "pl_y",
+        "politico_id": 1,
+        "voto_oficial": "Sim",
+    }
     proposicao = {"resumo_executivo": "Texto.", "data_votacao": "2023-01-01"}
 
     sb, votos_tabela = _make_supabase_mock([voto], proposicao, chunks=[])
@@ -184,7 +207,12 @@ async def test_pipeline_pula_voto_ausente():
     """
     Voto AUSENTE não deve acionar inferência (RF27).
     """
-    voto = {"id": "v4", "proposicao_id": "pl_x", "politico_id": 1, "voto_oficial": "AUSENTE"}
+    voto = {
+        "id": "v4",
+        "proposicao_id": "pl_x",
+        "politico_id": 1,
+        "voto_oficial": "AUSENTE",
+    }
     proposicao = {"resumo_executivo": "Texto.", "data_votacao": "2023-01-01"}
     chunks = [{"texto_chunk": "Discurso qualquer."}]
 

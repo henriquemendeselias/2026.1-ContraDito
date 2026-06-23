@@ -11,7 +11,9 @@ from etl.vinculador_discursos_votos_senado import executar_pipeline_vinculo_sena
 from etl.vinculador_discursos_votos_camara import executar_pipeline_vinculo_camara
 
 logging.Formatter.converter = time.gmtime
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 load_dotenv()
 
@@ -58,7 +60,9 @@ if __name__ == "__main__":
                 except ValueError:
                     pass
         else:
-            logging.error("Uso: python run_vinculo_chunks_votos.py [camara|senado|ambas] [limite] [threshold]")
+            logging.error(
+                "Uso: python run_vinculo_chunks_votos.py [camara|senado|ambas] [limite] [threshold]"
+            )
             sys.exit(1)
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -69,11 +73,19 @@ if __name__ == "__main__":
     t_senado = threshold if threshold is not None else 0.75
 
     if casa in ["camara", "ambas"]:
-        logging.info(f"Iniciando pipeline de vínculo de chunks aos votos da Câmara (limite={limite}, threshold={t_camara})...")
-        total_c = executar_pipeline_vinculo_camara(supabase, qdrant_client, threshold=t_camara, limite_votos=limite)
+        logging.info(
+            f"Iniciando pipeline de vínculo de chunks aos votos da Câmara (limite={limite}, threshold={t_camara})..."
+        )
+        total_c = executar_pipeline_vinculo_camara(
+            supabase, qdrant_client, threshold=t_camara, limite_votos=limite
+        )
         logging.info(f"Pipeline Câmara finalizado. {total_c} voto(s) processado(s).")
 
     if casa in ["senado", "ambas"]:
-        logging.info(f"Iniciando pipeline de vínculo de chunks aos votos do Senado (limite={limite}, threshold={t_senado})...")
-        total_s = executar_pipeline_vinculo_senado(supabase, qdrant_client, threshold=t_senado, limite_votos=limite)
+        logging.info(
+            f"Iniciando pipeline de vínculo de chunks aos votos do Senado (limite={limite}, threshold={t_senado})..."
+        )
+        total_s = executar_pipeline_vinculo_senado(
+            supabase, qdrant_client, threshold=t_senado, limite_votos=limite
+        )
         logging.info(f"Pipeline Senado finalizado. {total_s} voto(s) processado(s).")

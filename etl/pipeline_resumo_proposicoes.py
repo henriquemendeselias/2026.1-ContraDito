@@ -47,9 +47,9 @@ async def executar_pipeline_resumo(
         return 0
 
     def _registrar_erro(id_prop: str, mensagem: str) -> None:
-        supabase.table("camara_proposicoes").update(
-            {"erro_resumo": mensagem}
-        ).eq("id", id_prop).execute()
+        supabase.table("camara_proposicoes").update({"erro_resumo": mensagem}).eq(
+            "id", id_prop
+        ).execute()
         logger.warning(f"Proposição {id_prop}: {mensagem}")
 
     total = 0
@@ -77,7 +77,9 @@ async def executar_pipeline_resumo(
                             id=str(uuid.UUID(id_prop)),
                             payload={
                                 "proposicao_id_string": proposicao.get("proposicao_id"),
-                                "data_votacao": para_timestamp(proposicao.get("data_votacao")),
+                                "data_votacao": para_timestamp(
+                                    proposicao.get("data_votacao")
+                                ),
                                 "casa": "camara",
                             },
                             vector=embedding,
@@ -85,14 +87,16 @@ async def executar_pipeline_resumo(
                     ],
                 )
 
-                supabase.table("camara_proposicoes").update({
-                    "resumo_executivo": resumo,
-                    "erro_resumo": None,
-                }).eq("id", id_prop).execute()
+                supabase.table("camara_proposicoes").update(
+                    {
+                        "resumo_executivo": resumo,
+                        "erro_resumo": None,
+                    }
+                ).eq("id", id_prop).execute()
 
                 total += 1
                 logger.info(f"Proposição {id_prop}: resumo saved, embedding in Qdrant.")
-                
+
                 await asyncio.sleep(5)
 
             except Exception as e:

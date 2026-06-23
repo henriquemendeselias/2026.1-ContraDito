@@ -65,7 +65,9 @@ async def test_gerar_resumo_chama_generate_content_com_prompt():
 
     cliente.models.generate_content.assert_called_once()
     call_kwargs = cliente.models.generate_content.call_args
-    prompt_enviado = call_kwargs.kwargs.get("contents") or call_kwargs[1].get("contents", "")
+    prompt_enviado = call_kwargs.kwargs.get("contents") or call_kwargs[1].get(
+        "contents", ""
+    )
     assert "Texto da proposição." in prompt_enviado
 
 
@@ -84,5 +86,7 @@ async def test_gerar_resumo_texto_longo_chamada_unica():
     assert resultado == esperado
     cliente.models.generate_content.assert_called_once()
     call_kwargs = cliente.models.generate_content.call_args
-    prompt_enviado = call_kwargs.kwargs.get("contents") or call_kwargs[1].get("contents", "")
+    prompt_enviado = call_kwargs.kwargs.get("contents") or call_kwargs[1].get(
+        "contents", ""
+    )
     assert len(prompt_enviado) <= 105_000

@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, date as date_type
 
+
 class PoliticoDB(BaseModel):
     id: int
     nome_civil: str
@@ -14,12 +15,14 @@ class PoliticoDB(BaseModel):
     score_coerencia: Optional[float] = None
     data_ultima_atualizacao: Optional[datetime] = None
 
+
 class PaginaPoliticosDB(BaseModel):
     total_registros: int
     pagina_atual: int
     tamanho_pagina: int
     total_paginas: int
     itens: List[PoliticoDB]
+
 
 class PoliticoResumoVotosSchema(BaseModel):
     politico_id: int
@@ -32,9 +35,11 @@ class PoliticoResumoVotosSchema(BaseModel):
     qtd_obstrucao: int
     qtd_outros: int
 
+
 class PoliticoDetalhadoDB(BaseModel):
     politico: PoliticoDB
     resumo_votos: Optional[PoliticoResumoVotosSchema] = None
+
 
 class DiscursoDB(BaseModel):
     id: str  # UUID
@@ -45,6 +50,7 @@ class DiscursoDB(BaseModel):
     sumario: Optional[str] = None
     fase_evento: Optional[str] = None
 
+
 class PaginaDiscursosDB(BaseModel):
     total_registros: int
     pagina_atual: int
@@ -52,10 +58,12 @@ class PaginaDiscursosDB(BaseModel):
     total_paginas: int
     itens: List[DiscursoDB]
 
+
 class DiscursoChunkDB(BaseModel):
     id: str  # UUID
     discurso_id: str  # UUID
     texto_chunk: str
+
 
 class ProposicaoDB(BaseModel):
     id: str  # UUID
@@ -73,12 +81,14 @@ class ProposicaoDB(BaseModel):
     resumo_executivo: Optional[str] = None
     erro_resumo: Optional[str] = None
 
+
 class PaginaProposicoesDB(BaseModel):
     total_registros: int
     pagina_atual: int
     tamanho_pagina: int
     total_paginas: int
     itens: List[ProposicaoDB]
+
 
 class VotoDB(BaseModel):
     id: str  # UUID
@@ -87,6 +97,7 @@ class VotoDB(BaseModel):
     partido_na_epoca: Optional[str] = None
     voto_oficial: str
     chunks_proximos: Optional[List[dict]] = None
+
 
 class PaginaVotosDB(BaseModel):
     total_registros: int

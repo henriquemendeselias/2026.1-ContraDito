@@ -18,12 +18,19 @@ _COLLECTION_PROPOSICOES = "proposicoes_embeddings"
 _COLLECTION_CHUNKS = "chunks_discursos_embeddings"
 
 
-def _buscar_embedding_proposicao(qdrant_client: QdrantClient, proposicao_id_string: str) -> list[float] | None:
+def _buscar_embedding_proposicao(
+    qdrant_client: QdrantClient, proposicao_id_string: str
+) -> list[float] | None:
     """Recupera o vetor de uma proposição do Qdrant pelo proposicao_id_string do payload."""
     resultado = qdrant_client.scroll(
         collection_name=_COLLECTION_PROPOSICOES,
         scroll_filter=Filter(
-            must=[FieldCondition(key="proposicao_id_string", match=MatchValue(value=proposicao_id_string))]
+            must=[
+                FieldCondition(
+                    key="proposicao_id_string",
+                    match=MatchValue(value=proposicao_id_string),
+                )
+            ]
         ),
         with_vectors=True,
         limit=1,
@@ -98,18 +105,24 @@ async def executar_pipeline_inferencia(
                 .data
             )
             if not prop or not prop.get("resumo_executivo"):
-                logger.warning(f"Voto {id_voto}: proposição {proposicao_id} sem resumo, ignorando.")
+                logger.warning(
+                    f"Voto {id_voto}: proposição {proposicao_id} sem resumo, ignorando."
+                )
                 continue
 
             query_vector = _buscar_embedding_proposicao(qdrant_client, proposicao_id)
             if not query_vector:
-                logger.warning(f"Voto {id_voto}: embedding da proposição {proposicao_id} não encontrado no Qdrant.")
+                logger.warning(
+                    f"Voto {id_voto}: embedding da proposição {proposicao_id} não encontrado no Qdrant."
+                )
                 continue
 
             data_corte = para_timestamp(prop.get("data_votacao"))
             qdrant_filter = Filter(
                 must=[
-                    FieldCondition(key="politico_id", match=MatchValue(value=politico_id)),
+                    FieldCondition(
+                        key="politico_id", match=MatchValue(value=politico_id)
+                    ),
                 ]
             )
             if data_corte is not None:
@@ -127,7 +140,9 @@ async def executar_pipeline_inferencia(
 
             chunk_ids = [str(r.id) for r in resultados_qdrant.points]
             if not chunk_ids:
-                logger.warning(f"Voto {id_voto}: nenhum chunk encontrado no Qdrant para o parlamentar.")
+                logger.warning(
+                    f"Voto {id_voto}: nenhum chunk encontrado no Qdrant para o parlamentar."
+                )
                 continue
 
             chunks_data = (
@@ -146,21 +161,27 @@ async def executar_pipeline_inferencia(
             )
 
             if resultado is None:
-                logger.warning(f"Voto {id_voto}: sem chunks suficientes para inferir postura.")
+                logger.warning(
+                    f"Voto {id_voto}: sem chunks suficientes para inferir postura."
+                )
                 continue
 
             postura = resultado["postura"]
             justificativa = resultado["justificativa"]
             eh_coerente = calcular_coerencia(voto_oficial, postura)
 
-            supabase.table("camara_votos").update({
-                "inferencia_ia": postura,
-                "justificativa": justificativa,
-                "eh_coerente": eh_coerente,
-            }).eq("id", id_voto).execute()
+            supabase.table("camara_votos").update(
+                {
+                    "inferencia_ia": postura,
+                    "justificativa": justificativa,
+                    "eh_coerente": eh_coerente,
+                }
+            ).eq("id", id_voto).execute()
 
             total += 1
-            logger.info(f"Voto {id_voto}: {voto_oficial} vs {postura} → coerente={eh_coerente}")
+            logger.info(
+                f"Voto {id_voto}: {voto_oficial} vs {postura} → coerente={eh_coerente}"
+            )
 
         except Exception as e:
             logger.error(f"Voto {id_voto}: erro ao processar — {e}")

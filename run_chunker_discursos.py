@@ -11,7 +11,9 @@ from etl.chunker_discursos_camara import executar_pipeline_chunking
 from etl.chunker_discursos_senado import executar_pipeline_chunking_senado
 
 logging.Formatter.converter = time.gmtime
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 load_dotenv()
 
@@ -35,18 +37,40 @@ qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_KEY, timeout=60)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Chunking e vetorização de discursos (Câmara e Senado).")
-    parser.add_argument("--casa", type=str, choices=["camara", "senado", "ambas"], default="ambas", help="Qual casa processar.")
-    parser.add_argument("--chunk_size", type=int, default=1000, help="Tamanho máximo de cada chunk em caracteres.")
-    parser.add_argument("--overlap", type=int, default=200, help="Sobreposição entre chunks consecutivos em caracteres.")
-    parser.add_argument("--limite", type=int, default=None, help="Processar no máximo N discursos.")
+    parser = argparse.ArgumentParser(
+        description="Chunking e vetorização de discursos (Câmara e Senado)."
+    )
+    parser.add_argument(
+        "--casa",
+        type=str,
+        choices=["camara", "senado", "ambas"],
+        default="ambas",
+        help="Qual casa processar.",
+    )
+    parser.add_argument(
+        "--chunk_size",
+        type=int,
+        default=1000,
+        help="Tamanho máximo de cada chunk em caracteres.",
+    )
+    parser.add_argument(
+        "--overlap",
+        type=int,
+        default=200,
+        help="Sobreposição entre chunks consecutivos em caracteres.",
+    )
+    parser.add_argument(
+        "--limite", type=int, default=None, help="Processar no máximo N discursos."
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
 
-    logging.info(f"Carregando modelo BAAI/bge-m3 (chunk_size={args.chunk_size}, overlap={args.overlap})...")
+    logging.info(
+        f"Carregando modelo BAAI/bge-m3 (chunk_size={args.chunk_size}, overlap={args.overlap})..."
+    )
     modelo = SentenceTransformer("BAAI/bge-m3")
     logging.info("Iniciando pipeline de chunking incremental...")
 
@@ -78,4 +102,6 @@ if __name__ == "__main__":
 
     fim = time.time()
     total = total_camara + total_senado
-    logging.info(f"Pipeline geral finalizado: {total} chunk(s) processado(s) em {fim - inicio:.1f}s.")
+    logging.info(
+        f"Pipeline geral finalizado: {total} chunk(s) processado(s) em {fim - inicio:.1f}s."
+    )

@@ -1,7 +1,11 @@
 import uuid
 import pytest
 from unittest.mock import MagicMock
-from etl.chunker_discursos_camara import dividir_em_chunks, processar_discurso, executar_pipeline_chunking
+from etl.chunker_discursos_camara import (
+    dividir_em_chunks,
+    processar_discurso,
+    executar_pipeline_chunking,
+)
 from etl.utils import para_timestamp
 
 
@@ -24,12 +28,18 @@ def _make_supabase_mock(discursos_data: list, ids_ja_processados: list | None = 
     chunks_table = MagicMock()
     chunks_page_1 = MagicMock(data=ids_processados_dicts)
     chunks_page_2 = MagicMock(data=[])
-    chunks_table.select.return_value.range.return_value.execute.side_effect = [chunks_page_1, chunks_page_2]
+    chunks_table.select.return_value.range.return_value.execute.side_effect = [
+        chunks_page_1,
+        chunks_page_2,
+    ]
 
     discursos_table = MagicMock()
     disc_page_1 = MagicMock(data=discursos_data)
     disc_page_2 = MagicMock(data=[])
-    discursos_table.select.return_value.order.return_value.range.return_value.execute.side_effect = [disc_page_1, disc_page_2]
+    discursos_table.select.return_value.order.return_value.range.return_value.execute.side_effect = [
+        disc_page_1,
+        disc_page_2,
+    ]
 
     supabase = MagicMock()
     supabase.table.side_effect = lambda name: (
@@ -62,7 +72,12 @@ def test_dividir_texto_corrompido_retorna_lista_vazia():
     """
     Textos marcados como corrompidos na origem não devem gerar chunks.
     """
-    assert dividir_em_chunks("[ARQUIVO CORROMPIDO NA ORIGEM]", chunk_size=1000, chunk_overlap=200) == []
+    assert (
+        dividir_em_chunks(
+            "[ARQUIVO CORROMPIDO NA ORIGEM]", chunk_size=1000, chunk_overlap=200
+        )
+        == []
+    )
 
 
 def test_dividir_texto_curto_retorna_um_fragmento():
@@ -173,7 +188,9 @@ def test_processar_discurso_ids_sao_uuid5_deterministicos():
     for chunk_id in ids_1:
         parsed = uuid.UUID(chunk_id)
         assert parsed.version == 5
-    assert len(set(ids_1)) == len(ids_1), "IDs duplicados entre chunks do mesmo discurso"
+    assert len(set(ids_1)) == len(
+        ids_1
+    ), "IDs duplicados entre chunks do mesmo discurso"
     assert ids_1 == ids_2, "reprocessar o mesmo discurso deve gerar os mesmos ids"
 
 
@@ -251,7 +268,6 @@ def test_processar_discurso_casting_defensivo_tipos():
     assert ponto_none.payload["politico_id"] is None
 
 
-
 def test_pipeline_sem_discursos_pendentes_retorna_zero():
     """
     Quando não há discursos para processar, o pipeline retorna 0
@@ -279,7 +295,14 @@ def test_pipeline_processa_discurso_valido_e_retorna_contagem():
     discurso_id = "discurso-uuid-001"
     texto = "Sr. Presidente, apoio integralmente o projeto de reforma agrária."
     supabase, chunks_table, _ = _make_supabase_mock(
-        discursos_data=[{"id": discurso_id, "texto_bruto": texto, "politico_id": 1, "data_discurso": None}]
+        discursos_data=[
+            {
+                "id": discurso_id,
+                "texto_bruto": texto,
+                "politico_id": 1,
+                "data_discurso": None,
+            }
+        ]
     )
 
     total = executar_pipeline_chunking(
@@ -304,7 +327,14 @@ def test_pipeline_descarta_discurso_corrompido():
     e o pipeline deve retornar 0.
     """
     supabase, chunks_table, _ = _make_supabase_mock(
-        discursos_data=[{"id": "uuid-corrompido", "texto_bruto": "[ARQUIVO CORROMPIDO NA ORIGEM]", "politico_id": 1, "data_discurso": None}]
+        discursos_data=[
+            {
+                "id": "uuid-corrompido",
+                "texto_bruto": "[ARQUIVO CORROMPIDO NA ORIGEM]",
+                "politico_id": 1,
+                "data_discurso": None,
+            }
+        ]
     )
 
     total = executar_pipeline_chunking(
@@ -334,7 +364,9 @@ def test_pipeline_ordena_discursos_do_mais_novo_para_o_mais_antigo():
         chunk_overlap=200,
     )
 
-    discursos_table.select.return_value.order.assert_called_once_with("data_discurso", desc=True)
+    discursos_table.select.return_value.order.assert_called_once_with(
+        "data_discurso", desc=True
+    )
 
 
 def test_processar_discurso_camara_qdrant_sub_lotes():

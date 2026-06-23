@@ -19,11 +19,7 @@ def _is_transient_error(exception: BaseException) -> bool:
 def _extrair_texto_de_bytes(pdf_bytes: bytes) -> str:
     try:
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
-            partes = [
-                page.extract_text()
-                for page in pdf.pages
-                if page.extract_text()
-            ]
+            partes = [page.extract_text() for page in pdf.pages if page.extract_text()]
             return "\n\n".join(partes)
     except Exception as e:
         logger.warning(f"Falha ao parsear PDF: {e}")
