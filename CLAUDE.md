@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ContraDito** is a political transparency platform that cross-references Brazilian federal legislators' speeches against their voting records, computing a **Score de Coerência** (Coherence Score) using AI. It is an academic project for the MDS discipline at UnB (Universidade de Brasília).
+**ContraDito** is a political transparency **consultation portal** that cross-references Brazilian federal legislators' speeches against their voting records using AI. It is an academic project for the MDS discipline at UnB (Universidade de Brasília).
+
+> Product note: the **Score de Coerência** and the `dados_insuficientes` flag are **no longer surfaced in the product**. The `score_coerencia` column still exists in the database as dead/internal data, but no ranking, badge, ordering, or score is exposed in the UI. The `eh_coerente` column is **no longer populated** (permanent data limitation), so no coherence-derived metric exists anywhere. The product is a **consultation portal**, not a coherence ranking.
 
 ## Running the Project
 
@@ -50,9 +52,27 @@ The system is a strict **CQRS** pattern split into two isolated Python services:
 - Rate-limited via `slowapi` (5/min on semantic search)
 - CORS is locked to `http://localhost:3000`
 
-Key internal routes (hidden from Swagger):
-- `POST /api/politicos/interno/recalcular-scores` — recalculates all coherence scores from `provas_contradicao` table
-- `POST /api/politicos/interno/limpar-cache` — invalidates the in-memory cache (called by the ETL worker after writes)
+### Route structure — `{casa}` segment
+
+All public read routes are now namespaced by **casa** (`"camara"` or `"senado"`)
+in the path, **except** `GET /api/comparar` (which takes `casa` as a query param).
+Implemented in `app/rotas/dados.py` (router `prefix="/api"`); `validar_casa` rejects
+anything other than `camara`/`senado` with HTTP 400.
+
+- `GET /api/{casa}/politicos` — list/filter (busca, partido, estado, pagina, tamanho)
+- `GET /api/{casa}/politicos/{id_parlamentar}` — profile (`politico` + `resumo_votos`)
+- `GET /api/{casa}/politicos/{id_parlamentar}/timeline` — voting timeline
+- `GET /api/{casa}/politicos/{id_parlamentar}/afinidades` — gêmeo / antípoda (concordance)
+- `GET /api/{casa}/politicos/{id_parlamentar}/fidelidade` — raw party fidelity
+- `GET /api/{casa}/politicos/{id_parlamentar}/discursos` — speeches of one legislator
+- `GET /api/comparar` — direct comparison (concordância + divergências)
+- `GET /api/{casa}/partidos/coesao` — party cohesion (adapted Rice index)
+- `GET /api/{casa}/proposicoes[/{id_proposicao}[/polarizacao]]` — propositions
+- `GET /api/{casa}/discursos[/{discurso_id}[/chunks]]` — speeches
+- `GET /api/{casa}/votos` — raw nominal votes (+ nearest speech chunks, may be empty)
+
+None of these routes read or return `eh_coerente`. The `politicos` payload still
+includes `score_coerencia`, but it is dead data for the product (never rendered).
 
 ### Write Side — `worker_api.py` (FastAPI, port 8001, internal only)
 - Entry point: `worker_api.py`
@@ -61,22 +81,24 @@ Key internal routes (hidden from Swagger):
 - Port 8001 is **not exposed externally** (Docker-internal only); the API calls it via `http://worker:8001`
 
 ### Database — Supabase (PostgreSQL + pgvector)
-Core tables:
-- `politicos` — legislators with `score_coerencia` field
-- `provas_contradicao` — AI-generated contradiction evidence, one row per speech/vote pair, with `status_coerencia` (bool)
-- `logs_pipeline_ia` — ETL error log
-- Vector similarity search uses a Supabase RPC `buscar_discursos_similares` (stored procedure using `pgvector`)
+Tables are mirrored per casa (`camara_*` / `senado_*`). Core tables:
+- `{casa}_politicos` — legislators. Still has a `score_coerencia` column, but it is
+  dead data for the product (never shown).
+- `{casa}_votos` — nominal votes (`voto_oficial`, `partido_na_epoca`). The
+  `eh_coerente` column is **no longer populated** (permanent data limitation).
+- `{casa}_proposicoes`, `{casa}_discursos`, `{casa}_discurso_chunks` — propositions,
+  speeches and AI-mapped chunks.
+- `politico_resumo_votos` — consolidated vote tallies (Sim/Não/ausências/etc.).
+- Vector similarity search uses `pgvector` over the speech chunks.
 
 In local Docker, the DB is `pgvector/pgvector:pg15` on port 5432 (exposed for DBeaver/pgAdmin inspection).
 
 ### Frontend — `frontend/` (Next.js 16 + React 19 + Tailwind CSS 4)
 - App Router under `frontend/app/`
-- Pages: `/` (listing), `/politico/[id]` (profile), `/comparacao` (comparison)
-- Communicates with the API at `NEXT_PUBLIC_API_URL`
-
-## Score de Coerência Logic
-
-Defined in `app/rotas/politicos.py:recalcular_todos_scores`:
-- Abstentions/absences (`AUSENTE`, `ABSTENÇÃO`, `NÃO COMPARECEU`, etc.) are excluded from the denominator (RF27)
-- Minimum of **3 valid votes** required to produce a non-null score (RF15)
-- Score = `(votos_coerentes / total_validos) * 100`, rounded to 1 decimal
+- Consultation portal (no ranking). Pages (under restructuring — see `PLANEJAMENTO.md`):
+  `/` (unified Câmara+Senado directory with Todos/Câmara/Senado view modes +
+  "Sobre"/team section), `/politico/[id]` (dossiê), `/comparacao` (concordância).
+- No score, nota, ranking ordering, or `dados_insuficientes` rendered anywhere.
+- Design system: Fraunces (display) + DM Sans (body); palette/tokens in
+  `frontend/app/globals.css`.
+- Communicates with the API at `NEXT_PUBLIC_API_URL`; routes namespaced by `{casa}`.
