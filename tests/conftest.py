@@ -7,4 +7,5 @@ os.environ["SUPABASE_KEY"] = "dummy-key"
 
 # Mock the supabase library's create_client function to prevent it from validating keys or connecting
 import supabase
+
 supabase.create_client = MagicMock()
