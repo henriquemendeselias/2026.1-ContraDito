@@ -6,12 +6,7 @@ Para garantir a entrega de uma Prova de Conceito (PoC) funcional e de alto valor
 
 ## 1. Visão Geral
 
-O sistema funciona como um **motor de auditoria contínua**. Ele coleta o histórico legislativo (fala e voto) de políticos, processa o texto semanticamente por meio de Inteligência Artificial e exibe um **Score de Coerência** ao eleitor.
-
-A interface central concentra a barra de pesquisa, o ranking de parlamentares mais coerentes e as funcionalidades principais. A partir dela, o usuário navega entre:
-
-- **Face-to-Face:** comparação direta entre dois políticos.
-- **Dossiê:** página de perfil detalhada de cada parlamentar.
+O sistema funciona como uma vitrine de transparência política. Ele coleta o histórico legislativo (fala e voto) de políticos federais, processa esses textos semanticamente por meio de Inteligência Artificial para correlacionar discursos e votos, e apresenta painéis com os dados processados.
 
 ---
 
@@ -21,9 +16,9 @@ A interface central concentra a barra de pesquisa, o ranking de parlamentares ma
 - **Filtro de Proposições e Votos:** Apenas PLs e PECs que foram a votação nominal. Somente o voto no **texto-base** é considerado.
 - **Fontes de Dados (Discursos):** Notas Taquigráficas de Plenário ou Comissões, consumidas da API oficial do governo.
 - **Processamento de IA:**
-    - **Resumo Executivo:** Gerado obrigatoriamente para respeitar o limite de vetorização do BGE-M3 (máx. 512 tokens).
-    - **Chunking:** Discursos enviados em fragmentos ao modelo, prevenindo esgotamento de janela de contexto e alucinações.
-    - **Inferência:** Uso restrito do **Llama 3.1 8B** para determinar a coerência.
+    - **Sumarização Temática:** Geração de resumos executivos das matérias via API do **Google GenAI** (Gemini).
+    - **Fragmentação (Chunking):** Divisão dos discursos limpos em blocos menores com sobreposição para vetorização precisa.
+    - **Busca Semântica e Vinculação:** Vetorização via SBERT (`BAAI/bge-m3`) com indexação e busca espacial no **Qdrant Cloud** para aproximar e vincular falas de parlamentares com os temas votados no Supabase.
 
 ---
 
@@ -35,11 +30,3 @@ A interface central concentra a barra de pesquisa, o ranking de parlamentares ma
 - **Atores Não-Federais:** Deputados Distritais, Estaduais, Vereadores, Prefeitos, Governadores e membros dos Poderes Executivo e Judiciário.
 - **Redes Sociais e Mídia:** O motor vetorial ignora postagens em X (Twitter), Instagram, Facebook, TikTok ou entrevistas à imprensa. É exigido o registro taquigráfico oficial.
 - **Tempo Real:** O portal não é um *feed* em tempo real — os dados dependem do ciclo agendado de extração.
-
-### Exceções Matemáticas
-
-Para garantir a integridade do Score de Coerência, os seguintes cenários são descartados pelo motor:
-
-1. **Anacronismo de Discurso:** Discursos proferidos *após* a data de votação não entram no cálculo para aquela matéria.
-2. **Ausências e Abstenções:** Não compõem o denominador do cálculo.
-3. **Cold Start:** Políticos com dados insuficientes não terão o perfil avaliado, evitando distorções estatísticas.
