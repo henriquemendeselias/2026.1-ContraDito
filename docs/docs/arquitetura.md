@@ -15,15 +15,15 @@ O diagrama de Contexto mostra a visão de "helicóptero" de como a plataforma in
 C4Context
   title Nível 1: Contexto de Sistemas - ContraDito
   
-  Person(cidadao, "Cidadão / Eleitor", "Busca coerência política")
-  System(contradito, "ContraDito", "Calcula e exibe Scores")
+  Person(cidadao, "Cidadão / Eleitor / Jornalista", "Busca dados")
+  System(contradito, "ContraDito", "Exibe dados")
   
-  System_Ext(camara, "API da Câmara", "Deputados e Votos")
-  System_Ext(senado, "API do Senado", "Senadores e Discursos")
+  System_Ext(camara, "API da Câmara", "Deputados e dados relacionados")
+  System_Ext(senado, "API do Senado", "Senadores e dados relacionados")
   
   Rel_D(cidadao, contradito, "Acessa vitrine", "Web")
-  Rel_D(contradito, camara, "Extrai votos", "REST")
-  Rel_D(contradito, senado, "Extrai falas", "REST")
+  Rel_D(contradito, camara, "Extrai", "REST")
+  Rel_D(contradito, senado, "Extrai", "REST")
   
   UpdateElementStyle(cidadao, $bgColor="#08427b", $fontColor="#ffffff", $borderColor="#052e56")
   UpdateElementStyle(contradito, $bgColor="#1168bd", $fontColor="#ffffff", $borderColor="#0b4884")
@@ -34,75 +34,87 @@ C4Context
 ```
 
 ### Nível 2: C4 Container (Aplicações e Dados)
-O diagrama de Container detalha a Plataforma ContraDito em seus serviços independentes, evidenciando o padrão arquitetural CQRS que isola leitura de processamento.
+O diagrama de Container detalha a Plataforma ContraDito em seus serviços independentes, evidenciando o padrão arquitetural CQRS que isola leitura de processamento, e especificando que os bancos relacional e vetorial residem na nuvem como serviços gerenciados.
 
 ```mermaid
 C4Container
   title Nível 2: Diagrama de Container - ContraDito
   
-  Person(cidadao, "Cidadão / Eleitor", "Acessa portal")
+  Person(cidadao, "Cidadão / Eleitor / Jornalista", "Acessa portal e documentação")
   System_Ext(gov_apis, "APIs do Governo", "Câmara/Senado")
+
+  ContainerDb(supabase, "Banco Relacional (Supabase - Nuvem)", "PostgreSQL", "Armazena dados cadastrais de políticos, votos, discursos e resumos")
+  ContainerDb(qdrant, "Banco Vetorial (Qdrant - Nuvem)", "Qdrant Cloud", "Armazena embeddings e chunks de discursos/proposições")
 
   Container_Boundary(c1, "ContraDito") {
     Container(frontend, "Front-end Web", "Next.js", "Interface e Vitrine")
     Container(fastapi, "API de Leitura", "FastAPI", "Endpoints View_Query")
-    Container(worker, "Worker NLP", "Python", "Processa View_Command")
-    ContainerDb(supabase, "Banco de Dados", "Supabase", "Armazena tudo")
+    Container(worker, "Worker NLP / Scripts ETL", "Python", "Processa View_Command, extração e vetorização")
+    Container(mkdocs, "Servidor de Documentação", "MkDocs (Material Theme)", "Disponibiliza a documentação do projeto")
   }
 
   Rel_D(cidadao, frontend, "Navega", "HTTPS")
+  Rel_D(cidadao, mkdocs, "Consulta documentação", "HTTPS")
   Rel_D(frontend, fastapi, "Consome", "JSON")
   Rel_D(fastapi, supabase, "Lê dados", "SQL")
   
   Rel_R(worker, gov_apis, "Extrai dados", "HTTPS")
-  Rel_U(worker, supabase, "Escreve", "pgvector")
+  Rel_U(worker, supabase, "Lê/Escreve dados relacionais", "SQL")
+  Rel_U(worker, qdrant, "Escreve embeddings", "gRPC/HTTP")
   
   UpdateElementStyle(cidadao, $bgColor="#08427b", $fontColor="#ffffff", $borderColor="#052e56")
   UpdateElementStyle(gov_apis, $bgColor="#374151", $fontColor="#ffffff", $borderColor="#4b5563")
   UpdateElementStyle(frontend, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
   UpdateElementStyle(fastapi, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
   UpdateElementStyle(worker, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
-  UpdateElementStyle(supabase, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
+  UpdateElementStyle(mkdocs, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
+  UpdateElementStyle(supabase, $bgColor="#059669", $fontColor="#ffffff", $borderColor="#6ee7b7")
+  UpdateElementStyle(qdrant, $bgColor="#059669", $fontColor="#ffffff", $borderColor="#6ee7b7")
   
   UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
 
 ### Nível 3: C4 Component (Worker NLP)
-Focando no serviço mais complexo do backend — o **Worker NLP** —, este diagrama ilustra o padrão Pipe and Filter para a extração, sumarização e cálculo de coerência.
+Focando nos scripts e pipelines de processamento do backend — o **Worker NLP / Scripts ETL** —, este diagrama ilustra o fluxo de dados em formato de Pipe and Filter para a extração de dados, sumarização, fragmentação, vetorização e vinculação de proximidade semântica.
 
 ```mermaid
 C4Component
-  title Nível 3: Diagrama de Componentes - Worker NLP
+  title Nível 3: Diagrama de Componentes - Worker NLP / ETL
   
-  ContainerDb(supabase, "Supabase", "Armazenamento", "Tabelas e Vetores")
+  ContainerDb(supabase, "Supabase (Nuvem)", "PostgreSQL", "Armazena dados cadastrais, proposições, votos, discursos e vínculos")
+  ContainerDb(qdrant, "Qdrant (Nuvem)", "Qdrant Cloud", "Armazena embeddings e chunks de discursos/proposições")
   System_Ext(gov_apis, "APIs do Governo", "Câmara e Senado")
   
-  Container_Boundary(worker_nlp, "Worker NLP") {
-    Component(extrator, "1: Extrator", "Python", "Busca proposições")
-    Component(sumarizador, "2: Sumarizador", "Llama 3.1", "Resume tema")
-    Component(chunker, "3: Chunker", "Python", "Fragmenta texto")
-    Component(sbert, "4: Vetorizador", "SBERT", "Gera embeddings")
-    Component(rag, "5: Mecanismo RAG", "pgvector", "Recupera discursos")
-    Component(veredito, "6: Orquestrador", "Llama 3.1", "Calcula score")
+  Container_Boundary(worker_nlp, "Worker NLP / ETL Pipeline") {
+    Component(extrator, "1: Extrator", "Python Scripts", "Extrai dados brutos de parlamentares, discursos, proposições e votos")
+    Component(sumarizador, "2: Sumarizador", "Llama 3.1 / Gemini", "Gera resumos executivos temáticos das proposições")
+    Component(chunker, "3: Chunker", "Python Scripts", "Fragmenta discursos longos em blocos textuais menores")
+    Component(vetorizador, "4: Vetorizador", "SBERT / BGE-M3", "Gera embeddings para blocos de discurso e resumos")
+    Component(vinculador, "5: Vinculador de Chunks", "Python (run_vinculo_chunks)", "Calcula similaridade via Qdrant e vincula chunks de discursos a votos correspondentes")
   }
   
-  Rel_D(extrator, gov_apis, "Consulta", "HTTPS")
-  Rel_R(extrator, sumarizador, "Repassa", "Memória")
-  Rel_D(sumarizador, chunker, "Repassa", "Memória")
-  Rel_L(chunker, sbert, "Repassa", "Memória")
-  Rel_D(sbert, rag, "Repassa", "Memória")
-  Rel_L(rag, supabase, "Busca vizinhos", "SQL")
-  Rel_R(rag, veredito, "Repassa", "Memória")
-  Rel_U(veredito, supabase, "Salva score", "SQL")
+  Rel_D(extrator, gov_apis, "Extrai via REST", "HTTPS")
+  Rel_D(extrator, supabase, "Salva dados relacionais", "SQL")
   
-  UpdateElementStyle(supabase, $bgColor="#2563eb", $fontColor="#ffffff", $borderColor="#93c5fd")
+  Rel_D(sumarizador, supabase, "Lê proposições", "SQL")
+  Rel_D(sumarizador, supabase, "Salva resumos", "SQL")
+  
+  Rel_D(chunker, supabase, "Lê discursos", "SQL")
+  Rel_D(chunker, vetorizador, "Repassa chunks", "Memória")
+  
+  Rel_D(vetorizador, qdrant, "Salva embeddings", "gRPC/HTTP")
+  
+  Rel_D(vinculador, qdrant, "Busca vizinhos semânticos", "gRPC/HTTP")
+  Rel_D(vinculador, supabase, "Lê votos e salva vínculos de proximidade", "SQL")
+  
+  UpdateElementStyle(supabase, $bgColor="#059669", $fontColor="#ffffff", $borderColor="#6ee7b7")
+  UpdateElementStyle(qdrant, $bgColor="#059669", $fontColor="#ffffff", $borderColor="#6ee7b7")
   UpdateElementStyle(gov_apis, $bgColor="#374151", $fontColor="#ffffff", $borderColor="#4b5563")
   UpdateElementStyle(extrator, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
   UpdateElementStyle(sumarizador, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
   UpdateElementStyle(chunker, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
-  UpdateElementStyle(sbert, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
-  UpdateElementStyle(rag, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
-  UpdateElementStyle(veredito, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
+  UpdateElementStyle(vetorizador, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
+  UpdateElementStyle(vinculador, $bgColor="#1d4ed8", $fontColor="#ffffff", $borderColor="#60a5fa")
   
   UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
@@ -117,8 +129,6 @@ classDiagram
     +String nome
     +String partido
     +String estado
-    +Float score_coerencia_geral
-    +atualizar_score()
   }
   
   class Proposicao {
@@ -131,9 +141,17 @@ classDiagram
   class Discurso {
     +UUID id
     +UUID politico_id
-    +String texto_higienizado
+    +String texto
     +Date data
-    +Vector_768 embedding_bge_m3
+
+  }
+
+  class ChunkDiscurso {
+    +UUID id
+    +UUID discurso_id
+    +String texto
+    +Date data
+    +Vector_1024 embedding_bge_m3
   }
   
   class Voto {
@@ -143,21 +161,11 @@ classDiagram
     +Enum tipo_voto
   }
   
-  class VereditoCoerencia {
-    +UUID id
-    +UUID politico_id
-    +UUID proposicao_id
-    +String explicacao_llama
-    +Float pontuacao_local
-    +List~Discurso~ discursos_recuperados
-    +calcular_coerencia()
-  }
 
   Politico "1" *-- "many" Discurso : Realiza
   Politico "1" *-- "many" Voto : Efetua
+  Discurso "1" *-- "many" ChunkDiscurso : Possui
   Voto "many" -- "1" Proposicao : Pertence a
-  Politico "1" *-- "many" VereditoCoerencia : Possui
-  VereditoCoerencia "many" -- "1" Proposicao : Avalia
 ```
 
 ---
@@ -165,28 +173,27 @@ classDiagram
 
 ## 2. Macroarquitetura: CQRS
 
-O sistema é dividido física e logicamente em dois serviços independentes que não realizam chamadas HTTP diretas entre si, usando o Supabase (PostgreSQL + `pgvector`) como único meio de persistência e comunicação indireta.
+O sistema é dividido física e logicamente em dois lados independentes que não realizam chamadas diretas ou comunicação síncrona entre si, utilizando o **Supabase (PostgreSQL)** e o **Qdrant (Banco Vetorial)** como meios de persistência e acoplamento indireto de dados.
 
-| | Lado de Leitura (Query — FastAPI) | Lado de Escrita (Command — Worker NLP) |
+| | Lado de Leitura (Query — FastAPI) | Lado de Escrita (Command — Worker/ETL) |
 |---|---|---|
-| **Tipo** | API REST para consultas de alta performance | Serviço Python isolado, executado em background via Cron Jobs |
-| **Responsabilidades** | Ler dados consolidados, paginar, validar parâmetros, entregar JSONs ao front-end | Extração de APIs governamentais, comunicação com SBERT, inferência local do Llama 3.1 8B |
-| **Cache** | Opera com respostas cacheadas em memória | Ao final de cada ciclo, publica sinal de invalidação de cache via Redis |
-| **Resiliência** | Continua servindo o portal mesmo se o Worker falhar | Falhas ficam restritas ao contêiner do Worker — sem impacto na API principal |
+| **Tipo** | API REST para consultas e agregação de métricas em tempo de execução | Conjunto de scripts e pipelines Python executados em contêiner isolado |
+| **Responsabilidades** | Ler dados consolidados do Supabase e entregar JSONs estruturados ao front-end | Extração das APIs governamentais, fragmentação de textos, geração de embeddings com SBERT e geração de resumos executivos via Google GenAI |
+| **Cache** | Opera com respostas cacheadas em memória (FastAPICache) | Não se aplica (persistência direta nos bancos de dados) |
+| **Resiliência** | Continua servindo o portal mesmo se o Worker/ETL estiver inativo ou falhar | As falhas do pipeline ficam restritas ao contêiner do Worker, sem qualquer impacto na API principal |
 
 ---
 
 ## 3. Microarquitetura do Worker: Pipe and Filter
 
-Para o processamento interno do Worker NLP, a arquitetura abandona abstrações complexas e segue um fluxo **estritamente procedural, determinístico e linear**. O pacote de dados trafega de forma unidirecional por 6 estágios sequenciais — a saída de um filtro é obrigatoriamente a entrada do próximo:
+Para o processamento interno do Worker NLP, a arquitetura abandona abstrações complexas e segue um fluxo procedural, determinístico e linear. O pacote de dados trafega de forma unidirecional por 6 estágios sequenciais:
 
-1. **Filtro 1 — Extração (API):** Consumo das APIs federais para capturar perfis, proposições validadas e discursos, com higienização textual imediata.
-2. **Filtro 2 — Sumarização:** Submissão da ementa legislativa ao Llama 3.1 local para geração de um resumo executivo coeso.
+1. **Filtro 1 — Extração (API):** Consumo das APIs federais para capturar perfis, proposições validadas e discursos.
+2. **Filtro 2 — Sumarização:** Submissão da proposição legislativa para a API do Google GenAI para geração de um resumo executivo coeso.
 3. **Filtro 3 — Fragmentação (Chunking):** Divisão dos discursos limpos em *chunks* textuais com sobreposição, preparando a carga para modelos com limite de contexto estrito.
-4. **Filtro 4 — Vetorização:** Transformação em *embeddings* vetoriais via SBERT (modelo `BAAI/bge-m3`), parametrizando tanto os fragmentos de discurso quanto o resumo legislativo.
-5. **Filtro 5 — Recuperação Contextual (RAG):** Busca espacial no Supabase via distância de cosseno — apenas fragmentos discursivos semanticamente próximos à proposição avaliada são selecionados.
-6. **Filtro 6 — Inferência e Veredito:** Orquestração dos dados filtrados para envio ao LLM, determinando a coerência ou incoerência do voto e armazenando os scores consolidados no banco.
-
+4. **Filtro 4 — Vetorização:** Geração de embeddings com SBERT ( BAAI/bge-m3 ) para chunks e resumos.
+5. **Filtro 5 — Armazenamento Vetorial:** Envio e indexação dos chunks com seus vetores no Qdrant.
+6. **Filtro 6 — Vinculação de Chunks a Votos:** Execução do mecanismo de similaridade vetorial comparando discursos do Qdrant e associando-os aos votos no Supabase.
 ---
 
 ## 4. Stack Tecnológica
@@ -197,6 +204,6 @@ A tabela a seguir consolida as principais tecnologias que compõem o ecossistema
 | :--- | :--- | :--- |
 | **Front-end** | React, Next.js, Tailwind CSS | Interface interativa, roteamento da aplicação web e estilização visual. |
 | **API de Leitura** | FastAPI | Camada REST para entrega rápida e cacheada dos dados (CQRS - *Query*). |
-| **Banco de Dados** | Supabase, PostgreSQL, HNSW, `pgvector` | Persistência relacional, indexação avançada e suporte estrutural à busca vetorial. |
-| **Extração (ETL)** | Regex, BeautifulSoup4, `pdfplumber`, Celery, Redis | Coleta governamental, limpeza textual rigorosa, extração de PDFs e orquestração de rotinas automatizadas em *background*. |
-| **Inteligência Artificial** | Llama 3.1 8B, `BAAI/bge-m3`, LangChain| Processamento e vetorização de textos, busca semântica, orquestração do fluxo RAG e inferência contextual.|
+| **Banco de Dados** | Supabase (PostgreSQL), Qdrant Cloud | Supabase para persistência relacional de políticos/votos/discursos e Qdrant para armazenamento/busca vetorial de embeddings. |
+| **Extração e Processamento (ETL)** | Regex, BeautifulSoup4, `pdfplumber` | Coleta governamental, limpeza textual rigorosa e extração de PDFs legislativos. |
+| **Inteligência Artificial** | Google GenAI (Gemini), `BAAI/bge-m3` (SBERT) | Google GenAI para sumarização temática de proposições e SBERT para vetorização de textos e busca semântica. |

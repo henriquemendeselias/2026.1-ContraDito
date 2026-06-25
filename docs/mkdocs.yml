@@ -59,7 +59,7 @@ nav:
       - Visão Geral da Arquitetura: arquitetura.md
       - Frontend e Interface: frontend.md
       - Engenharia de Dados (ETL): etl-dados.md
-      - Banco de Dados (Supabase): supabase.md
+      - Bancos de Dados (Supabase e Qdrant): bancos.md
       - Motor NLP e RAG: motor-nlp.md
 
   -  Desenvolvimento:
