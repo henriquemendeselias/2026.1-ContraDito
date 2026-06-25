@@ -74,14 +74,51 @@ com path exato e nenhuma usa `eh_coerente`.**
 ## 3. Fase 1 — Landing Page / Home
 
 ### a) Diretório unificado Câmara + Senado
+
+**Modelo de dados (decidido):** um único tipo `Parlamentar` com campo
+**`casa: "camara" | "senado"` obrigatório**, carimbado pelo client no momento do
+fetch (o endpoint conhece a casa; o payload não a ecoa). Não há união de dois tipos
+(os payloads são idênticos). A identidade estável do parlamentar é o par
+**(casa, id)** — usado, inclusive, como React key na lista mesclada de "Todos", já
+que o `id` não é único entre casas. Os campos `score_coerencia` e
+`dados_insuficientes` **saem do tipo por completo** (não ficam como opcionais).
+
 - Lista única com 3 modos: **Todos · Só Câmara · Só Senado**.
-- "Todos" agrega as duas casas; modos por casa chamam `GET /api/{casa}/politicos`.
-- **Nada de nota/score/badge de coerência/flag de dados** em nenhum modo. Card:
-  foto, nome de urna, partido, estado, cargo, status do mandato.
-- Filtros: `busca`, `partido`, `estado` + paginação. **Remover** `ordem` e
-  `incluirSemDados`.
-- Em aberto (implementação): no modo "Todos", mesclar páginas das duas casas no
-  servidor/cliente — a resolver.
+- **Estratégia de dados (decidido — ver [ADR 003](docs/docs/adrs/adr-003.md)):**
+  carregar o roster completo das duas casas **uma vez** num buffer client-side e fazer
+  tudo no client — escopo por casa (o toggle filtra o buffer), filtros, sort global por
+  `nome_urna` e paginação. Caminho único e uniforme nos 3 modos. Não há endpoint
+  unificado; o dataset é pequeno (~594) e o sort global no modo "Todos" exige todos os
+  registros em mãos. Fetch com `tamanho` grande para reduzir requisições; cache de 1h
+  no servidor amortiza a carga inicial.
+- **Nada de nota/score/badge de coerência/flag de dados** em nenhum modo.
+- **Linha = identidade pura, sem métrica** (decidido). O endpoint de listagem não traz
+  contagem de votos (`resumo_votos` só existe no detalhe), então a linha é só
+  identificação + navegação para o dossiê. Colunas:
+  - avatar · **nome de urna** / nome civil · partido · **UF** (promovida a coluna
+    visível) · *(cargo, oculto no mobile)* · **badge de Casa** na coluna da direita,
+    que **substitui a antiga coluna "COERÊNCIA"** (header `COERÊNCIA` → `CASA`).
+  - `status_mandato` **não** aparece na listagem — fica reservado ao dossiê.
+- **Cor (sem semântica de coerência):** tint por casa apenas para identificar a origem
+  visualmente — **`pulse` (#5e88ff) para Câmara, `aurum` (#f59e0b) para Senado** —
+  aplicado no accent bar e no ring do avatar. Não significa "bom/mau"; substitui o
+  antigo `scoreHex` verde/vermelho.
+- Filtros: `busca`, `partido`, `estado` (aplicados client-side sobre o buffer) +
+  paginação client-side. **Remover** `ordem` e `incluirSemDados`.
+- **Toggle de casa = controle de modo primário** (segmented control Todos/Câmara/Senado),
+  não um dropdown irmão de UF/Partido. UF/Partido/busca são refinamentos secundários
+  sobre o escopo definido pelo toggle.
+- **Filtros UF/Partido casa-aware (decidido):** as opções de Partido e UF são
+  **derivadas dinamicamente do buffer, escopadas pela casa ativa** ("Só Senado" → só
+  partidos/UFs presentes no Senado; "Todos" → união). **Eliminar os arrays hardcoded**
+  `PARTIDOS`/`ESTADOS` de `FilterBar.tsx`.
+- **Ao trocar de casa:** manter um filtro ativo se o valor ainda existir no novo
+  escopo; **limpar (resetar) o filtro cujo valor não existe mais** — nunca manter um
+  filtro que zere a lista silenciosamente.
+- **Layout da barra de filtros:** a navbar atual (`h-14`, 56px) não comporta
+  busca + UF + Partido + toggle de casa junto com logo/tema/links. A solução técnica
+  (sub-barra sticky abaixo da navbar vs. navbar que expande no mobile) fica para a
+  fase de **prototype visual** — não decidida no grilling.
 
 ### b) Seção "Sobre o ContraDito" + Equipe (na própria landing, via scroll)
 - Seção abaixo do diretório, não página separada.
@@ -94,6 +131,44 @@ com path exato e nenhuma usa `eh_coerente`.**
   `bright/mid/dim`, acentos `pulse #5e88ff` / `aurum #f59e0b`; utilitários
   `.glass`/`.glass-elevated`. Texto, cores e layout **originais**.
 
+#### Texto de origem (proposta — narrativa de portal de consulta; revisão pendente)
+
+Descarta o storytelling score-cêntrico antigo (README/home.html/escopo). Preserva:
+nome "ContraDito", disciplina MDS, projeto UnB-FCTE 2026, dados oficiais Câmara+Senado.
+
+> O **ContraDito** nasceu na disciplina de **Métodos de Desenvolvimento de Software
+> (MDS)**, na Faculdade de Ciências e Tecnologias em Engenharia (**FCTE**) da
+> **Universidade de Brasília**, em **2026**. A pergunta que moveu a Squad 09 era simples
+> e incômoda: por que é tão difícil, para um cidadão comum, descobrir o que um
+> parlamentar de fato discursou — e como ele votou?
+>
+> A informação existe. Está pública nos portais da **Câmara dos Deputados** e do
+> **Senado Federal**, mas espalhada, técnica e cansativa de garimpar. O ContraDito
+> reúne discursos, votações e proposições das duas casas num só lugar e deixa você
+> **consultar e cruzar** esses dados livremente.
+>
+> Sem notas, sem rótulos, sem ranking: a plataforma não decide quem é "coerente" ou
+> "incoerente". Ela organiza o registro oficial e devolve a leitura — e o juízo — a
+> quem importa: **você**.
+
+#### Equipe — Squad 09 (roster real, papéis confirmados)
+
+Fonte do roster: `docs/overrides/home.html`. Avatar via
+`https://avatars.githubusercontent.com/<handle>`. Tags = proposta (revisão pendente).
+
+| Nome | GitHub | Especialidades (tags) |
+| --- | --- | --- |
+| Henrique Mendes | @henriquemendeselias | Scrum Master · Extração de Dados · Lead Fullstack |
+| Luiz Henrique Tomaz | @luizhtmoreira | Fullstack · IA / NLP · Arquitetura · Extração · Frontend |
+| Matheus Rodrigues | @matheus0346 | Documentação (MkDocs) · Docker / DevOps |
+| João Guilherme Amâncio | @jot4-ge | Product Owner · Lead Fullstack · API · Extração · Frontend |
+| Gabriel Portácio | @G2SBiell | Frontend |
+| Lucas Araújo Lima | @lucasaraujoszz | Documentação (MkDocs) · Docker / DevOps |
+
+**Contato (face 3):** estrutura por membro com `github` (preenchido para os 6) +
+`linkedin?` e `email?` **opcionais, vazios por agora** — o ícone/link de cada canal só
+é renderizado quando o campo existir.
+
 ## 4. Fase 2 — Anotada (NÃO implementar nesta etapa)
 
 Nenhuma métrica desta fase usa `eh_coerente` (ver §0).
@@ -102,6 +177,8 @@ Nenhuma métrica desta fase usa `eh_coerente` (ver §0).
 - `GET /api/comparar` → `concordancia_percentual` + `proposicoes_em_comum` +
   `divergencias` (proposição, ementa, voto de cada um). Conceito central:
   **concordância**.
+- _A detalhar (ideia do time):_ aplicar o mesmo tema de identidade visual de origem
+  (tint por casa — Câmara/Senado) na Comparação. Pendente de definição na Fase 2.
 
 ### Métricas do Dossiê
 - **Timeline de Votações** (`/timeline`) — cronologia **puramente visual**:

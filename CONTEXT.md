@@ -37,7 +37,9 @@ _Avoid_: Similaridade, alinhamento, score comparativo.
 ### Parlamentares
 
 **Parlamentar**:
-Deputado Federal ou Senador rastreado pelo sistema.
+Deputado Federal ou Senador rastreado pelo sistema. Identificado de forma única pela
+combinação **casa + id** (o `id` numérico não é único entre casas). Toda navegação e
+busca de dados de um parlamentar exige a sua [[casa]].
 _Avoid_: Político, candidato.
 
 **Dossiê**:
