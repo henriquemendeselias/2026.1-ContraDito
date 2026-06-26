@@ -206,14 +206,46 @@ docker compose down -v
 
 ---
 
-## 5. Executar o Worker Manualmente
+## 5. Executar o Worker Manualmente (Pipelines de Script)
 
-O Worker é disparado por cron — não fica em execução contínua. Entre ciclos, o contêiner não existe e não consome memória.
+Como o sistema utiliza uma arquitetura **Pipe and Filter**, o pipeline do Worker é dividido em etapas sequenciais executadas por scripts independentes localizados na raiz do projeto. 
 
-Para executar o pipeline manualmente durante desenvolvimento:
+Para executar o pipeline completo ou etapas específicas manualmente durante o desenvolvimento, execute os comandos do docker compose apontando para os scripts `run_*.py` na ordem correta:
 
+**Etapa 1: Ingestão de Dados Brutos (Extração)**
 ```bash
-docker compose run --rm worker python main.py
+# Extração de Deputados e Senadores cadastrais
+docker compose run --rm worker python run_extrator_politicos.py
+
+# Extração de Proposições
+docker compose run --rm worker python run_extrator_proposicoes.py
+
+# Extração de Votos
+docker compose run --rm worker python run_extrator_votos.py
+
+# Extração de Discursos
+docker compose run --rm worker python run_extrator_discursos.py
+```
+
+**Etapa 2: Sumarização Temática (Gemini)**
+```bash
+# Gera os resumos executivos das proposições extraídas
+docker compose run --rm worker python run_resumo_proposicoes.py
+```
+
+**Etapa 3: Fragmentação e Vetorização (Qdrant)**
+```bash
+# Cria os chunks dos discursos e gera os embeddings no Qdrant
+docker compose run --rm worker python run_chunker_discursos.py
+```
+
+**Etapa 4: Vinculação e Inferência Semântica**
+```bash
+# Vincula os chunks aos votos por similaridade
+docker compose run --rm worker python run_vinculo_chunks_votos.py
+
+# Executa a inferência de postura
+docker compose run --rm worker python run_inferencia.py
 ```
 
 ---
