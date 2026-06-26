@@ -8,7 +8,7 @@ import { CoherenceChart } from "@/components/CoherenceChart";
 import { VotosTable } from "@/components/VotosTable";
 import { SimilaresGrid } from "@/components/SimilaresGrid";
 import { Skeleton } from "@/components/ui/Skeleton";
-import type { Parlamentar, TimelinePoint, PaginaVotos, ParlamentarSimilar } from "@/lib/types";
+import type { Parlamentar, TimelinePoint, PaginaVotos, ParlamentarSimilar } from "@/lib/types-legacy";
 
 type Tab = "perfil" | "votacoes" | "similares";
 

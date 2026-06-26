@@ -7,8 +7,7 @@ import { TendenciaRecente } from "@/components/TendenciaRecente";
 import { Avatar } from "@/components/ui/Avatar";
 import { ScoreGauge } from "@/components/ui/ScoreBadge";
 import { ComparisonChart } from "@/components/CoherenceChart";
-import { scoreHex } from "@/lib/utils";
-import type { Parlamentar, TimelinePoint } from "@/lib/types";
+import type { Parlamentar, TimelinePoint } from "@/lib/types-legacy";
 
 const ESTADOS = [
   "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT",
@@ -65,7 +64,6 @@ function ParlamentarSelector({
   }, []);
 
   if (selected) {
-    const color = scoreHex(selected.score_coerencia);
     return (
       <div className="glass rounded-xl p-6 flex flex-col items-center gap-4 text-center" style={{ borderColor: `${accent}28` }}>
         <p className="text-[10px] uppercase tracking-widest" style={{ color: accent }}>{label}</p>

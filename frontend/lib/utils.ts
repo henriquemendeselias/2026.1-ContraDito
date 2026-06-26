@@ -1,4 +1,4 @@
-import type { TimelinePoint, TimelinePointComputed } from "./types";
+import type { TimelinePoint, TimelinePointComputed } from "./types-legacy";
 
 export function scoreHex(score: number | null): string {
   if (score === null) return "#475569";

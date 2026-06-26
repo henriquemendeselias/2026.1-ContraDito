@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Fraunces, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Playfair_Display, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 
-const fraunces = Fraunces({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "600", "700", "900"],
+  weight: ["400", "600", "700", "800", "900"],
   style: ["normal", "italic"],
-  variable: "--font-fraunces",
+  variable: "--font-playfair",
   display: "swap",
 });
 
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="pt-BR"
-      className={`${fraunces.variable} ${dmSans.variable} ${jetbrains.variable}`}
+      className={`${playfair.variable} ${dmSans.variable} ${jetbrains.variable}`}
       suppressHydrationWarning
     >
       <head>
