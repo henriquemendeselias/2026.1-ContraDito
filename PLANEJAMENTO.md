@@ -71,9 +71,34 @@ com path exato e nenhuma usa `eh_coerente`.**
 - `ordem` e `incluirSemDados` **não existem na API**; remover do front (`page.tsx`,
   `FilterBar`).
 
-## 3. Fase 1 — Landing Page / Home
+## 3. Fase 1 — Home (vitrine) + Diretório completo (`/comparacao`)
 
-### a) Diretório unificado Câmara + Senado
+**Arquitetura de páginas (decidido — fora do grilling):** a Fase 1 separa-se em duas
+páginas, inspirada **estruturalmente** em como o ranking.org.br separa a Home
+(hero + busca/preview) da lista completa (`/ranking`):
+
+- **Home (`/`)** — vitrine/preview, **não** a lista completa:
+  - hero com imagem de fundo + storytelling;
+  - **números reais do projeto** (Supabase, confirmados em 2026-06-25):
+    - **887 parlamentares** extraídos — 642 Câmara + 245 Senado;
+    - **53.329 discursos** extraídos — 49.731 Câmara + 3.598 Senado;
+    - **2.573 proposições** cruzadas — 1.372 Câmara + 1.201 Senado;
+    - **51.611 votos nominais** processados — 47.966 Câmara + 3.645 Senado;
+  - barra de **busca** + **seletor de Casa** (Todos/Câmara/Senado) como vitrine/preview;
+  - botão **"Ver lista completa"** → `/comparacao`;
+  - seção **Sobre + Equipe** no final (ver §3b).
+- **`/comparacao` (rota existente, propósito novo)** — **diretório completo**:
+  - busca + filtros (UF/Partido) + seletor de Casa **fixos (sticky)**;
+  - listagem **completa** de todos os parlamentares, paginada/scrollável.
+  - _Obs.: o antigo propósito de `/comparacao` ("comparar 2 parlamentares lado a lado")
+    não desaparece — foi redefinido como uma interação dentro desta mesma página;
+    ver §4._
+
+> As decisões de §3a abaixo (modelo de dados, fetch-all, linha, filtros, toggle de casa)
+> descrevem **o diretório completo, que agora vive em `/comparacao`**. A Home reaproveita
+> apenas a busca + seletor de Casa como preview.
+
+### a) Diretório completo Câmara + Senado (em `/comparacao`)
 
 **Modelo de dados (decidido):** um único tipo `Parlamentar` com campo
 **`casa: "camara" | "senado"` obrigatório**, carimbado pelo client no momento do
@@ -88,7 +113,7 @@ que o `id` não é único entre casas. Os campos `score_coerencia` e
   carregar o roster completo das duas casas **uma vez** num buffer client-side e fazer
   tudo no client — escopo por casa (o toggle filtra o buffer), filtros, sort global por
   `nome_urna` e paginação. Caminho único e uniforme nos 3 modos. Não há endpoint
-  unificado; o dataset é pequeno (~594) e o sort global no modo "Todos" exige todos os
+  unificado; o dataset é pequeno (~887 parlamentares) e o sort global no modo "Todos" exige todos os
   registros em mãos. Fetch com `tamanho` grande para reduzir requisições; cache de 1h
   no servidor amortiza a carga inicial.
 - **Nada de nota/score/badge de coerência/flag de dados** em nenhum modo.
@@ -120,8 +145,9 @@ que o `id` não é único entre casas. Os campos `score_coerencia` e
   (sub-barra sticky abaixo da navbar vs. navbar que expande no mobile) fica para a
   fase de **prototype visual** — não decidida no grilling.
 
-### b) Seção "Sobre o ContraDito" + Equipe (na própria landing, via scroll)
-- Seção abaixo do diretório, não página separada.
+### b) Seção "Sobre o ContraDito" + Equipe (ao final da Home, via scroll)
+- Seção ao final da **Home** (após a vitrine de busca/preview), não página separada.
+  O diretório completo agora vive em `/comparacao`, não na Home.
 - **Referência apenas estrutural** (não de conteúdo/cor/layout):
   1. Bloco de texto *storytelling* sobre origem/motivação.
   2. Cards de membro com **carrossel de 3 faces**: Perfil (avatar, nome, papel) ·
@@ -173,12 +199,33 @@ Fonte do roster: `docs/overrides/home.html`. Avatar via
 
 Nenhuma métrica desta fase usa `eh_coerente` (ver §0).
 
-### Página de Comparação
-- `GET /api/comparar` → `concordancia_percentual` + `proposicoes_em_comum` +
-  `divergencias` (proposição, ementa, voto de cada um). Conceito central:
-  **concordância**.
-- _A detalhar (ideia do time):_ aplicar o mesmo tema de identidade visual de origem
-  (tint por casa — Câmara/Senado) na Comparação. Pendente de definição na Fase 2.
+### Comparação 1×1 (decidido — integrada ao diretório `/comparacao`)
+
+A comparação direta entre dois parlamentares deixa de ser uma página própria de
+seleção e passa a ser uma **interação dentro da página do diretório** (`/comparacao`),
+como **estado/layout distinto** — não misturada na tabela densa. Conceito central:
+**concordância**.
+
+1. **Seleção:** cada linha do diretório ganha uma ação **"Selecionar para comparar"**
+   (checkbox ou botão).
+2. **Visão de resultado:** ao selecionar **2** parlamentares, o usuário é levado a uma
+   visão de resultado dedicada — pode ser **rota com query params**
+   (ex.: `/comparacao?a={id1}&b={id2}`) **ou** um painel que substitui temporariamente
+   a lista. A tabela densa (887 linhas, fetch-all-once — [ADR 003](docs/docs/adrs/adr-003.md))
+   e o painel de resultado são **estados/layouts diferentes da mesma página**, não a
+   mesma superfície visual.
+3. **A visão de resultado** consome `GET /api/comparar`
+   (`concordancia_percentual` + `proposicoes_em_comum` + `divergencias`) e exibe:
+   - o **percentual de concordância**;
+   - um **gráfico por votos**: eixo X = proposições/tempo (PECs/PLs em ordem
+     cronológica), eixo Y = voto (`voto_oficial`: Sim/Não/Abstenção/etc.), com **uma
+     série/linha por parlamentar** — permitindo visualizar onde os votos coincidem e
+     onde divergem ao longo do tempo. As duas séries são distinguíveis visualmente,
+     preservando a identidade de [[casa]] de cada parlamentar. É a **aplicação concreta
+     da "Timeline de Votações"** (definida no grilling da Fase 1: eixo X tempo, eixo Y
+     categórico de `voto_oficial`), agora com **dois parlamentares simultâneos** em vez
+     de um só;
+   - a **lista detalhada das divergências** (proposição, ementa, voto de cada um).
 
 ### Métricas do Dossiê
 - **Timeline de Votações** (`/timeline`) — cronologia **puramente visual**:
