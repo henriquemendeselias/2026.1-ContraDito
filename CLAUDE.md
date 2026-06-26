@@ -96,8 +96,10 @@ In local Docker, the DB is `pgvector/pgvector:pg15` on port 5432 (exposed for DB
 ### Frontend — `frontend/` (Next.js 16 + React 19 + Tailwind CSS 4)
 - App Router under `frontend/app/`
 - Consultation portal (no ranking). Pages (under restructuring — see `PLANEJAMENTO.md`):
-  `/` (unified Câmara+Senado directory with Todos/Câmara/Senado view modes +
-  "Sobre"/team section), `/politico/[id]` (dossiê), `/comparacao` (concordância).
+  `/` (Home — vitrine/preview: hero, storytelling, real numbers, search + Casa selector
+  preview, "Sobre"/team section), `/diretorio` (full unified Câmara+Senado listing with
+  Todos/Câmara/Senado view modes, fetch-all-once — ADR 003), `/politico/[id]` (dossiê),
+  `/comparacao` (1×1 comparison by vote — concordância).
 - No score, nota, ranking ordering, or `dados_insuficientes` rendered anywhere.
 - Design system: Fraunces (display) + DM Sans (body); palette/tokens in
   `frontend/app/globals.css`.
