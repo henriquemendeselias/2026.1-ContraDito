@@ -4,7 +4,7 @@ import type {
   PaginaVotos,
   TimelinePoint,
   ParlamentarSimilar,
-} from "./types";
+} from "./types-legacy";
 import {
   mockGetParlamentares,
   mockGetParlamentar,

@@ -4,7 +4,7 @@ import type {
   PaginaVotos,
   TimelinePoint,
   ParlamentarSimilar,
-} from "./types";
+} from "./types-legacy";
 import type { ParlamentaresParams } from "./api";
 
 const FOTO = (id: number) =>

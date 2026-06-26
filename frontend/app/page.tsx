@@ -1,90 +1,65 @@
-"use client";
+// Home (vitrine) do portal de consulta ContraDito.
+// Hero com a silhueta do Congresso Nacional + storytelling + números reais + busca/
+// seletor de Casa (preview → /diretorio). Sem score, sem ranking, sem listagem aqui.
 
-import { useState, useEffect, useCallback } from "react";
-import { getParlamentares } from "@/lib/api";
-import type { Filters } from "@/components/FilterBar";
-import { FilterBar } from "@/components/FilterBar";
-import type { PaginaParlamentares } from "@/lib/types";
-import { Hero } from "@/components/Hero";
-import { HowItWorks } from "@/components/HowItWorks";
-import { DirectoryTable } from "@/components/DirectoryTable";
-import { Pagination } from "@/components/Pagination";
+import { CongressoSilhueta } from "@/components/CongressoSilhueta";
+import { HomeBusca } from "@/components/home/HomeBusca";
+import { SobreEquipe } from "@/components/SobreEquipe";
+import { SiteFooter } from "@/components/SiteFooter";
+import { PROJECT_STATS } from "@/lib/equipe";
+import { CASA, tint } from "@/lib/casa";
 
 export default function HomePage() {
-  const [filters, setFilters] = useState<Filters>({
-    busca: "", partido: "", estado: "", cargo: "", ordem: "mais_coerentes", incluirSemDados: false,
-  });
-  const [pagina, setPagina] = useState(1);
-  const [data, setData] = useState<PaginaParlamentares | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async (f: Filters, p: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await getParlamentares({
-        busca: f.busca || undefined,
-        partido: f.partido || undefined,
-        estado: f.estado || undefined,
-        cargo: f.cargo || undefined,
-        ordem: f.ordem || undefined,
-        pagina: p,
-        tamanho: 20,
-      });
-      setData(result);
-    } catch {
-      setError("Não foi possível carregar os parlamentares. Verifique se a API está disponível.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(filters, pagina); }, [filters, pagina, load]);
-
-  const handleFilters = useCallback((f: Filters) => {
-    setFilters(f);
-    setPagina(1);
-  }, []);
-
   return (
-    <div className="pt-14 min-h-screen">
-      <Hero />
-      <HowItWorks />
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        <FilterBar onChange={handleFilters} />
-        {data && !loading && (() => {
-          const semDados = data.itens.filter((p) => p.score_coerencia === null).length;
-          const ocultos = !filters.incluirSemDados ? semDados : 0;
-          return (
-            <p className="mt-3 text-xs text-dim">
-              {data.total_registros.toLocaleString("pt-BR")} parlamentares
-              {filters.busca ? ` para "${filters.busca}"` : ""}
-              {ocultos > 0 && (
-                <span className="ml-2 text-dim/60">
-                  · {ocultos} sem dados suficientes ocultos
-                </span>
-              )}
-            </p>
-          );
-        })()}
-        <DirectoryTable
-          loading={loading}
-          error={error}
-          data={data}
-          filters={filters}
-          pagina={pagina}
-          onRetry={() => load(filters, pagina)}
+    <div className="pt-14">
+      {/* HERO */}
+      <header className="relative min-h-[86vh] flex items-center justify-center overflow-hidden px-5 text-center">
+        {/* brilho ambiente (pulse/aurum) */}
+        <div className="absolute inset-0 z-0" style={{
+          background: `radial-gradient(80% 60% at 50% -10%, ${tint(CASA.camara.hex, 18)}, transparent 60%), radial-gradient(55% 50% at 85% 15%, ${tint(CASA.senado.hex, 14)}, transparent 55%)`,
+        }} />
+
+        {/* silhueta do Congresso, largura cheia, ancorada na base */}
+        <CongressoSilhueta
+          variant="fill"
+          className="absolute bottom-0 inset-x-0 z-0 w-full h-auto pointer-events-none"
         />
-        {data && data.total_paginas > 1 && (
-          <Pagination
-            pagina={pagina}
-            totalPaginas={data.total_paginas}
-            loading={loading}
-            onChange={setPagina}
-          />
-        )}
+
+        {/* overlay adaptável ao tema (legibilidade do texto sobre a silhueta) */}
+        <div className="absolute inset-0 z-[1] pointer-events-none" style={{
+          background: `radial-gradient(72% 58% at 50% 40%, var(--color-canvas) 0%, var(--color-canvas) 30%, color-mix(in srgb, var(--color-canvas) 55%, transparent) 56%, transparent 80%), linear-gradient(to top, var(--color-canvas) 8%, transparent 48%)`,
+        }} />
+
+        {/* conteúdo */}
+        <div className="relative z-10 max-w-3xl">
+          <p className="text-xs uppercase tracking-[0.3em] text-coherent">Portal de consulta · Câmara e Senado</p>
+          <h1 className="font-display text-bright font-black leading-[0.92] mt-5 text-6xl sm:text-8xl">
+            O que dizem.<br /><span className="text-coherent italic font-normal">Como votam.</span>
+          </h1>
+          <p className="text-mid max-w-xl mx-auto mt-6 text-lg leading-relaxed">
+            Discursos, votações e proposições das duas casas legislativas, reunidos e abertos para você consultar.
+          </p>
+          <div className="mt-8">
+            <HomeBusca />
+          </div>
+        </div>
+      </header>
+
+      {/* faixa de números reais do projeto */}
+      <section className="relative z-10 border-y border-rim/30 bg-card/30">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 grid grid-cols-2 lg:grid-cols-4 divide-x divide-rim/20">
+          {PROJECT_STATS.map((s) => (
+            <div key={s.label} className="px-5 py-7 text-center">
+              <p className="font-display text-4xl text-bright">{s.value}</p>
+              <p className="text-sm text-mid mt-1 capitalize">{s.label}</p>
+              <p className="text-[11px] text-dim mt-0.5">{s.sub}</p>
+            </div>
+          ))}
+        </div>
       </section>
+
+      <SobreEquipe />
+      <SiteFooter />
     </div>
   );
 }

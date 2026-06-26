@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate, votoHex } from "@/lib/utils";
-import type { Voto, PaginaVotos } from "@/lib/types";
+import type { Voto, PaginaVotos } from "@/lib/types-legacy";
 
 function VotoRow({ v }: { v: Voto }) {
   const [open, setOpen] = useState(false);
