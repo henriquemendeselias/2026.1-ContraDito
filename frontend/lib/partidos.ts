@@ -19,7 +19,7 @@ type CoesaoGeralResponse = {
 
 async function fetchCoesaoCasa(casa: Casa): Promise<CoesaoPartido[]> {
   const url = `${API_BASE}/api/${casa}/partidos/coesao`;
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, { next: { revalidate: 3600 } });
   if (!res.ok) {
     throw new Error(`Falha ao buscar coesão dos partidos para ${casa}: HTTP ${res.status}`);
   }

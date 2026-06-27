@@ -180,6 +180,15 @@ function DiscursosInner({
   return (
     <div className="pt-14 min-h-screen">
       <header className="max-w-6xl mx-auto px-5 sm:px-8 pt-10 pb-5">
+        {politicoIdParam && (
+          <Link
+            href={`/politico/${politicoIdParam}?casa=${casaAtiva}`}
+            className="inline-flex items-center gap-1.5 text-xs text-dim hover:text-bright mb-4.5 transition-colors group cursor-pointer"
+          >
+            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+            <span>Voltar para o Dossiê do Parlamentar</span>
+          </Link>
+        )}
         <h1 className="font-display text-bright font-black text-4xl sm:text-5xl">Discursos em Plenário</h1>
         <p className="text-mid mt-2">Veja e consulte as transcrições das falas oficiais dos parlamentares em plenário.</p>
       </header>

@@ -11,15 +11,14 @@ export function HomeBusca() {
   const router = useRouter();
 
   return (
-    <div className="w-full max-w-xl mx-auto flex items-center justify-center gap-3">
+    <div className="w-full max-w-xl mx-auto flex items-center justify-center">
       <button
         type="button"
         onClick={() => router.push("/diretorio")}
-        className="inline-flex items-center gap-2 h-12 px-6 rounded-xl font-medium bg-coherent text-canvas hover:opacity-90 transition-all cursor-pointer"
+        className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl font-medium bg-coherent text-canvas hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-lg shadow-coherent/10 cursor-pointer"
       >
-        Ver lista completa <ArrowRight size={17} />
+        Explorar todos os 887 parlamentares <ArrowRight size={17} />
       </button>
-      <span className="text-xs font-semibold text-mid">887 parlamentares no diretório →</span>
     </div>
   );
 }

@@ -40,16 +40,24 @@ function CasaBadge({ casa }: { casa: Casa }) {
 export function DiretorioPreview({ parlamentares }: { parlamentares: Parlamentar[] }) {
   const [mode, setMode] = useState<Mode>("todos");
   const [busca, setBusca] = useState("");
+  const [mostrarInativos, setMostrarInativos] = useState(false);
 
   // Filtra por casa e por termo de busca
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return parlamentares
       .filter((p) => mode === "todos" || p.casa === mode)
+      .filter(
+        (p) =>
+          mostrarInativos
+            ? true
+            : p.status_mandato?.toLowerCase() !== "inativo" &&
+              p.status_mandato?.toLowerCase() !== "suplente"
+      )
       .filter((p) =>
         q ? p.nome_urna.toLowerCase().includes(q) || p.nome_civil.toLowerCase().includes(q) || p.partido.toLowerCase().includes(q) : true
       );
-  }, [parlamentares, mode, busca]);
+  }, [parlamentares, mode, busca, mostrarInativos]);
 
   // Exibe uma amostra de 6 a 8 parlamentares no preview da homepage
   const amostra = useMemo(() => filtrados.slice(0, 8), [filtrados]);
@@ -68,12 +76,8 @@ export function DiretorioPreview({ parlamentares }: { parlamentares: Parlamentar
         {/* Cabeçalho da Seção */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-coherent/10 border border-coherent/20 text-coherent text-xs font-semibold uppercase tracking-wider mb-3">
-              <UserCheck size={14} />
-              <span>Explorador da Rede Legislativa</span>
-            </div>
             <h2 className="font-display text-3xl sm:text-4xl text-bright font-bold">
-              Pré-visualização do Diretório
+              Pré-visualização dos Parlamentares
             </h2>
             <p className="text-mid mt-2 max-w-xl text-base">
               Explore o perfil, as votações nominais e discursos dos deputados federais e senadores em exercício.
@@ -84,7 +88,7 @@ export function DiretorioPreview({ parlamentares }: { parlamentares: Parlamentar
             href="/diretorio"
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-card-alt border border-rim/50 text-bright text-sm font-medium hover:border-coherent/60 hover:bg-card transition-all group shrink-0 self-start md:self-auto"
           >
-            <span>Ver diretório completo</span>
+            <span>Ver todos os parlamentares</span>
             <span className="font-data text-xs text-dim group-hover:text-coherent transition-colors">
               ({parlamentares.length || 887})
             </span>
@@ -121,6 +125,17 @@ export function DiretorioPreview({ parlamentares }: { parlamentares: Parlamentar
               );
             })}
           </div>
+
+          {/* Mostrar inativos */}
+          <label className="flex items-center gap-2 h-10 px-3 rounded-lg bg-card border border-rim/40 cursor-pointer select-none text-xs sm:text-sm text-mid hover:text-bright transition-colors self-start sm:self-auto shrink-0">
+            <input
+              type="checkbox"
+              checked={mostrarInativos}
+              onChange={(e) => setMostrarInativos(e.target.checked)}
+              className="rounded bg-canvas border-rim/40 text-coherent focus:ring-0 focus:ring-offset-0 accent-coherent w-3.5 h-3.5"
+            />
+            Incluir inativos/suplentes
+          </label>
 
           {/* Input de busca rápida na amostra */}
           <div className="relative flex-1 max-w-md">
@@ -174,9 +189,21 @@ export function DiretorioPreview({ parlamentares }: { parlamentares: Parlamentar
                     </div>
 
                     {/* Identificação do Parlamentar */}
-                    <h3 className="font-display text-lg text-bright font-bold leading-snug group-hover:text-coherent transition-colors truncate">
-                      {p.nome_urna}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-0.5 min-w-0">
+                      <h3 className={`font-display text-lg font-bold leading-snug group-hover:text-coherent transition-colors truncate ${p.status_mandato === "Inativo" ? "text-dim/60" : p.status_mandato === "Suplente" ? "text-dim/80" : "text-bright"}`}>
+                        {p.nome_urna}
+                      </h3>
+                      {p.status_mandato === "Inativo" && (
+                        <span className="text-[8px] px-1.5 py-0.5 bg-dim/15 text-dim border border-rim/20 rounded uppercase tracking-wider shrink-0 font-medium font-data">
+                          Inativo
+                        </span>
+                      )}
+                      {p.status_mandato === "Suplente" && (
+                        <span className="text-[8px] px-1.5 py-0.5 bg-coherent/15 text-coherent border border-coherent/20 rounded uppercase tracking-wider shrink-0 font-medium font-data">
+                          Suplente
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-dim truncate mt-0.5" title={p.nome_civil}>
                       {p.nome_civil}
                     </p>

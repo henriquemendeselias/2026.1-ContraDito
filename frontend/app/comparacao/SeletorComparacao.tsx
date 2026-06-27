@@ -8,7 +8,7 @@
 
 import { Suspense, useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { Search, X, Plus } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { CASA, tint, type Casa } from "@/lib/casa";
 import type { Parlamentar } from "@/lib/types";
@@ -16,6 +16,164 @@ import type { Parlamentar } from "@/lib/types";
 export type Selecao = { casa: Casa; pol1: Parlamentar | null; pol2: Parlamentar | null };
 
 const CASAS: Casa[] = ["camara", "senado"];
+
+// ─── SelectionModal: modal de escolha de parlamentar ──────────────────────────────────
+function SelectionModal({
+  pool,
+  excludeId,
+  accent,
+  label,
+  onClose,
+  onSelect,
+}: {
+  pool: Parlamentar[];
+  excludeId?: number;
+  accent: string;
+  label: string;
+  onClose: () => void;
+  onSelect: (p: Parlamentar) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [selectedParty, setSelectedParty] = useState("todos");
+  const [selectedUF, setSelectedUF] = useState("todos");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const parties = useMemo(() => {
+    return ["todos", ...new Set(pool.filter((p) => p.id !== excludeId).map((p) => p.partido))].sort();
+  }, [pool, excludeId]);
+
+  const ufs = useMemo(() => {
+    return ["todos", ...new Set(pool.filter((p) => p.id !== excludeId).map((p) => p.estado))].sort();
+  }, [pool, excludeId]);
+
+  const filteredList = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return pool
+      .filter((p) => p.id !== excludeId)
+      .filter((p) => {
+        if (selectedParty !== "todos" && p.partido !== selectedParty) return false;
+        if (selectedUF !== "todos" && p.estado !== selectedUF) return false;
+        if (!q) return true;
+        return (
+          p.nome_urna.toLowerCase().includes(q) ||
+          p.nome_civil.toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) => a.nome_urna.localeCompare(b.nome_urna, "pt-BR"));
+  }, [pool, excludeId, query, selectedParty, selectedUF]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas/85 backdrop-blur-md">
+      <div className="w-full max-w-2xl bg-card border border-rim/45 rounded-2xl flex flex-col max-h-[85vh] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-rim/25 flex items-center justify-between">
+          <div>
+            <h3 className="font-display text-bright text-lg font-bold">Selecionar {label}</h3>
+            <p className="text-xs text-dim mt-0.5">Filtre e selecione o parlamentar da listagem</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg bg-card-alt border border-rim/30 flex items-center justify-center text-dim hover:text-bright hover:border-rim/60 transition-colors cursor-pointer"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Filtros */}
+        <div className="p-5 border-b border-rim/15 bg-card-alt/20 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div className="relative flex-1">
+            <label className="flex items-center gap-2 h-10 px-3 rounded-lg bg-card border border-rim/40 focus-within:border-coherent/60 transition-colors">
+              <Search size={15} className="text-dim shrink-0" />
+              <input
+                type="text"
+                placeholder="Pesquisar por nome..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full bg-transparent outline-none text-xs sm:text-sm text-bright placeholder:text-dim"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="text-xs text-dim hover:text-bright px-1 py-0.5 rounded"
+                >
+                  Limpar
+                </button>
+              )}
+            </label>
+          </div>
+
+          <div className="flex gap-2">
+            <select
+              value={selectedParty}
+              onChange={(e) => setSelectedParty(e.target.value)}
+              className="h-10 px-3 rounded-lg bg-card border border-rim/40 text-xs text-bright focus:outline-none focus:border-coherent/60 cursor-pointer"
+            >
+              <option value="todos">Todos os Partidos</option>
+              {parties.filter((p) => p !== "todos").map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+
+            <select
+              value={selectedUF}
+              onChange={(e) => setSelectedUF(e.target.value)}
+              className="h-10 px-3 rounded-lg bg-card border border-rim/40 text-xs text-bright focus:outline-none focus:border-coherent/60 cursor-pointer"
+            >
+              <option value="todos">Todos os Estados</option>
+              {ufs.filter((u) => u !== "todos").map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Lista de Resultados */}
+        <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+          {filteredList.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {filteredList.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => onSelect(p)}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-rim/20 bg-card hover:bg-card-alt/80 hover:border-coherent/40 transition-all text-left group cursor-pointer"
+                >
+                  <Avatar name={p.nome_urna} url={p.url_foto} size={38} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-bright group-hover:text-coherent transition-colors truncate">
+                      {p.nome_urna}
+                    </p>
+                    <p className="text-xs text-dim truncate">
+                      {p.nome_civil}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <span className="text-[10px] font-semibold text-mid bg-card-alt px-1.5 py-0.2 rounded border border-rim/20">
+                        {p.partido}
+                      </span>
+                      <span className="text-[10px] text-dim">{p.estado}</span>
+                      <span className="text-[10px] text-dim ml-auto uppercase tracking-wider text-[8px] font-medium">{p.cargo}</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center">
+              <p className="text-mid text-sm font-medium">Nenhum parlamentar encontrado.</p>
+              <p className="text-dim text-xs mt-1">Tente ajustar seus termos ou seletores de filtro.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Picker de um lado: busca dentro do escopo da Casa, exclui o id do outro lado ──────
 function Picker({
@@ -28,27 +186,7 @@ function Picker({
   accent: string;
   label: string;
 }) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (q.length < 2) return [];
-    return pool
-      .filter((p) => p.id !== excludeId)
-      .filter((p) => p.nome_urna.toLowerCase().includes(q) || p.nome_civil.toLowerCase().includes(q))
-      .sort((a, b) => a.nome_urna.localeCompare(b.nome_urna, "pt-BR"))
-      .slice(0, 8);
-  }, [pool, query, excludeId]);
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
+  const [modalOpen, setModalOpen] = useState(false);
 
   if (selected) {
     return (
@@ -61,7 +199,7 @@ function Picker({
         </div>
         <button
           onClick={() => onSelect(null)}
-          className="text-xs text-dim hover:text-bright flex items-center gap-1 transition-colors"
+          className="text-xs text-dim hover:text-bright flex items-center gap-1 transition-colors cursor-pointer"
         >
           <X size={11} /> Remover
         </button>
@@ -70,40 +208,38 @@ function Picker({
   }
 
   return (
-    <div ref={ref} className="relative">
-      <div className="glass rounded-xl p-6 flex flex-col items-center gap-4">
-        <p className="text-[10px] uppercase tracking-widest" style={{ color: accent }}>{label}</p>
-        <div className="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center" style={{ borderColor: tint(accent, 35) }}>
-          <Search size={18} style={{ color: accent }} />
+    <>
+      <div
+        onClick={() => setModalOpen(true)}
+        className="glass rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:border-rim/80 hover:bg-card-alt/30 transition-all cursor-pointer group min-h-[220px]"
+        style={{ borderColor: tint(accent, 20) }}
+      >
+        <p className="text-[10px] uppercase tracking-widest text-dim group-hover:text-bright transition-colors">{label}</p>
+        <div
+          className="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center transition-all group-hover:scale-[1.03]"
+          style={{ borderColor: tint(accent, 35) }}
+        >
+          <Plus size={20} style={{ color: accent }} />
         </div>
-        <input
-          type="text"
-          placeholder="Buscar por nome..."
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          className="w-full h-9 px-3 bg-card-alt rounded-lg border border-rim/30 text-sm text-bright placeholder:text-dim focus:outline-none focus:border-rim/60 transition-colors"
-        />
+        <span className="text-sm font-semibold text-mid group-hover:text-bright transition-colors">
+          Selecionar Parlamentar
+        </span>
       </div>
 
-      {open && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 glass-elevated rounded-xl overflow-hidden z-20 shadow-2xl">
-          {results.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => { onSelect(p); setQuery(""); setOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-card-alt transition-colors text-left"
-            >
-              <Avatar name={p.nome_urna} url={p.url_foto} size={32} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-bright truncate">{p.nome_urna}</p>
-                <p className="text-xs text-dim">{p.partido} · {p.estado}</p>
-              </div>
-            </button>
-          ))}
-        </div>
+      {modalOpen && (
+        <SelectionModal
+          pool={pool}
+          excludeId={excludeId}
+          accent={accent}
+          label={label}
+          onClose={() => setModalOpen(false)}
+          onSelect={(p) => {
+            onSelect(p);
+            setModalOpen(false);
+          }}
+        />
       )}
-    </div>
+    </>
   );
 }
 

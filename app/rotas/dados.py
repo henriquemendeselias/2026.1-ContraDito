@@ -977,6 +977,7 @@ def obter_polarizacao_proposicao(
     summary="Obter Índice de Coesão dos Partidos",
     description="Retorna o índice médio de disciplina e coesão de votos de todos os partidos políticos na casa legislativa.",
 )
+@cache(expire=3600)
 def obter_coesao_partidos(
     casa: str = Path(..., description="Casa legislativa ('camara' ou 'senado')"),
 ):

@@ -9,7 +9,7 @@
 import { Suspense, useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Search, AlertTriangle, RefreshCw } from "lucide-react";
+import { Search, AlertTriangle, RefreshCw, ArrowLeft } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { CASA, tint, type Casa } from "@/lib/casa";
 import type { Parlamentar } from "@/lib/types";
@@ -21,6 +21,37 @@ const MODES: { key: Mode; label: string }[] = [
   { key: "senado", label: "Senado" },
 ];
 const PAGE_SIZE = 30;
+
+function obterPaginas(atual: number, total: number): (number | string)[] {
+  const paginas: (number | string)[] = [];
+  
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) paginas.push(i);
+  } else {
+    paginas.push(1);
+    
+    if (atual > 4) {
+      paginas.push("...");
+    }
+    
+    const inicio = Math.max(2, atual - 2);
+    const fim = Math.min(total - 1, atual + 2);
+    
+    for (let i = inicio; i <= fim; i++) {
+      if (!paginas.includes(i)) paginas.push(i);
+    }
+    
+    if (atual < total - 3) {
+      paginas.push("...");
+    }
+    
+    if (!paginas.includes(total)) {
+      paginas.push(total);
+    }
+  }
+  
+  return paginas;
+}
 
 function CasaBadge({ casa }: { casa: Casa }) {
   const { label, hex } = CASA[casa];
@@ -139,6 +170,15 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
   return (
     <div className="pt-14 min-h-screen">
       <header className="max-w-6xl mx-auto px-5 sm:px-8 pt-10 pb-5">
+        {params.get("partido") && (
+          <Link
+            href="/partidos"
+            className="inline-flex items-center gap-1.5 text-xs text-dim hover:text-bright mb-4.5 transition-colors group cursor-pointer"
+          >
+            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+            <span>Voltar para Coesão por Partido</span>
+          </Link>
+        )}
         <h1 className="font-display text-bright font-black text-4xl sm:text-5xl">Parlamentares</h1>
         <p className="text-mid mt-2">Listagem completa — Câmara dos Deputados e Senado Federal.</p>
       </header>
@@ -243,14 +283,44 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
 
         {/* paginação client-side */}
         {totalPaginas > 1 && (
-          <div className="mt-5 flex items-center justify-center gap-3">
-            <button onClick={() => setPagina((n) => Math.max(1, n - 1))} disabled={paginaAtual <= 1}
-              className="h-9 px-4 rounded-lg border border-rim/40 text-sm text-mid hover:text-bright disabled:opacity-40 disabled:cursor-not-allowed">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <button
+              onClick={() => setPagina((n) => Math.max(1, n - 1))}
+              disabled={paginaAtual <= 1}
+              className="h-9 px-3 rounded-lg border border-rim/40 text-sm text-mid hover:text-bright disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-card/20"
+            >
               Anterior
             </button>
-            <span className="text-sm text-dim font-data">{paginaAtual} / {totalPaginas}</span>
-            <button onClick={() => setPagina((n) => Math.min(totalPaginas, n + 1))} disabled={paginaAtual >= totalPaginas}
-              className="h-9 px-4 rounded-lg border border-rim/40 text-sm text-mid hover:text-bright disabled:opacity-40 disabled:cursor-not-allowed">
+            
+            {obterPaginas(paginaAtual, totalPaginas).map((p, idx) => {
+              if (p === "...") {
+                return (
+                  <span key={`dots-${idx}`} className="px-2 text-sm text-dim select-none font-data">
+                    ...
+                  </span>
+                );
+              }
+              const active = paginaAtual === p;
+              return (
+                <button
+                  key={`page-${p}`}
+                  onClick={() => setPagina(p as number)}
+                  className={`w-9 h-9 rounded-lg border text-sm font-data font-semibold transition-all flex items-center justify-center cursor-pointer ${
+                    active
+                      ? "bg-coherent text-canvas border-coherent shadow-md shadow-coherent/10"
+                      : "border-rim/40 text-mid hover:text-bright hover:border-rim/80 bg-card/45"
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => setPagina((n) => Math.min(totalPaginas, n + 1))}
+              disabled={paginaAtual >= totalPaginas}
+              className="h-9 px-3 rounded-lg border border-rim/40 text-sm text-mid hover:text-bright disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-card/20"
+            >
               Próxima
             </button>
           </div>
