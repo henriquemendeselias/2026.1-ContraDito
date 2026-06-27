@@ -981,7 +981,11 @@ def obter_coesao_partidos(
 
             if total_proposicoes_validas > 0:
                 coesao_media = round((soma_coesao / total_proposicoes_validas) * 100, 1)
-                itens.append({"partido": partido, "indice_coesao": coesao_media})
+                itens.append({
+                    "partido": partido,
+                    "indice_coesao": coesao_media,
+                    "total_proposicoes": total_proposicoes_validas
+                })
 
         itens.sort(key=lambda x: x["indice_coesao"], reverse=True)
         return {"itens": itens}

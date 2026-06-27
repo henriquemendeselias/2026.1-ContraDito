@@ -24,3 +24,11 @@ export type PaginaParlamentares = {
   total_paginas: number;
   itens: Parlamentar[];
 };
+
+export type CoesaoPartido = {
+  partido: string;
+  indice_coesao: number;
+  total_proposicoes: number;
+  casa: Casa;
+};
+
