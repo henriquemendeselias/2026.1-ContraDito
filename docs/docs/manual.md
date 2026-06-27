@@ -9,7 +9,7 @@ Bem-vindo ao **ContraDito**! A plataforma foi desenhada para ser rápida, intuit
 A **Homepage** é a porta de entrada da plataforma. Ela concentra:
 
 - **Barra de Pesquisa e Filtros:** Localize parlamentares por **Nome**, **Partido**, **Estado (UF)** ou **Cargo** (Deputado Federal / Senador).
-- **Ranking de Coerência:** Lista dos políticos ordenados do maior para o menor *Score de Coerência*, permitindo identificar rapidamente os parlamentares mais e menos alinhados com suas próprias falas.
+<!-- - **Ranking de Coerência:** Lista dos políticos ordenados do maior para o menor *Score de Coerência*, permitindo identificar rapidamente os parlamentares mais e menos alinhados com suas próprias falas. -->
 - **Raio-X do Congresso:** Painel geral com o escopo monitorado pelo sistema — **594 parlamentares federais** (Câmara dos Deputados e Senado Federal).
 
 ---
@@ -29,10 +29,10 @@ Ao selecionar um político, você acessa seu perfil individual em formato de dos
 A funcionalidade **Face-to-Face** permite colocar dois políticos lado a lado para uma avaliação cruzada:
 
 - **Comparação Direta:** Visualize simultaneamente os perfis e desempenhos de dois parlamentares.
-- **Contraste de Coerência:** O *Score de Coerência* geral de ambos é exibido de forma clara para identificação imediata de qual representante possui maior alinhamento entre discurso e prática.
+<!-- - **Contraste de Coerência:** O *Score de Coerência* geral de ambos é exibido de forma clara para identificação imediata de qual representante possui maior alinhamento entre discurso e prática. -->
 - **Transparência Temporal:** O painel exibe a **data do último cálculo** processado pela IA, informando exatamente a atualidade dos scores apresentados.
 
 ---
 
-!!! tip "Quer aprofundar a análise?"
-    Para entender a fórmula matemática por trás do Score e como a IA trata nuances e manobras regimentais, consulte [Entendendo o Score de Coerência](calculo-score.md).
+<!-- !!! tip "Quer aprofundar a análise?" -->
+<!--     Para entender a fórmula matemática por trás do Score e como a IA trata nuances e manobras regimentais, consulte [Entendendo o Score de Coerência](calculo-score.md). -->
