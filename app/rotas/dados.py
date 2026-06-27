@@ -981,18 +981,28 @@ def obter_coesao_partidos(
     casa: str = Path(..., description="Casa legislativa ('camara' ou 'senado')"),
 ):
     casa_clean = validar_casa(casa)
+    tabela_politicos = f"{casa_clean}_politicos"
     tabela_votos = f"{casa_clean}_votos"
 
     try:
-        res_votos = (
-            supabase.table(tabela_votos)
-            .select("proposicao_id, voto_oficial, partido_na_epoca")
+        res_politicos = (
+            supabase.table(tabela_politicos)
+            .select("partido")
             .execute()
+        )
+        partidos_ativos = {
+            p["partido"].strip().upper()
+            for p in res_politicos.data
+            if p.get("partido")
+        }
+
+        res_votos = _obter_todos_os_votos(
+            tabela_votos, "proposicao_id, voto_oficial, partido_na_epoca"
         )
 
         partidos_votos = {}
 
-        for v in res_votos.data:
+        for v in res_votos:
             prop_id = v.get("proposicao_id")
             voto_of = v.get("voto_oficial")
             partido = v.get("partido_na_epoca")
@@ -1006,6 +1016,14 @@ def obter_coesao_partidos(
 
             voto_norm = "NÃO" if voto_upper in ["NÃO", "NAO"] else "SIM"
             partido_upper = partido.strip().upper()
+
+            if (
+                partido_upper.startswith("S.PART")
+                or partido_upper.startswith("S/PART")
+                or partido_upper.startswith("SEM PART")
+                or partido_upper not in partidos_ativos
+            ):
+                continue
 
             if partido_upper not in partidos_votos:
                 partidos_votos[partido_upper] = {}

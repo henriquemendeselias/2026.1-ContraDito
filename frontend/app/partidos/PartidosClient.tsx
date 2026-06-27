@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Search, AlertTriangle, RefreshCw, Info, ExternalLink } from "lucide-react";
 import { CASA, tint, type Casa } from "@/lib/casa";
-import type { CoesaoPartido } from "@/lib/types";
+import type { CoesaoPartido, Parlamentar } from "@/lib/types";
 
 type Mode = "todos" | Casa;
 const MODES: { key: Mode; label: string }[] = [
@@ -20,7 +20,15 @@ const MODES: { key: Mode; label: string }[] = [
   { key: "senado", label: "Senado" },
 ];
 
-function PartidosInner({ partidos, erro }: { partidos: CoesaoPartido[]; erro: boolean }) {
+function PartidosInner({
+  partidos,
+  parlamentares = [],
+  erro,
+}: {
+  partidos: CoesaoPartido[];
+  parlamentares?: Parlamentar[];
+  erro: boolean;
+}) {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -31,6 +39,12 @@ function PartidosInner({ partidos, erro }: { partidos: CoesaoPartido[]; erro: bo
   const [mode, setMode] = useState<Mode>(modeInicial);
   const [ordem, setOrdem] = useState<"coesao-desc" | "coesao-asc" | "nome-asc" | "nome-desc">("coesao-desc");
   const [showTooltip, setShowTooltip] = useState(false);
+
+  // Conjunto de siglas com representantes ativos atualmente
+  const partidosAtivos = useMemo(() => {
+    if (!parlamentares || parlamentares.length === 0) return null;
+    return new Set(parlamentares.map((p) => p.partido.toUpperCase()));
+  }, [parlamentares]);
 
   // Fecha o tooltip automaticamente ao clicar em qualquer outro lugar da janela
   useEffect(() => {
@@ -60,6 +74,14 @@ function PartidosInner({ partidos, erro }: { partidos: CoesaoPartido[]; erro: bo
     >();
     for (const p of partidos) {
       const name = p.partido.toUpperCase();
+      if (
+        name.startsWith("S.PART") ||
+        name.startsWith("S/PART") ||
+        name.startsWith("SEM PART") ||
+        (partidosAtivos && !partidosAtivos.has(name))
+      ) {
+        continue;
+      }
       if (!map.has(name)) {
         map.set(name, {});
       }
@@ -389,7 +411,11 @@ function PartidosInner({ partidos, erro }: { partidos: CoesaoPartido[]; erro: bo
   );
 }
 
-export function PartidosClient(props: { partidos: CoesaoPartido[]; erro: boolean }) {
+export function PartidosClient(props: {
+  partidos: CoesaoPartido[];
+  parlamentares?: Parlamentar[];
+  erro: boolean;
+}) {
   return (
     <Suspense fallback={<div className="pt-14" />}>
       <PartidosInner {...props} />
