@@ -108,7 +108,7 @@ export function ProposicaoDetalheClient({
                 Resumo Executivo (IA)
               </h2>
               {p.resumo_executivo ? (
-                <div className="text-bright text-base leading-relaxed space-y-4 whitespace-pre-line font-display italic">
+                <div className="text-bright text-base leading-relaxed space-y-4 whitespace-pre-line font-serif italic">
                   {p.resumo_executivo}
                 </div>
               ) : (

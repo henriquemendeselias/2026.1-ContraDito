@@ -1,7 +1,11 @@
 import type { Casa } from "@/lib/casa";
 import type { CoesaoPartido } from "@/lib/types";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001").replace(/\/$/, "");
+const API_BASE = (
+  process.env.API_INTERNAL_URL ?? 
+  process.env.NEXT_PUBLIC_API_URL ?? 
+  "http://localhost:8001"
+).replace(/\/$/, "");
 
 type CoesaoPartidoApi = {
   partido: string;

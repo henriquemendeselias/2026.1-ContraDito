@@ -61,7 +61,7 @@ export default async function DossiePage({ params, searchParams }: PageProps) {
             className="inline-flex items-center gap-2 text-sm text-mid hover:text-bright transition-colors group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            Voltar para o Diretório
+            Voltar para Parlamentares
           </Link>
         </div>
       </div>

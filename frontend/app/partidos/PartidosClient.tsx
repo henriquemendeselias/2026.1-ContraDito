@@ -369,8 +369,8 @@ function PartidosInner({ partidos, erro }: { partidos: CoesaoPartido[]; erro: bo
                 </div>
 
                 <Link
-                  href={`/diretorio?partido=${item.partido}`}
-                  className="mt-6 inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-card-alt hover:bg-card-alt/80 border border-rim/30 text-xs font-semibold text-mid hover:text-bright transition-all"
+                  href={`/diretorio?partido=${item.partido}${mode !== "todos" ? `&casa=${mode}` : ""}`}
+                  className="mt-6 inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-card-alt hover:bg-card-alt/80 border border-rim/30 text-xs font-semibold text-mid hover:text-coherent hover:border-coherent/40 transition-all"
                 >
                   Ver parlamentares <ExternalLink size={12} />
                 </Link>

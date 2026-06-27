@@ -334,7 +334,7 @@ export function DossieClient({
                         <span className="font-data text-bright font-semibold">{fidelidade.votos_alinhados}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-mid">Votos divergentes (rebeldes):</span>
+                        <span className="text-mid">Votos divergentes:</span>
                         <span className="font-data text-bright font-semibold">{fidelidade.votos_rebeldes}</span>
                       </div>
                     </div>
@@ -432,7 +432,7 @@ export function DossieClient({
                 {/* Discursos Direct Link */}
                 <div className="md:col-span-2 pt-2">
                   <Link
-                    href={`/politico/${p.id}/discursos?casa=${p.casa}`}
+                    href={`/discursos?casa=${p.casa}&politico_id=${p.id}`}
                     className="inline-flex items-center gap-2 text-xs font-semibold text-bright border border-rim/45 hover:border-bright px-5 h-11 rounded-lg transition-colors bg-card-alt/30"
                   >
                     <BookOpen size={14} />
@@ -551,7 +551,7 @@ export function DossieClient({
                                     Resumo da IA
                                   </p>
                                   {v.proposicao.resumo_executivo ? (
-                                    <p className="text-xs text-bright leading-relaxed italic font-display">
+                                    <p className="text-xs text-bright leading-relaxed italic font-serif">
                                       {v.proposicao.resumo_executivo}
                                     </p>
                                   ) : (
@@ -630,9 +630,17 @@ export function DossieClient({
                                       })()}
                                     </div>
                                   ) : (
-                                    <p className="text-xs text-dim italic bg-card/10 p-4 rounded-lg">
-                                      Nenhum trecho de discurso associado a esta votação.
-                                    </p>
+                                    <div className="rounded-lg p-4 bg-card/10 border border-rim/15 flex flex-col sm:flex-row justify-between items-center gap-3">
+                                      <span className="text-xs text-dim italic">
+                                        Nenhum trecho de discurso associado a esta votação.
+                                      </span>
+                                      <Link
+                                        href={`/discursos?casa=${p.casa}&politico_id=${p.id}`}
+                                        className="text-[10px] font-semibold text-bright border border-rim/35 hover:border-bright px-2.5 py-1 rounded transition-colors bg-card-alt/20 shrink-0"
+                                      >
+                                        Ver Outros Discursos
+                                      </Link>
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -658,7 +666,7 @@ export function DossieClient({
                     {apenasComDiscursos && (
                       <div className="mt-6">
                         <Link
-                          href={`/politico/${p.id}/discursos?casa=${p.casa}`}
+                          href={`/discursos?casa=${p.casa}&politico_id=${p.id}`}
                           className="inline-flex items-center gap-2 text-xs font-semibold text-bright border border-rim/45 hover:border-bright px-4 py-2 rounded-lg transition-colors bg-card-alt"
                         >
                           Ir para Pronunciamentos Integrais

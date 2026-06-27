@@ -63,7 +63,7 @@ export function HomeBusca() {
             placeholder="Buscar parlamentar por nome..."
             className="flex-1 bg-transparent outline-none text-base text-bright placeholder:text-dim"
           />
-          <button type="submit" aria-label="Buscar no diretório"
+          <button type="submit" aria-label="Buscar parlamentar"
             className="h-9 w-9 grid place-items-center rounded-lg text-mid hover:text-bright hover:bg-white/5 transition-colors">
             <ArrowRight size={18} />
           </button>
@@ -79,7 +79,7 @@ export function HomeBusca() {
         >
           Ver lista completa <ArrowRight size={17} />
         </button>
-        <span className="text-xs text-dim">887 parlamentares no diretório →</span>
+        <span className="text-xs text-dim">887 parlamentares mapeados →</span>
       </div>
     </div>
   );

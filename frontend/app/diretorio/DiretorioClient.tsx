@@ -45,6 +45,7 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
   const [partido, setPartido] = useState(params.get("partido") ?? "");
   const [estado, setEstado] = useState(params.get("estado") ?? "");
   const [pagina, setPagina] = useState(1);
+  const [mostrarInativos, setMostrarInativos] = useState(false);
 
   // Sincroniza só busca + casa na URL (contrato compartilhável); partido/estado ficam locais.
   const syncUrl = useCallback((b: string, m: Mode) => {
@@ -57,8 +58,17 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
 
   // Escopo por casa + opções de filtro DINÂMICAS (casa-aware).
   const scoped = useMemo(
-    () => parlamentares.filter((p) => mode === "todos" || p.casa === mode),
-    [parlamentares, mode]
+    () =>
+      parlamentares
+        .filter((p) => mode === "todos" || p.casa === mode)
+        .filter(
+          (p) =>
+            mostrarInativos
+              ? true
+              : p.status_mandato?.toLowerCase() !== "inativo" &&
+                p.status_mandato?.toLowerCase() !== "suplente"
+        ),
+    [parlamentares, mode, mostrarInativos]
   );
   const partidos = useMemo(() => [...new Set(scoped.map((p) => p.partido))].sort(), [scoped]);
   const estados = useMemo(() => [...new Set(scoped.map((p) => p.estado))].sort(), [scoped]);
@@ -67,13 +77,24 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
     const q = busca.trim().toLowerCase();
     return scoped
       .filter((p) => (q ? p.nome_urna.toLowerCase().includes(q) || p.nome_civil.toLowerCase().includes(q) : true))
-      .filter((p) => (partido ? p.partido === partido : true))
+      .filter((p) => (partido ? p.partido.toLowerCase() === partido.toLowerCase() : true))
       .filter((p) => (estado ? p.estado === estado : true))
       .sort((a, b) => a.nome_urna.localeCompare(b.nome_urna, "pt-BR"));
   }, [scoped, busca, partido, estado]);
 
+  // Normaliza o partido vindo da URL (ex: PCDOB -> PCdoB) para bater com a capitalização do banco e selecionar no select
+  useEffect(() => {
+    const urlPartido = params.get("partido");
+    if (urlPartido) {
+      const match = partidos.find((p) => p.toLowerCase() === urlPartido.toLowerCase());
+      if (match) {
+        setPartido(match);
+      }
+    }
+  }, [params, partidos]);
+
   // Volta para a página 1 sempre que o resultado muda.
-  useEffect(() => { setPagina(1); }, [busca, mode, partido, estado]);
+  useEffect(() => { setPagina(1); }, [busca, mode, partido, estado, mostrarInativos]);
 
   const totalPaginas = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const paginaAtual = Math.min(pagina, totalPaginas);
@@ -118,7 +139,7 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
   return (
     <div className="pt-14 min-h-screen">
       <header className="max-w-6xl mx-auto px-5 sm:px-8 pt-10 pb-5">
-        <h1 className="font-display text-bright font-black text-4xl sm:text-5xl">Diretório de parlamentares</h1>
+        <h1 className="font-display text-bright font-black text-4xl sm:text-5xl">Parlamentares</h1>
         <p className="text-mid mt-2">Listagem completa — Câmara dos Deputados e Senado Federal.</p>
       </header>
 
@@ -159,6 +180,16 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
             <option value="">Partido — todos</option>
             {partidos.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
+          {/* Mostrar inativos */}
+          <label className="flex items-center gap-2 h-10 px-3 rounded-lg bg-card border border-rim/40 cursor-pointer select-none text-sm text-mid hover:text-bright transition-colors">
+            <input
+              type="checkbox"
+              checked={mostrarInativos}
+              onChange={(e) => setMostrarInativos(e.target.checked)}
+              className="rounded bg-canvas border-rim/40 text-coherent focus:ring-0 focus:ring-offset-0 accent-coherent w-3.5 h-3.5"
+            />
+            Incluir inativos/suplentes
+          </label>
           <span className="text-sm text-dim ml-auto">
             <span className="font-data text-bright">{rows.length.toLocaleString("pt-BR")}</span> resultados
           </span>
@@ -168,20 +199,34 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
       {/* lista */}
       <main className="max-w-6xl mx-auto px-5 sm:px-8 py-6">
         <div className="rounded-xl border border-rim/30 overflow-hidden">
-          <div className="hidden sm:grid grid-cols-[1fr_5rem_3rem_9rem_7rem] gap-4 px-5 py-2.5 bg-card-alt/60 border-b border-rim/30 text-[10px] uppercase tracking-widest text-dim">
+          <div className="hidden sm:grid grid-cols-[1fr_8rem_3rem_8rem_7rem] gap-4 px-5 py-2.5 bg-card-alt/60 border-b border-rim/30 text-[10px] uppercase tracking-widest text-dim">
             <span>Parlamentar</span><span>Partido</span><span>UF</span><span>Cargo</span><span className="text-right">Casa</span>
           </div>
           {visiveis.map((p) => (
             <Link
               key={`${p.casa}-${p.id}`}
               href={`/politico/${p.id}?casa=${p.casa}`}
-              className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_5rem_3rem_9rem_7rem] gap-4 items-center px-5 py-3 border-b border-rim/15 hover:bg-card-alt/40 transition-colors cursor-pointer group"
+              className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_8rem_3rem_8rem_7rem] gap-4 items-center px-5 py-3 border-b border-rim/15 hover:bg-card-alt/40 transition-colors cursor-pointer group"
             >
               <span className="flex items-center gap-3 min-w-0">
                 <span className="w-0.5 h-9 rounded-full shrink-0" style={{ background: CASA[p.casa].hex }} />
                 <Avatar name={p.nome_urna} url={p.url_foto} size={40} ringColor={tint(CASA[p.casa].hex, 45)} />
                 <span className="min-w-0">
-                  <span className="block text-sm text-bright truncate group-hover:text-coherent transition-colors">{p.nome_urna}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`block text-sm truncate group-hover:text-coherent transition-colors ${p.status_mandato === "Inativo" ? "text-dim/60" : p.status_mandato === "Suplente" ? "text-dim/80" : "text-bright"}`}>
+                      {p.nome_urna}
+                    </span>
+                    {p.status_mandato === "Inativo" && (
+                      <span className="text-[9px] px-1.5 py-0.5 bg-dim/15 text-dim border border-rim/20 rounded uppercase tracking-wider shrink-0 font-medium font-data">
+                        Inativo
+                      </span>
+                    )}
+                    {p.status_mandato === "Suplente" && (
+                      <span className="text-[9px] px-1.5 py-0.5 bg-coherent/15 text-coherent border border-coherent/20 rounded uppercase tracking-wider shrink-0 font-medium font-data">
+                        Suplente
+                      </span>
+                    )}
+                  </div>
                   <span className="block text-[11px] text-dim truncate">{p.nome_civil}</span>
                 </span>
               </span>

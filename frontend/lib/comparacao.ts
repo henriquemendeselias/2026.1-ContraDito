@@ -6,7 +6,11 @@
 import type { Casa } from "@/lib/casa";
 
 // Mesmo contrato do lib/diretorio.ts: no host (next dev) a API responde em :8001.
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001").replace(/\/$/, "");
+const API_BASE = (
+  process.env.API_INTERNAL_URL ?? 
+  process.env.NEXT_PUBLIC_API_URL ?? 
+  "http://localhost:8001"
+).replace(/\/$/, "");
 
 /** Uma divergência de voto entre os dois parlamentares (campos crus de /api/comparar). */
 export type Divergencia = {
