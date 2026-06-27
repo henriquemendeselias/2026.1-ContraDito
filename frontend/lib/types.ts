@@ -24,3 +24,34 @@ export type PaginaParlamentares = {
   total_paginas: number;
   itens: Parlamentar[];
 };
+
+export type Proposicao = {
+  id: string; // UUID
+  proposicao_id: string; // ex: "PL 2630/2020"
+  casa: Casa;
+  tipo: string;
+  numero: number;
+  ano: number;
+  ementa: string;
+  data_votacao: string | null;
+  url_texto_inteiro: string | null;
+  resumo_executivo: string | null;
+};
+
+export type PaginaProposicoes = {
+  total_registros: number;
+  pagina_atual: number;
+  tamanho_pagina: number;
+  total_paginas: number;
+  itens: Proposicao[];
+};
+
+export type PolarizacaoProposicao = {
+  proposicao_id: string;
+  qtd_sim: number;
+  qtd_nao: number;
+  pct_sim: number;
+  pct_nao: number;
+  polarizacao: number;
+  classificacao: "Consensual" | "Dividida" | "Altamente Polarizada";
+};

@@ -294,14 +294,18 @@ def obter_chunks_discurso(
     "/{casa}/proposicoes",
     response_model=PaginaProposicoesDB,
     summary="Listar Proposições",
-    description="Retorna a listagem paginada das proposições (Câmara ou Senado) com filtros por ano e tipo.",
+    description="Retorna a listagem paginada das proposições (Câmara ou Senado) com filtros por busca textual, ano, tipo e status de análise IA.",
 )
 @cache(expire=3600)
 def listar_proposicoes(
     casa: str = Path(..., description="Casa legislativa ('camara' ou 'senado')"),
+    busca: Optional[str] = Query(None, description="Busca por termo no ID, ementa ou resumo executivo"),
     ano: Optional[int] = Query(None, description="Filtro por ano da proposição"),
     tipo: Optional[str] = Query(
         None, description="Filtro por tipo de proposição (ex: PL, PEC)"
+    ),
+    apenas_analisadas: bool = Query(
+        False, description="Exibir apenas proposições com resumo da IA (analisadas)"
     ),
     pagina: int = Query(1, ge=1, description="Número da página"),
     tamanho: int = Query(
@@ -314,6 +318,16 @@ def listar_proposicoes(
     try:
         query = supabase.table(tabela).select("*", count="exact")
 
+        if apenas_analisadas:
+            query = query.not_.is_("resumo_executivo", "null")
+        if busca:
+            import re
+            # Substitui caracteres especiais/espaços/barras por '%' para simular busca aproximada (fuzzy)
+            normalized = re.sub(r'[^a-zA-Z0-9]+', '%', busca).strip('%')
+            # Insere '%' entre letras e números (ex: PL2630 -> PL%2630)
+            normalized = re.sub(r'([a-zA-Z])([0-9])', r'\1%\2', normalized)
+            normalized = re.sub(r'([0-9])([a-zA-Z])', r'\1%\2', normalized)
+            query = query.or_(f"proposicao_id.ilike.%{normalized}%,ementa.ilike.%{normalized}%,resumo_executivo.ilike.%{normalized}%")
         if ano:
             query = query.eq("ano", ano)
         if tipo:
