@@ -32,3 +32,22 @@ export type CoesaoPartido = {
   casa: Casa;
 };
 
+export type Discurso = {
+  id: string;
+  politico_id: number | null;
+  data_discurso: string | null;
+  texto_bruto: string;
+  url_video: string | null;
+  sumario: string | null;
+  fase_evento: string | null;
+};
+
+export type PaginaDiscursos = {
+  total_registros: number;
+  pagina_atual: number;
+  tamanho_pagina: number;
+  total_paginas: number;
+  itens: Discurso[];
+  aviso?: string | null;
+};
+

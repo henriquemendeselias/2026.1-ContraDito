@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { List, GitCompareArrows, Building2 } from "lucide-react";
+import { List, GitCompareArrows, Building2, MessageSquare } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Navbar() {
@@ -23,6 +23,12 @@ export function Navbar() {
             className="px-3 py-1.5 inline-flex items-center gap-1.5 text-sm text-mid hover:text-bright transition-colors"
           >
             <Building2 size={15} /> Partidos
+          </Link>
+          <Link
+            href="/discursos"
+            className="px-3 py-1.5 inline-flex items-center gap-1.5 text-sm text-mid hover:text-bright transition-colors"
+          >
+            <MessageSquare size={15} /> Discursos
           </Link>
           <Link
             href="/comparacao"

@@ -92,6 +92,15 @@ _Avoid_: Parlamentar aliado, votante parecido.
 `GET /api/{casa}/partidos/coesao`.
 _Avoid_: Alinhamento ideológico, disciplina partidária.
 
+### Discursos
+
+**Discurso**:
+Pronunciamento oficial realizado por um parlamentar em plenário, obtido a partir
+dos diários e canais oficiais da Câmara ou do Senado. O portal exibe sua
+data, fase do evento (ex: Grande Expediente) e o texto bruto da transcrição
+integral. Exposta via `GET /api/{casa}/discursos` e `GET /api/{casa}/discursos/{id}`.
+_Avoid_: Pronunciamento informal, fala do político.
+
 ### Termos descontinuados (limitação de dado permanente)
 
 A coluna `eh_coerente` **não é mais preenchida no banco** (confirmado pelo responsável

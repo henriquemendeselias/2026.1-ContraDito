@@ -158,6 +158,9 @@ def listar_discursos(
     politico_id: Optional[int] = Query(
         None, description="ID do político para filtrar discursos"
     ),
+    termo: Optional[str] = Query(
+        None, description="Termo para pesquisar no texto do discurso"
+    ),
     pagina: int = Query(1, ge=1, description="Número da página"),
     tamanho: int = Query(
         20, ge=1, le=100, description="Quantidade de itens por página"
@@ -167,10 +170,17 @@ def listar_discursos(
     tabela = f"{casa_clean}_discursos"
 
     try:
-        query = supabase.table(tabela).select("*", count="exact")
+        if termo:
+            # Não usa count="exact" para buscas textuais (evita timeout na tabela de ~50k discursos)
+            query = supabase.table(tabela).select("*")
+        else:
+            query = supabase.table(tabela).select("*", count="exact")
 
         if politico_id:
             query = query.eq("politico_id", politico_id)
+
+        if termo:
+            query = query.ilike("texto_bruto", f"%{termo}%")
 
         query = query.order("data_discurso", desc=True)
 
@@ -180,10 +190,16 @@ def listar_discursos(
 
         resultado = query.execute()
 
-        total_registros = resultado.count if resultado.count is not None else 0
-        total_paginas = (
-            math.ceil(total_registros / tamanho) if total_registros > 0 else 0
-        )
+        if termo:
+            # Paginação dinâmica sem contagem total lenta
+            total_registros = -1  # Sinaliza contagem simplificada/indisponível
+            tem_mais = len(resultado.data) == tamanho
+            total_paginas = pagina + 1 if tem_mais else pagina
+        else:
+            total_registros = resultado.count if resultado.count is not None else 0
+            total_paginas = (
+                math.ceil(total_registros / tamanho) if total_registros > 0 else 0
+            )
 
         return {
             "total_registros": total_registros,
@@ -193,6 +209,17 @@ def listar_discursos(
             "itens": resultado.data,
         }
     except Exception as e:
+        err_msg = str(e)
+        if termo and ("57014" in err_msg or "timeout" in err_msg.lower() or "search" in err_msg.lower() or "42703" in err_msg):
+            return {
+                "total_registros": 0,
+                "pagina_atual": pagina,
+                "tamanho_pagina": tamanho,
+                "total_paginas": 0,
+                "itens": [],
+                "aviso": "A busca por esta palavra-chave excedeu o tempo limite do banco de dados. Tente um termo mais específico."
+            }
+
         raise HTTPException(
             status_code=500, detail=f"Erro ao buscar discursos: {str(e)}"
         )
