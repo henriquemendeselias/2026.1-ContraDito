@@ -208,44 +208,44 @@ docker compose down -v
 
 ## 5. Executar o Worker Manualmente (Pipelines de Script)
 
-Como o sistema utiliza uma arquitetura **Pipe and Filter**, o pipeline do Worker é dividido em etapas sequenciais executadas por scripts independentes localizados na raiz do projeto. 
+Como o sistema utiliza uma arquitetura **Pipe and Filter**, o pipeline do Worker é dividido em etapas sequenciais executadas por scripts independentes localizados na pasta `scripts/` do projeto. 
 
-Para executar o pipeline completo ou etapas específicas manualmente durante o desenvolvimento, execute os comandos do docker compose apontando para os scripts `run_*.py` na ordem correta:
+Para executar o pipeline completo ou etapas específicas manualmente durante o desenvolvimento, execute os comandos do docker compose utilizando a flag `-m` apontando para os caminhos de módulo correspondentes aos scripts na ordem correta:
 
 **Etapa 1: Ingestão de Dados Brutos (Extração)**
 ```bash
 # Extração de Deputados e Senadores cadastrais
-docker compose run --rm worker python run_extrator_politicos.py
+docker compose run --rm worker python -m scripts.run_extrator_politicos
 
 # Extração de Proposições
-docker compose run --rm worker python run_extrator_proposicoes.py
+docker compose run --rm worker python -m scripts.run_extrator_proposicoes
 
 # Extração de Votos
-docker compose run --rm worker python run_extrator_votos.py
+docker compose run --rm worker python -m scripts.run_extrator_votos
 
 # Extração de Discursos
-docker compose run --rm worker python run_extrator_discursos.py
+docker compose run --rm worker python -m scripts.run_extrator_discursos
 ```
 
 **Etapa 2: Sumarização Temática (Gemini)**
 ```bash
 # Gera os resumos executivos das proposições extraídas
-docker compose run --rm worker python run_resumo_proposicoes.py
+docker compose run --rm worker python -m scripts.run_resumo_proposicoes
 ```
 
 **Etapa 3: Fragmentação e Vetorização (Qdrant)**
 ```bash
 # Cria os chunks dos discursos e gera os embeddings no Qdrant
-docker compose run --rm worker python run_chunker_discursos.py
+docker compose run --rm worker python -m scripts.run_chunker_discursos
 ```
 
 **Etapa 4: Vinculação e Inferência Semântica**
 ```bash
 # Vincula os chunks aos votos por similaridade
-docker compose run --rm worker python run_vinculo_chunks_votos.py
+docker compose run --rm worker python -m scripts.run_vinculo_chunks_votos
 
 # Executa a inferência de postura
-docker compose run --rm worker python run_inferencia.py
+docker compose run --rm worker python -m scripts.run_inferencia
 ```
 
 ---
