@@ -35,7 +35,7 @@ Utilizando Inteligência Artificial avançada (modelos *LLaMA 3.1 8B* para sumar
 
 O sistema foi concebido sob restrições estritas de alta performance e uso eficiente de recursos de IA, operando em um padrão arquitetural **CQRS** rigorosamente isolado e orquestrado por contêineres Docker:
 
-1. **Lado de Leitura (Query):** Front-end responsivo desenvolvido em **Next.js** comunicando-se com uma API de Leitura blindada em **FastAPI**. O ambiente é otimizado para atender um alto volume de acessos lendo apenas dados consolidados e pré-processados, fazendo uso inteligente de invalidação de cache em memória via Redis.
+1. **Lado de Leitura (Query):** Front-end responsivo desenvolvido em **Next.js** comunicando-se com uma API de Leitura blindada em **FastAPI**. O ambiente é otimizado para atender um alto volume de acessos lendo apenas dados consolidados e pré-processados, fazendo uso inteligente de cache em memória (InMemoryBackend).
 2. **Lado de Escrita (Command / Worker NLP):** Um *Worker* autônomo em Python rodando processos agendados em *background*. Operando sob o padrão arquitetural *Pipe and Filter*, ele absorve a carga pesada de NLP: coleta das APIs federais oficiais, fragmentação (*chunking*), processamento de embeddings e inferência de veredito, escrevendo o *Score de Coerência* consolidado na base.
 3. **Persistência Central:** Todo o estado do sistema, desde entidades básicas até vetores dimensionais gerados pelo modelo BAAI/bge-m3, é gerenciado pelo **Supabase** (PostgreSQL) potencializado pela extensão `pgvector`.
 
@@ -69,7 +69,6 @@ LLM_PROVIDER=groq # "groq" ou "colab"
 GROQ_API_KEY=sua_chave_da_groq_aqui
 
 # Integração Interna (Docker)
-REDIS_URL=redis://redis:6379
 NEXT_PUBLIC_API_URL=http://localhost:8001
 ```
 
