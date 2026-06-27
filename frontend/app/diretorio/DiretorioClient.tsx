@@ -42,8 +42,8 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
 
   const [busca, setBusca] = useState(params.get("busca") ?? "");
   const [mode, setMode] = useState<Mode>(modeInicial);
-  const [partido, setPartido] = useState("");
-  const [estado, setEstado] = useState("");
+  const [partido, setPartido] = useState(params.get("partido") ?? "");
+  const [estado, setEstado] = useState(params.get("estado") ?? "");
   const [pagina, setPagina] = useState(1);
 
   // Sincroniza só busca + casa na URL (contrato compartilhável); partido/estado ficam locais.

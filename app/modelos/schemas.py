@@ -171,6 +171,7 @@ class PolarizacaoResponse(BaseModel):
 class CoesaoPartidoSchema(BaseModel):
     partido: str
     indice_coesao: float
+    total_proposicoes: int
 
 
 class CoesaoGeralResponse(BaseModel):

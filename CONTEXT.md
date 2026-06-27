@@ -82,6 +82,25 @@ Parlamentar que apresenta alta concordância com outro, com ao menos 5 proposiç
 comum. Base do gêmeo (maior concordância) e antípoda (menor) nas afinidades.
 _Avoid_: Parlamentar aliado, votante parecido.
 
+### Partidos
+
+**Coesão Partidária (Índice de Rice)**:
+Índice que mede o grau de consenso ou unidade de votação interna de um partido
+(bancada) nas votações nominais da [[casa]] legislativa. É calculado em escala de
+0% (bancada dividida igualmente com 50% de votos Sim e 50% Não) a 100%
+(unanimidade, onde todos votam Sim ou todos votam Não). Exposta via
+`GET /api/{casa}/partidos/coesao`.
+_Avoid_: Alinhamento ideológico, disciplina partidária.
+
+### Discursos
+
+**Discurso**:
+Pronunciamento oficial realizado por um parlamentar em plenário, obtido a partir
+dos diários e canais oficiais da Câmara ou do Senado. O portal exibe sua
+data, fase do evento (ex: Grande Expediente) e o texto bruto da transcrição
+integral. Exposta via `GET /api/{casa}/discursos` e `GET /api/{casa}/discursos/{id}`.
+_Avoid_: Pronunciamento informal, fala do político.
+
 ### Termos descontinuados (limitação de dado permanente)
 
 A coluna `eh_coerente` **não é mais preenchida no banco** (confirmado pelo responsável
