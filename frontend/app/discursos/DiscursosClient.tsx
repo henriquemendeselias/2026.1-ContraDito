@@ -347,27 +347,39 @@ function DiscursosInner({
                 >
                   <div>
                     {/* Parlamentar Header */}
-                    <div className="flex items-center gap-3 border-b border-rim/15 pb-3.5 mb-3.5">
+                    <div className="border-b border-rim/15 pb-3.5 mb-3.5">
                       {pol ? (
-                        <>
-                          <Avatar name={pol.nome_urna} url={pol.url_foto} size={38} />
-                          <div>
-                            <span className="block text-sm text-bright font-bold">{pol.nome_urna}</span>
-                            <span className="block text-[11px] text-dim">
+                        <Link
+                          href={`/politico/${pol.id}?casa=${pol.casa}`}
+                          className="flex items-center gap-3 group/pol hover:opacity-90 transition-all cursor-pointer min-w-0"
+                          title={`Ver dossiê de ${pol.nome_urna}`}
+                        >
+                          <Avatar name={pol.nome_urna} url={pol.url_foto} size={38} ringColor={tint(CASA[pol.casa].hex, 45)} />
+                          <div className="min-w-0">
+                            <span className="block text-sm text-bright font-bold truncate group-hover/pol:text-coherent transition-colors">
+                              {pol.nome_urna}
+                            </span>
+                            <span className="block text-[11px] text-dim truncate">
                               {pol.nome_civil} · {pol.partido}-{pol.estado}
                             </span>
                           </div>
-                        </>
+                        </Link>
                       ) : (
-                        <>
+                        <Link
+                          href={`/politico/${item.politico_id}?casa=${casaAtiva}`}
+                          className="flex items-center gap-3 group/pol hover:opacity-90 transition-all cursor-pointer min-w-0"
+                          title="Ver dossiê do parlamentar"
+                        >
                           <div className="w-[38px] h-[38px] rounded-full bg-card-alt flex items-center justify-center border border-rim/35">
                             <User size={18} className="text-dim" />
                           </div>
-                          <div>
-                            <span className="block text-sm text-bright font-bold">Parlamentar ID #{item.politico_id}</span>
-                            <span className="block text-[11px] text-dim">Informações do diretório ausentes</span>
+                          <div className="min-w-0">
+                            <span className="block text-sm text-bright font-bold truncate group-hover/pol:text-coherent transition-colors">
+                              Parlamentar ID #{item.politico_id}
+                            </span>
+                            <span className="block text-[11px] text-dim truncate">Informações do diretório ausentes</span>
                           </div>
-                        </>
+                        </Link>
                       )}
                     </div>
 
@@ -452,27 +464,37 @@ function DiscursosInner({
               <div className="px-5 py-4 border-b border-rim/25 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {discursoAberto.parlamentar ? (
-                    <>
-                      <Avatar name={discursoAberto.parlamentar.nome_urna} url={discursoAberto.parlamentar.url_foto} size={36} />
+                    <Link
+                      href={`/politico/${discursoAberto.parlamentar.id}?casa=${discursoAberto.parlamentar.casa}`}
+                      className="flex items-center gap-3 group/drawerPol hover:opacity-90 transition-all cursor-pointer"
+                      title={`Ver dossiê de ${discursoAberto.parlamentar.nome_urna}`}
+                    >
+                      <Avatar name={discursoAberto.parlamentar.nome_urna} url={discursoAberto.parlamentar.url_foto} size={36} ringColor={tint(CASA[discursoAberto.parlamentar.casa].hex, 45)} />
                       <div>
-                        <h4 className="text-sm font-bold text-bright">{discursoAberto.parlamentar.nome_urna}</h4>
+                        <h4 className="text-sm font-bold text-bright group-hover/drawerPol:text-coherent transition-colors">{discursoAberto.parlamentar.nome_urna}</h4>
                         <span className="text-[10px] text-dim">
                           {discursoAberto.parlamentar.partido}-{discursoAberto.parlamentar.estado} · {CASA[casaAtiva].label}
                         </span>
                       </div>
-                    </>
+                    </Link>
                   ) : (
-                    <div>
-                      <h4 className="text-sm font-bold text-bright">Parlamentar ID #{discursoAberto.politico_id}</h4>
-                      <span className="text-[10px] text-dim">{CASA[casaAtiva].label}</span>
-                    </div>
+                    <Link
+                      href={`/politico/${discursoAberto.politico_id}?casa=${casaAtiva}`}
+                      className="flex items-center gap-3 group/drawerPol hover:opacity-90 transition-all cursor-pointer"
+                      title="Ver dossiê do parlamentar"
+                    >
+                      <div>
+                        <h4 className="text-sm font-bold text-bright group-hover/drawerPol:text-coherent transition-colors">Parlamentar ID #{discursoAberto.politico_id}</h4>
+                        <span className="text-[10px] text-dim">{CASA[casaAtiva].label}</span>
+                      </div>
+                    </Link>
                   )}
                 </div>
 
                 <div className="flex items-center gap-2">
                   {discursoAberto.parlamentar && (
                     <Link
-                      href={`/politico/${discursoAberto.politico_id}`}
+                      href={`/politico/${discursoAberto.politico_id}?casa=${discursoAberto.parlamentar.casa}`}
                       className="px-3 h-8 inline-flex items-center gap-1.5 rounded-lg border border-rim/30 text-[11px] font-semibold text-mid hover:text-bright hover:bg-card-alt/50 transition-all shrink-0"
                     >
                       Dossiê <ExternalLink size={11} />

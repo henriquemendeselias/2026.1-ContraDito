@@ -1,6 +1,6 @@
 // Rodapé do site (Home e demais páginas que quiserem reaproveitar).
 
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Github } from "lucide-react";
 
 export function SiteFooter() {
   return (
@@ -10,13 +10,28 @@ export function SiteFooter() {
           <span className="text-bright">CONTRA</span>
           <span className="text-coherent italic font-normal">dito</span>
         </span>
-        <p className="text-xs text-dim text-center">
+        <p className="text-xs text-dim text-center max-w-md">
           Portal de consulta · dados oficiais da Câmara dos Deputados e do Senado Federal · projeto acadêmico MDS · UnB / FCTE · 2026
         </p>
-        <a href="https://unb-mds.github.io/2026.1-ContraDito/" target="_blank" rel="noreferrer"
-           className="text-xs text-mid hover:text-bright inline-flex items-center gap-1">
-          Documentação <ArrowUpRight size={13} />
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href="https://github.com/unb-mds/2026.1-ContraDito"
+            target="_blank"
+            rel="noreferrer"
+            title="Repositório no GitHub"
+            className="h-9 w-9 grid place-items-center rounded-full border border-rim/50 text-mid hover:text-bright hover:border-coherent/60 transition-colors shrink-0"
+          >
+            <Github size={17} />
+          </a>
+          <a
+            href="https://unb-mds.github.io/2026.1-ContraDito/"
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-mid hover:text-bright inline-flex items-center gap-1"
+          >
+            Documentação <ArrowUpRight size={13} />
+          </a>
+        </div>
       </div>
     </footer>
   );

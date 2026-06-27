@@ -104,8 +104,8 @@ export function TimelineVotos({ tl1, tl2, nomeA, nomeB }: {
           tickFormatter={(v: number) => NIVEL_LABEL[v] ?? ""}
         />
         <Tooltip content={<Tip nomeA={nomeA} nomeB={nomeB} />} cursor={{ stroke: "rgba(255,255,255,0.08)" }} />
-        <Line type="stepAfter" dataKey="nivelA" name={nomeA} stroke={SERIE_A} strokeWidth={1.5} dot={{ r: 3, fill: SERIE_A }} connectNulls={false} />
-        <Line type="stepAfter" dataKey="nivelB" name={nomeB} stroke={SERIE_B} strokeWidth={1.5} dot={{ r: 3, fill: SERIE_B }} connectNulls={false} />
+        <Line type="stepAfter" dataKey="nivelA" name={nomeA} stroke={SERIE_A} strokeWidth={0} dot={{ r: 3, fill: SERIE_A, stroke: SERIE_A }} activeDot={{ r: 4.5, fill: SERIE_A, stroke: "#fff", strokeWidth: 1.5 }} connectNulls={false} />
+        <Line type="stepAfter" dataKey="nivelB" name={nomeB} stroke={SERIE_B} strokeWidth={0} dot={{ r: 3, fill: SERIE_B, stroke: SERIE_B }} activeDot={{ r: 4.5, fill: SERIE_B, stroke: "#fff", strokeWidth: 1.5 }} connectNulls={false} />
       </LineChart>
     </ResponsiveContainer>
   );
