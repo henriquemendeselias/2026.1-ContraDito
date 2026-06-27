@@ -1,7 +1,7 @@
 # Planejamento — Reestruturação do Frontend ContraDito
 
 > Documento de planejamento. Nenhuma implementação parte deste arquivo até aprovação.
-> Última atualização: 2026-06-25.
+> Última atualização: 2026-06-27.
 
 ## 0. Limitação de dado permanente (premissa de base)
 
@@ -73,6 +73,10 @@ com path exato e nenhuma usa `eh_coerente`.**
 
 ## 3. Fase 1 — Home (`/`) + Diretório (`/diretorio`) + Comparação (`/comparacao`)
 
+> **Status (2026-06-27): as três rotas estão IMPLEMENTADAS, validadas e no
+> `origin/feat/frontend_final`** (após merge com o trabalho do squad). Esta seção
+> descreve o que foi entregue; os blocos de decisão da §3a refletem o que está no ar.
+
 **Arquitetura de navegação (decidido):** a Fase 1 tem **três rotas distintas**,
 inspirada **estruturalmente** em como o ranking.org.br separa a Home (hero +
 busca/preview) da lista completa (`/ranking`):
@@ -88,11 +92,14 @@ busca/preview) da lista completa (`/ranking`):
   - barra de **busca** + **seletor de Casa** (Todos/Câmara/Senado) como vitrine/preview;
   - botão **"Ver lista completa"** → **navega para `/diretorio`** (não embute a lista);
   - seção **Sobre + Equipe** no final (ver §3b).
-- **`/diretorio` (rota NOVA)** — **listagem completa** dos 887 parlamentares:
+- **`/diretorio` (rota NOVA — ✅ implementada)** — **listagem completa** dos 887 parlamentares:
   - busca + filtros (UF/Partido) + seletor de Casa **fixos (sticky)**;
-  - listagem **completa**, fetch-all-once client-side ([ADR 003](docs/docs/adrs/adr-003.md)).
-- **`/comparacao` (rota existente, propósito original mantido)** — **comparação 1×1**
-  entre dois parlamentares. **Não** é fundida com o diretório; ver §4.
+  - **fetch-all-once real** dos 887 (642 Câmara + 245 Senado) via Server Component
+    ([ADR 003](docs/docs/adrs/adr-003.md)); busca/filtros UF/Partido/Casa **100% em
+    memória**, com `?busca=` e `?casa=` sincronizados na URL (contrato compartilhável).
+- **`/comparacao` (rota existente — ✅ implementada, propósito original mantido)** —
+  **comparação 1×1** entre dois parlamentares da **mesma casa**. **Não** é fundida com
+  o diretório; decisões reais de implementação em **§3c**.
 
 > As decisões de §3a abaixo (modelo de dados, fetch-all, linha, filtros, toggle de casa)
 > descrevem **a listagem completa, que vive em `/diretorio`**. A Home reaproveita apenas
@@ -213,44 +220,67 @@ Fonte do roster: `docs/overrides/home.html`. Avatar via
 `linkedin?` e `email?` **opcionais, vazios por agora** — o ícone/link de cada canal só
 é renderizado quando o campo existir.
 
-## 4. Fase 2 — Anotada (NÃO implementar nesta etapa)
+### c) Comparação 1×1 (`/comparacao`) — ✅ implementada
 
-Nenhuma métrica desta fase usa `eh_coerente` (ver §0).
+Implementada e validada de ponta a ponta (build limpo, dados reais, conferida no
+navegador). Conceito central: **concordância de votos**. Sem score/coerência. Decisões
+reais — algumas **divergem do plano original** (preservado no histórico do git):
 
-### Comparação 1×1 (`/comparacao` — rota própria, propósito original mantido)
+- **Restrição de casa:** só entre parlamentares da **MESMA casa** — `GET /api/comparar`
+  recebe **um** parâmetro `casa`, não dois; o seletor força isso.
+- **Seleção:** dois seletores com **busca em memória**, reaproveitando os 887 do
+  diretório (mesmo `fetchDiretorioCompleto`), escopados pela casa ativa. **Pré-população
+  por URL** via `?casa=&id1=&id2=` (porta aberta para deep-link futuro a partir do
+  /diretorio), com sync da URL nas ações do usuário.
+- **Dados:** `GET /api/comparar` (concordância + proposições em comum + divergências)
+  **mais as DUAS timelines completas** (`GET /api/{casa}/politicos/{id}/timeline`), em
+  paralelo. As timelines **não filtram interseção** — o gráfico mostra todas as
+  votações de cada um, com lacuna onde só um votou.
+- **Visual (sem semântica de valor):** cores **neutras categóricas** para os votos
+  (violeta/ciano/ardósia — **não** reaproveita pulse/aurum, que é identidade de casa)
+  e **duas cores de série** (índigo/teal) para distinguir os dois parlamentares **sem
+  hierarquia** entre eles. Tokens em `globals.css`.
+- **Tabela de divergências sem enriquecimento extra:** só os campos que `/api/comparar`
+  já retorna (proposição, ementa, voto de cada lado) — **decisão consciente de
+  simplicidade**, sem chamadas a `/proposicoes/{id}`.
+- **Erro:** mesma filosofia do /diretorio — fetch que falha mostra mensagem amigável +
+  retry (erro técnico só no console), nunca estado vazio silencioso.
 
-A comparação direta entre dois parlamentares **continua sendo a página `/comparacao`**,
-com seu propósito original: **comparar 1×1**. **Não** é fundida com o diretório
-(`/diretorio`) — são rotas e superfícies distintas. Conceito central: **concordância**.
+## 4. Backlog — pendente (NÃO implementado ainda)
 
-- **Seleção dos dois parlamentares** acontece na própria `/comparacao` (seletores/busca
-  independentes para cada um). _Mecânica exata de seleção a refinar no prototype da
-  Fase 2 — pode, por exemplo, aceitar deep-link `/comparacao?a={id1}&b={id2}`._
-- A página consome `GET /api/comparar`
-  (`concordancia_percentual` + `proposicoes_em_comum` + `divergencias`) e exibe:
-  - o **percentual de concordância**;
-  - um **gráfico por votos**: eixo X = proposições/tempo (PECs/PLs em ordem
-    cronológica), eixo Y = voto (`voto_oficial`: Sim/Não/Abstenção/etc.), com **uma
-    série/linha por parlamentar** — permitindo visualizar onde os votos coincidem e
-    onde divergem ao longo do tempo. As duas séries são distinguíveis visualmente,
-    preservando a identidade de [[casa]] de cada parlamentar. É a **aplicação concreta
-    da "Timeline de Votações"** (definida no grilling da Fase 1: eixo X tempo, eixo Y
-    categórico de `voto_oficial`), agora com **dois parlamentares simultâneos** em vez
-    de um só;
-  - a **lista detalhada das divergências** (proposição, ementa, voto de cada um).
+> A **Comparação 1×1** saiu desta seção — foi implementada (ver §3c). O bloco de
+> planejamento original dela fica preservado no histórico do git.
 
-### Métricas do Dossiê
-- **Timeline de Votações** (`/timeline`) — cronologia **puramente visual**:
-  eixo X = tempo (`data_votacao`); eixo Y = categórico com os valores de
-  `voto_oficial` (Sim, Não, Abstenção, etc.). **Sem cálculo de coerência, sem
-  acúmulo.**
-- **Fidelidade Partidária bruta** (`/fidelidade`) — exibe se o parlamentar votou
-  com a maioria do partido ou não, agrupado por voto: `taxa_fidelidade`,
-  `votos_alinhados`, `votos_rebeldes`, `total_votos_com_orientacao`. **Sem
-  "Quadrantes de Comportamento"** (Coerente&Fiel, Rebelde Coerente, Fidelidade
-  Cega, Incoerente&Rebelde) — esses dependiam de `eh_coerente`, que nunca será
-  preenchida (limitação de dado permanente, §0).
+Nenhuma métrica abaixo usa `eh_coerente` (ver §0).
+
+### Atribuição de responsáveis
+- **João (@jot4-ge):** `/politico/[id]` (dossiê) + página/seção de **Discursos**.
+- **Henrique (@henriquemendeselias):** `/proposicoes` (painel + detalhe + polarização).
+- **Luiz (@luizhtmoreira):** `/partidos` (coesão partidária).
+
+### Dossiê — `/politico/[id]` (João)
+- **Timeline de Votações** — cronologia **puramente visual**: X = `data_votacao`,
+  Y = categórico de `voto_oficial` (Sim/Não/Abstenção/etc.). Sem coerência, sem acúmulo.
 - **Gêmeo e Antípoda** (`/afinidades`) — por concordância de votos.
 - **Assiduidade / presença efetiva** — derivada de `resumo_votos`.
-- **Polarização de proposições** (`/proposicoes/{id}/polarizacao`).
-- **Coesão partidária** (`/partidos/coesao`).
+> Nota técnica: o rework de `/politico/[id]` **destrava a remoção final** dos legados
+> compartilhados ainda em uso pelo dossiê (`ScoreGauge`, `CoherenceChart`,
+> `TendenciaRecente`, `computeTimeline`, `scoreHex`, `formatScore`).
+
+### Discursos (João)
+- Página/seção consumindo `GET /api/{casa}/discursos`, `.../discursos/{id}`,
+  `.../discursos/{id}/chunks` e `.../politicos/{id}/discursos`.
+
+### Proposições — `/proposicoes` (Henrique)
+- Painel (`GET /api/{casa}/proposicoes`), detalhe + resumo executivo IA
+  (`.../proposicoes/{id}`) e badge de **Polarização** (`.../polarizacao`:
+  Consensual / Dividida / Altamente Polarizada).
+
+### Partidos — `/partidos` (Luiz)
+- **Coesão partidária** (`GET /api/{casa}/partidos/coesao`) — índice de Rice adaptado.
+
+### Fidelidade partidária — extensão futura do `/comparacao` (já implementado)
+- Fidelidade bruta (`GET /api/{casa}/politicos/{id}/fidelidade`): `taxa_fidelidade`,
+  `votos_alinhados`, `votos_rebeldes`, `total_votos_com_orientacao`. **Sem "Quadrantes
+  de Comportamento"** (dependiam de `eh_coerente` — §0). Planejada como **extensão do
+  /comparacao**, não do dossiê.
