@@ -1,6 +1,6 @@
 # ContraDito
 
-> **O que os políticos dizem vs. o que eles votam.** Uma plataforma de transparência política movida a Inteligência Artificial.
+> **O que os políticos dizem vs. o que eles votam.** Uma plataforma de transparência política.
 
 <div align="center">
 
@@ -27,17 +27,17 @@ Este README fornece apenas um guia de execução rápido e panorama estrutural. 
 
 ## O Projeto
 
-O **ContraDito** atua como um motor de auditoria contínua que coleta o histórico legislativo de Deputados Federais e Senadores, processando o texto das notas taquigráficas de seus discursos e cruzando-os semanticamente com seus votos em plenário (em projetos e propostas de lei). 
+O **ContraDito** atua como um motor de auditoria contínua que coleta o histórico legislativo de Deputados Federais e Senadores, processando o texto de seus discursos e cruzando-os com seus votos em plenário (em projetos e propostas de lei).
 
-Utilizando Inteligência Artificial avançada (modelos *LLaMA 3.1 8B* para sumarização e inferência, e *BAAI/bge-m3* para vetorização) em uma arquitetura **RAG** (Retrieval-Augmented Generation), o sistema calcula um **Score de Coerência** matemático e rastreável. Seu objetivo é evidenciar aos eleitores se as atitudes no plenário refletem verdadeiramente o que foi proferido no microfone público.
+Utilizando Inteligência Artificial (modelo *BAAI/bge-m3* para vetorização e a API do *Google GenAI - Gemini* para resumos executivos das proposições) em uma arquitetura **RAG** (Retrieval-Augmented Generation), o sistema extrai dados e calcula métricas analíticas em tempo de consulta (como afinidades gêmeo/antípoda, fidelidade partidária, coesão partidária e polarização). Seu objetivo é dar transparência à atuação de parlamentares, evidenciando aos eleitores o alinhamento de suas ações legislativas.
 
 ## A Arquitetura (Resumo)
 
-O sistema foi concebido sob restrições estritas de alta performance e uso eficiente de recursos de IA, operando em um padrão arquitetural **CQRS** rigorosamente isolado e orquestrado por contêineres Docker:
+O sistema opera sob o padrão arquitetural **CQRS** rigorosamente isolado e orquestrado por contêineres Docker:
 
-1. **Lado de Leitura (Query):** Front-end responsivo desenvolvido em **Next.js** comunicando-se com uma API de Leitura blindada em **FastAPI**. O ambiente é otimizado para atender um alto volume de acessos lendo apenas dados consolidados e pré-processados, fazendo uso inteligente de cache em memória (InMemoryBackend).
-2. **Lado de Escrita (Command / Worker NLP):** Um *Worker* autônomo em Python rodando processos agendados em *background*. Operando sob o padrão arquitetural *Pipe and Filter*, ele absorve a carga pesada de NLP: coleta das APIs federais oficiais, fragmentação (*chunking*), processamento de embeddings e inferência de veredito, escrevendo o *Score de Coerência* consolidado na base.
-3. **Persistência Central:** Todo o estado do sistema, desde entidades básicas até vetores dimensionais gerados pelo modelo BAAI/bge-m3, é gerenciado pelo **Supabase** (PostgreSQL) potencializado pela extensão `pgvector`.
+1. **Lado de Leitura (Query):** Front-end responsivo desenvolvido em **Next.js** comunicando-se com uma API de Leitura em **FastAPI** (porta `8001`). O ambiente é otimizado para atender consultas de leitura rápidas com cache em memória de TTL curto.
+2. **Lado de Escrita (Command / Worker NLP):** Um *Worker* autônomo em Python que executa pipelines procedurais (padrão *Pipe and Filter*) para extração das APIs governamentais, fragmentação (*chunking*), geração de resumos das proposições via API do Gemini e vetorização. Ele roda de forma assíncrona por meio de run scripts específicos sob demanda.
+3. **Persistência Central:** Os dados estruturados relacionais (perfis, proposições, discursos e votos) são armazenados no **Supabase (PostgreSQL)** em nuvem. A extensão `pgvector` foi descontinuada: 100% dos embeddings de discursos e resumos são armazenados e indexados de forma isolada no banco vetorial **Qdrant (Nuvem)**.
 
 ---
 
@@ -58,17 +58,20 @@ cd 2026.1-ContraDito
 ```
 
 **2. Configure o ambiente (.env):**
-Crie um arquivo `.env` na raiz da pasta do projeto e defina as seguintes credenciais obrigatórias. *(Nota: o Supabase atua como banco de dados externo Serverless, ele não roda em contêiner).*
+Crie um arquivo `.env` na raiz da pasta do projeto e defina as seguintes credenciais obrigatórias:
 ```env
-# Conexões com o Supabase
+# Supabase — banco relacional gerenciado
 SUPABASE_URL=sua_url_do_projeto_aqui
 SUPABASE_KEY=sua_chave_anon_publica_aqui
 
-# Conexões com Motor de Inferência IA
-LLM_PROVIDER=groq # "groq" ou "colab"
-GROQ_API_KEY=sua_chave_da_groq_aqui
+# Qdrant — banco vetorial gerenciado
+QDRANT_URL=sua_url_do_qdrant_aqui
+QDRANT_API_KEY=sua_chave_do_qdrant_aqui
 
-# Integração Interna (Docker)
+# Motor de Inferência — API do Gemini
+GEMINI_API_KEY=sua_chave_do_gemini_aqui
+
+# Integração Interna / Front-end
 NEXT_PUBLIC_API_URL=http://localhost:8001
 ```
 
@@ -77,13 +80,14 @@ NEXT_PUBLIC_API_URL=http://localhost:8001
 docker compose up --build
 ```
 
-> ** Atenção (Desenvolvedores em Apple Silicon / ARM64):**
-> Certifique-se de que a tag `platform: linux/arm64` esteja incluída no `docker-compose.yml`. Emular os processos PyTorch via Rosetta resultará em degradação acentuada de CPU e consumo abusivo de RAM. Em sua primeira execução, o build baixará o modelo HuggingFace completo (~2.3GB), salvando em volume cache para agilizar os *rebuilds* seguintes.
-
 **4. Acesso aos Serviços Locais:**
 Com a stack ativa, a plataforma será roteada localmente para as seguintes portas:
-- **Aplicação Web (Next.js - Vitrine do Eleitor):** [http://localhost:3000](http://localhost:3000)
+- **Aplicação Web (Next.js):** [http://localhost:3000](http://localhost:3000)
 - **API de Leitura / Documentação Swagger (FastAPI):** [http://localhost:8001/docs](http://localhost:8001/docs)
+- **Portal de Documentação (MkDocs):** [http://localhost:8002](http://localhost:8002)
+
+**5. Executar o Worker Manualmente:**
+O pipeline do Worker segue o padrão *Pipe and Filter* e é executado rodando os scripts sequenciais sob a pasta `scripts/` utilizando a flag de módulo do Python (ex: `python -m scripts.run_extrator_politicos`, `python -m scripts.run_chunker_discursos`, etc.). O passo a passo e a ordem detalhada de execução de cada script podem ser consultados no manual de [execucao.md](file:///home/henrique/Faculdade%20-%20UNB/4%20SEMESTRE/MDS/Projeto_MDS/api-coerencia/docs/docs/execucao.md#L209).
 
 ---
 
