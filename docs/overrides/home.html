@@ -26,8 +26,8 @@
     <div class="hero-badge">Projeto Acadêmico · MDS/UnB · 2026</div>
     <h1 class="hero-title">O que os políticos <span>dizem</span><br>vs. o que eles <span>votam</span></h1>
     <p class="hero-subtitle">
-      O <strong>ContraDito</strong> usa Inteligência Artificial para cruzar discursos parlamentares
-      com votos oficiais e calcular um <strong>Score de Coerência</strong> auditável e transparente.
+      O <strong>ContraDito</strong> analisa e cruza discursos parlamentares com votos oficiais
+      usando busca semântica, identificando afinidades políticas e fidelidade partidária de forma transparente.
     </p>
     <div class="hero-cta">
       <a href="{{ base_url }}/ux/prototipos/" class="btn-primary">Ver a Plataforma</a>
@@ -55,38 +55,37 @@
       <div class="pipeline-number">02</div>
       <h3>Motor NLP e RAG</h3>
       <p>Os discursos são vetorizados com <strong>BGE-M3</strong> e cruzados semanticamente com as matérias votadas via
-        busca vetorial no Supabase.</p>
+        busca vetorial no Qdrant.</p>
     </div>
     <div class="pipeline-card">
       <div class="pipeline-number">03</div>
-      <h3>Score de Coerência</h3>
-      <p>O <strong>Llama 3.1 8B</strong> analisa o contexto e emite um veredito. O resultado é exibido ao cidadão como
-        uma métrica de 0 a 100.</p>
+      <h3>Métricas e Afinidades</h3>
+      <p>O sistema calcula em tempo de consulta a <strong>fidelidade partidária</strong>, <strong>coesão partidária</strong> e as <strong>afinidades (gêmeo/antípoda)</strong> baseadas nos votos reais.</p>
     </div>
   </div>
 
   <hr class="landing-divider">
 
   <!-- ═══════════════════════════════════
-       SCORE DE COERÊNCIA
+       MÉTRICAS ANALÍTICAS
   ══════════════════════════════════════ -->
-  <p class="section-title">O Score de Coerência</p>
-  <p class="section-subtitle">Uma métrica matemática, determinística e auditável — sem opiniões subjetivas.</p>
+  <p class="section-title">Métricas Analíticas</p>
+  <p class="section-subtitle">Cálculo de alinhamento e fidelidade em tempo real — com base em dados de plenário.</p>
 
   <div class="score-box">
     <div class="score-formula">
-      <p>Fórmula</p>
-      <div class="formula">
-        Score = (Votos Coerentes ÷<br>Votações Válidas) × 100
+      <p>Fórmula de Fidelidade</p>
+      <div class="formula" style="font-size: 1.1rem; line-height: 1.5; padding: 1.5rem 1rem;">
+        Fidelidade = (Votos com o Partido ÷<br>Total de Votos Válidos) × 100
       </div>
     </div>
     <div class="score-rules">
-      <h3>Regras do cálculo</h3>
+      <h3>Principais Análises</h3>
       <ul>
-        <li>Apenas votos "Sim" ou "Não" entram no denominador.</li>
-        <li>Só discursos anteriores à data do voto são considerados.</li>
-        <li>Ausências e abstenções são ignoradas para não distorcer o índice.</li>
-        <li>Parlamentares sem dados suficientes exibem "N/A" — sem falsos incoerentes.</li>
+        <li><strong>Fidelidade Partidária:</strong> Mede o percentual de votos do parlamentar alinhados com a liderança partidária.</li>
+        <li><strong>Gêmeo e Antípoda:</strong> Revela quais deputados ou senadores votam de maneira mais parecida e mais divergente.</li>
+        <li><strong>Coesão de Voto:</strong> Taxa que avalia o quão unificado cada partido se posiciona no plenário.</li>
+        <li><strong>Polarização de Plenário:</strong> Exposição de quais temas geram maior divisão ideológica entre as bancadas.</li>
       </ul>
     </div>
   </div>
@@ -133,13 +132,12 @@
   <div class="stack-grid">
     <div class="stack-badge">Python 3.12</div>
     <div class="stack-badge">FastAPI</div>
-    <div class="stack-badge">Next.js 14</div>
+    <div class="stack-badge">Next.js 15</div>
     <div class="stack-badge">Docker Compose</div>
-    <div class="stack-badge">Supabase (pgvector)</div>
-    <div class="stack-badge">Llama 3.1 8B</div>
+    <div class="stack-badge">Supabase</div>
+    <div class="stack-badge">Qdrant Cloud</div>
+    <div class="stack-badge">Google GenAI (Gemini)</div>
     <div class="stack-badge">BAAI/bge-m3</div>
-    <div class="stack-badge">LangChain</div>
-    <div class="stack-badge">Redis (Pub/Sub)</div>
     <div class="stack-badge">HuggingFace</div>
   </div>
 

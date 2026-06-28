@@ -87,7 +87,7 @@ Com a stack ativa, a plataforma será roteada localmente para as seguintes porta
 - **Portal de Documentação (MkDocs):** [http://localhost:8002](http://localhost:8002)
 
 **5. Executar o Worker Manualmente:**
-O pipeline do Worker segue o padrão *Pipe and Filter* e é executado rodando os scripts sequenciais `run_*.py` na raiz do projeto (como `run_extrator_politicos.py`, `run_chunker_discursos.py`, etc.). O passo a passo e a ordem detalhada de execução de cada script podem ser consultados no manual de [execucao.md](file:///home/henrique/Faculdade%20-%20UNB/4%20SEMESTRE/MDS/Projeto_MDS/api-coerencia/docs/docs/execucao.md#L209).
+O pipeline do Worker segue o padrão *Pipe and Filter* e é executado rodando os scripts sequenciais sob a pasta `scripts/` utilizando a flag de módulo do Python (ex: `python -m scripts.run_extrator_politicos`, `python -m scripts.run_chunker_discursos`, etc.). O passo a passo e a ordem detalhada de execução de cada script podem ser consultados no manual de [execucao.md](file:///home/henrique/Faculdade%20-%20UNB/4%20SEMESTRE/MDS/Projeto_MDS/api-coerencia/docs/docs/execucao.md#L209).
 
 ---
 
