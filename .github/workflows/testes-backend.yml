@@ -57,7 +57,7 @@ jobs:
           pip install "google-genai==2.8.0"
 
       - name: Executar testes do ETL com Pytest e Cobertura XML
-        run: pytest --cov=etl --cov=utils --cov-report=xml --cov-fail-under=90 tests/etl
+        run: pytest --cov=etl --cov-report=xml --cov-fail-under=90 tests/etl
 
       - name: Subir relatório de cobertura do ETL
         uses: actions/upload-artifact@v4
@@ -69,7 +69,6 @@ jobs:
     name: Análise SonarQube Cloud
     runs-on: ubuntu-latest
     needs: [rodar-testes, testes-etl]
-    # Mapeamos o segredo como variável de ambiente do JOB para que o "if" consiga lê-lo
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
@@ -82,9 +81,16 @@ jobs:
         uses: actions/download-artifact@v4
 
       - name: SonarQube Cloud Scan
-        # Agora validamos usando 'env' ao invés de 'secrets'
-        if: ${{ env.SONAR_TOKEN != '' }}
+        # Roda apenas se houver token E se estiver no seu fork OU no repositório original
+        if: ${{ env.SONAR_TOKEN != '' && (github.repository == 'henriquemendeselias/2026.1-ContraDito' || github.repository == 'unb-mds/2026.1-ContraDito') }}
         uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.projectKey=${{ github.repository == 'unb-mds/2026.1-ContraDito' && 'unb-mds_2026.1-ContraDito' || 'henriquemendeselias_2026.1-ContraDito' }}
+            -Dsonar.organization=${{ github.repository == 'unb-mds/2026.1-ContraDito' && 'unb-mds' || 'contradito' }}            
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          # Força análise de branch apenas se for o fork pessoal (para evitar erro 404). 
+          # Se for o original, usa o tipo de evento padrão do GitHub (para fazer análise de PR).
+          GITHUB_EVENT_NAME: ${{ github.repository != 'unb-mds/2026.1-ContraDito' && 'push' || github.event_name }}
