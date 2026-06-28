@@ -1,91 +1,143 @@
 # Integração e API (Rotas e Swagger)
 
-A API do ContraDito foi construída com **FastAPI**, focada em alta performance, respostas cacheadas e processamento assíncrono.
+Esta documentação especifica todas as rotas ativas da API **ContraDito**. Ela serve como guia oficial de integração para a equipe de Front-end (Next.js).
 
 ---
 
-## 1. Documentação Interativa (Swagger)
-
-Com os contêineres em execução, toda a documentação de *schemas*, contratos e testes de rotas está disponível automaticamente: **Swagger UI:**`http://localhost:8001/docs`
-
----
-
-## 2. Domínio: Políticos (`/api/politicos`)
-
-### `GET /api/politicos` — Listar e Filtrar
-
-Retorna uma listagem paginada de parlamentares. A rota utiliza **cache em memória de 1 hora** para garantir carregamento rápido da página inicial.
-
-**Parâmetros de Query (Opcionais):**
-
-| Parâmetro | Tipo | Descrição |
-|---|---|---|
-| `busca` | `string` | Pesquisa parcial por nome de urna. |
-| `partido` | `string` | Partido político (`PT`, `PL`, etc.). |
-| `cargo` | `string` | Cargo parlamentar (`DEPUTADO`, `SENADOR`). |
-| `uf` | `string` | Unidade federativa (`SP`, `RJ`). |
-| `ordem` | `string` | `mais_coerentes` ou `menos_coerentes`. |
-| `pagina` | `int` | Página atual da paginação. |
-
-**Retorno de Sucesso (`200 OK`):**
-
-```json
-{
-  "total_registros": 513,
-  "pagina_atual": 1,
-  "tamanho_pagina": 20,
-  "total_paginas": 26,
-  "itens": [
-    {
-      "id": 1,
-      "nome_urna": "Fulano",
-      "score_coerencia": 85.5,
-      "uf": "SP"
-    }
-  ]
-}
-```
+## 1. Visão Geral da Integração
+* **URL Base Local**: `http://localhost:8000`
+* **Porta de Desenvolvimento (CORS)**: O frontend Next.js deve rodar em `http://localhost:3000` para estar coberto pelas regras de liberação de CORS.
+* **Documentação Interativa (Swagger)**: Com os contêineres em execução, toda a documentação de schemas, contratos e testes de rotas está disponível automaticamente em `http://localhost:8000/docs` (ou na porta configurada para a API).
+* **Caches**: Rotas de listagem geral possuem cache em memória com validade de 1 hora (`3600` segundos).
+* **Ausência de Score**: As métricas de *Coherence Score* e a flag *dados_insuficientes* foram removidas definitivamente.
 
 ---
 
-### `GET /api/politicos/{id_parlamentar}` — Perfil Detalhado
-
-Rota consumida na tela individual do parlamentar. Retorna dados cadastrais e o histórico completo de análises semânticas e provas de contradição.
-
-**Retorno de Sucesso (`200 OK`):**
-
-```json
-{
-  "politico": {
-    "id": 1,
-    "nome_urna": "Fulano",
-    "cargo": "DEPUTADO",
-    "score_coerencia": 85.5
-  },
-  "provas": [
-    {
-      "id": 10,
-      "contexto": {
-        "tipo_documento": "DISCURSO",
-        "data_evento": "2024-05-10",
-        "texto_extraido": "Sempre fui a favor do teto de gastos..."
-      },
-      "resultado": {
-        "topico_identificado": "Economia",
-        "postura_extraida_do_texto": "A Favor",
-        "justificativa": "O parlamentar defende explicitamente o limite.",
-        "voto_oficial_registrado": "Contra",
-        "status_coerencia": false
-      }
-    }
-  ]
-}
-```
-
-**Erros:**
-
-| Status | Cenário |
-|---|---|
-| `404 Not Found` | `id_parlamentar` não encontrado no banco. |
+## 2. Detalhamento das Rotas por Categoria
 
 ---
+
+### Categoria A: Parlamentares (Perfil, Votos e Afinidades)
+
+#### 1. Listar e Filtrar Políticos
+* **Método / Path**: `GET /api/{casa}/politicos`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"` (obrigatório).
+  * `busca` (Query, opcional): Busca por parte do nome de urna.
+  * `partido` (Query, opcional): Sigla do partido (ex: `PL`, `PT`).
+  * `estado` (Query, opcional): Sigla da UF com 2 letras (ex: `SP`, `DF`).
+  * `pagina` (Query, opcional): Inteiro (padrão `1`).
+  * `tamanho` (Query, opcional): Inteiro (padrão `20`).
+
+#### 2. Obter Perfil Detalhado
+* **Método / Path**: `GET /api/{casa}/politicos/{id_parlamentar}`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{id_parlamentar}` (Path): ID numérico do político.
+
+#### 3. Linha do Tempo de Votações (Individual)
+* **Método / Path**: `GET /api/{casa}/politicos/{id_parlamentar}/timeline`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{id_parlamentar}` (Path): ID do político.
+
+#### 4. Afinidades Políticas (Gêmeo e Antípoda)
+* **Método / Path**: `GET /api/{casa}/politicos/{id_parlamentar}/afinidades`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{id_parlamentar}` (Path): ID do político.
+
+#### 5. Fidelidade Partidária Bruta
+* **Método / Path**: `GET /api/{casa}/politicos/{id_parlamentar}/fidelidade`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{id_parlamentar}` (Path): ID do político.
+
+---
+
+### Categoria B: Análises Comparativas e Partidos
+
+#### 6. Comparação Direta entre Dois Parlamentares
+* **Método / Path**: `GET /api/comparar`
+* **Parâmetros (Query)**:
+  * `politico_id_1` (Query): ID do primeiro parlamentar (obrigatório).
+  * `politico_id_2` (Query): ID do segundo parlamentar (obrigatório).
+  * `casa` (Query): `"camara"` ou `"senado"` (obrigatório).
+
+#### 7. Coesão de Voto dos Partidos
+* **Método / Path**: `GET /api/{casa}/partidos/coesao`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+
+> [!IMPORTANT]
+> **Processamento e Cache**: Este endpoint calcula a coesão média de todos os partidos de forma analítica e dinâmica. Para isso, o backend executa internamente a função `_obter_todos_os_votos`, que busca sequencialmente a totalidade de votos do banco de dados em lotes (chunks de 1000 registros). Devido à alta carga dessa operação, **a ativação e respeito ao cache de 1 hora (`expire=3600`) são críticos** para evitar degradação de performance na API e sobrecarga no Supabase.
+
+---
+
+### Categoria C: Proposições (Matérias e Polarização)
+
+#### 8. Listar Proposições
+* **Método / Path**: `GET /api/{casa}/proposicoes`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"` (obrigatório).
+  * `busca` (Query, opcional): Busca por termo no ID, ementa ou resumo executivo.
+  * `ano` (Query, opcional): Filtro por ano.
+  * `tipo` (Query, opcional): Tipo de matéria (ex: `PL`, `PEC`).
+  * `apenas_analisadas` (Query, opcional): Exibir apenas proposições com resumo da IA (analisadas) (`true` ou `false`).
+  * `pagina` (Query, opcional): Inteiro (padrão `1`).
+  * `tamanho` (Query, opcional): Inteiro (padrão `20`).
+
+#### 9. Obter Detalhes da Proposição
+* **Método / Path**: `GET /api/{casa}/proposicoes/{id_proposicao}`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{id_proposicao}` (Path): UUID da proposição.
+
+#### 10. Polarização de Plenário
+* **Método / Path**: `GET /api/{casa}/proposicoes/{id_proposicao}/polarizacao`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{id_proposicao}` (Path): UUID da proposição.
+
+---
+
+### Categoria D: Discursos, Chunks e Votos Brutos
+
+#### 11. Listar Discursos Gerais
+* **Método / Path**: `GET /api/{casa}/discursos`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `politico_id` (Query, opcional): Filtro por ID do parlamentar.
+  * `termo` (Query, opcional): Termo para pesquisar no texto do discurso.
+  * `pagina` (Query, opcional): Inteiro (padrão `1`).
+  * `tamanho` (Query, opcional): Inteiro (padrão `20`).
+
+#### 12. Listar Discursos de um Político
+* **Método / Path**: `GET /api/{casa}/politicos/{id_parlamentar}/discursos`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{id_parlamentar}` (Path): ID do político.
+  * `pagina` (Query, opcional): Inteiro (padrão `1`).
+  * `tamanho` (Query, opcional): Inteiro (padrão `20`).
+
+#### 13. Obter Detalhes do Discurso
+* **Método / Path**: `GET /api/{casa}/discursos/{discurso_id}`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{discurso_id}` (Path): UUID do discurso.
+
+#### 14. Chunks de um Discurso
+* **Método / Path**: `GET /api/{casa}/discursos/{discurso_id}/chunks`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{discurso_id}` (Path): UUID do discurso.
+
+#### 15. Listar Votos Nominais Brutos
+* **Método / Path**: `GET /api/{casa}/votos`
+* **Parâmetros**:
+  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `politico_id` (Query, opcional): Filtro por político.
+  * `proposicao_id` (Query, opcional): Filtro por proposição.
+  * `apenas_com_discursos` (Query, opcional): Filtrar apenas votos que possuem discursos associados (`true` ou `false`).
+  * `pagina` (Query, opcional): Inteiro (padrão `1`).
+  * `tamanho` (Query, opcional): Inteiro (padrão `20`).

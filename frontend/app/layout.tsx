@@ -1,38 +1,54 @@
 import type { Metadata } from "next";
-import { Syne, DM_Sans } from "next/font/google";
+import { Playfair_Display, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import NextTopLoader from "nextjs-toploader";
+import { Navbar } from "@/components/Navbar";
 
-// --- Configuração das fontes do ContraDito ---
-const syne = Syne({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"], // Pesos usados nos títulos
-  variable: "--font-syne",
+  weight: ["400", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
 });
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "700"], // Pesos usados no corpo do texto e tabela
-  variable: "--font-dm",
+  variable: "--font-dm-sans",
+  display: "swap",
 });
 
-// --- SEO e Metadados do Projeto ---
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Contradito – O que foi dito vs. Realidade",
-  description: "Acompanhe a coerência dos parlamentares brasileiros com base em Inteligência Artificial.",
+  title: {
+    default: "ContraDito — Transparência Parlamentar",
+    template: "%s | ContraDito",
+  },
+  description:
+    "Cruzamento de discursos e votos de parlamentares brasileiros com Inteligência Artificial.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="pt-BR"
-      className={`${syne.variable} ${dmSans.variable} h-full antialiased`}
+      data-theme="light"
+      className={`${playfair.variable} ${dmSans.variable} ${jetbrains.variable}`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#0d1117]">
-        {children}
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();` }} />
+      </head>
+      <body className="bg-canvas text-bright antialiased noise-overlay">
+        <NextTopLoader color="#10b981" showSpinner={false} height={3} shadow="0 0 10px #10b981,0 0 5px #10b981" />
+        <Navbar />
+        <main className="relative z-10">{children}</main>
       </body>
     </html>
   );

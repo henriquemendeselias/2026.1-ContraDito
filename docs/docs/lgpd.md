@@ -10,8 +10,8 @@ O objetivo central é promover o controle social e evidenciar a aderência entre
 
 - **Enquadramento Legal (LGPD e LAI):** O processamento dos dados dos parlamentares ocorre sob as premissas do **interesse público** e da **transparência ativa** do Estado, enquadrando-se nas exceções do Artigo 4º da LGPD. São processados exclusivamente dados relacionados ao exercício do mandato público (votos, discursos e propostas legislativas).
 - **Fontes Primárias Oficiais:** O pipeline ETL não realiza raspagem de sites de terceiros. A ingestão ocorre exclusivamente pelas APIs de Dados Abertos do Governo Federal (Câmara dos Deputados e Senado Federal).
-- **Isenção Algorítmica:** O Score de Coerência não é uma avaliação subjetiva. É o resultado matemático e determinístico do cruzamento de dados executado pelo sistema. Para aprofundar, consulte a página [Cálculo do Score](./calculo-score.md).
-- **Rastreabilidade e Auditoria:** A rastreabilidade é garantida pela exibição do voto oficial registrado (ex: PEC 45/2019) acompanhado da justificativa analítica elaborada pela IA.
+- **Isenção Algorítmica:** As informações e métricas de alinhamento e transparência não são avaliações subjetivas do sistema, mas sim o resultado objetivo de cruzamentos lógicos de dados nativos de votações e discursos públicos.
+- **Rastreabilidade e Auditoria:** A rastreabilidade é garantida pela exibição transparente do voto oficial e público registrado pelo parlamentar em cada proposição correspondente.
 
 ---
 
@@ -21,8 +21,7 @@ Se você é um cidadão navegando no ContraDito, a *Privacy by Default* é a reg
 
 ### Quais dados coletamos e por quê?
 
-- **Minimização de Dados:** A arquitetura atual **não exige criação de conta, login ou autenticação**. Não são solicitados, capturados ou processados Dados Pessoais Identificáveis (PII) dos visitantes, como e-mail, nome ou CPF.
-- **Métricas de Navegação:** São coletados apenas dados de telemetria básicos e anonimizados (ex: taxa de rejeição, tempo de carregamento de página) para monitorar a estabilidade dos servidores e aprimorar a experiência de uso.
+- **Minimização de Dados:** A arquitetura atual **não exige criação de conta, login ou autenticação**. Não são coletados, armazenados ou processados Dados Pessoais Identificáveis (PII) dos visitantes (como nome, e-mail, CPF ou histórico de navegação). A navegação é inteiramente anônima.
 
 ### Compartilhamento de Dados
 
