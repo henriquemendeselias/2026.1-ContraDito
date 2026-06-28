@@ -60,27 +60,27 @@ def limpar_transcricao(texto_bruto: str) -> str:
             r"^[\.\s]*(?:Discurso feito|Discurso pronunciado|DISCURSO|CÂMARA DOS DEPUTADOS|A VOLTA|PRONUN?CIAMENTO)[^()]*?\.\s+",
             re.IGNORECASE,
         ),
-        # Padrão 1: Clássico com travessão, flexibilizado para aceitar 'Sra.', chaves {} ou colchetes [].
+        # Padrão 1: Clássico com travessão
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+)*(?:\s*[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"
+            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*(?:\s*[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"
         ),
-        # Padrão 2: Discurso encaminhado.
+        # Padrão 2: Discurso encaminhado
         re.compile(
-            r"^[\.\s]*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SR[A]?\. DEPUTAD[OA] [A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+)*\.\s*"
+            r"^[\.\s]*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SR[A]?\. DEPUTAD[OA] [A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\.\s*"
         ),
-        # Padrão 3: Inserção nos anais ("pronuncia o seguinte discurso:").
-        # Limitamos o wildcard a no máximo 150 caracteres para evitar backtracking catastrófico em textos longos.
+        # Padrão 3: Inserção nos anais
         re.compile(
-            r"^[\.\s]*.{0,150}?(?:pronuncia|pronunciou|pronunciar) o seguinte discurso:\s*",
+            r"^[\.\s]*.*?(?:pronuncia|pronunciou|pronunciar) o seguinte discurso:\s*",
             re.IGNORECASE,
         ),
-        # Padrão 4: Clássico sem travessão (agora flexível para chaves e colchetes).
+        # Padrão 4: Clássico sem travessão
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+)*\s*[({\[][^)}\]]+[)}\]]\s*"
+            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\s*[({\[][^)}\]]+[)}\]]\s*"
         ),
-        # Padrão 4b: Clássico faltando fechamento de parêntese, emendando direto no pronome de tratamento.
+        # Padrão 4b: Clássico sem fechamento de parêntese (simplificado com re.IGNORECASE)
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+)*\s*[({\[][^)}\]]*?(?=\s*(?:(?:[Ee]xcelentíssimo\s+)?(?:[Ss]r[a]?\.\s+|[Ss]enhor[a]?\s+)?[Pp]residente\b|[Ss]ras?\.\s+e\s+[Ss]rs?\.|[Ss]enhoras\s+e\s+[Ss]enhores))"
+            r"^[\.\s]*(?:O SR\.|A SRA\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\s*[({\[][^)}]*?(?=\s*(?:(?:excelentíssimo\s+)?(?:sr[a]?\.\s+|senhor[a]?\s+)?presidente\b|sras?\.\s+e\s+srs?\.|senhoras\s+e\s+senhores))",
+            re.IGNORECASE
         ),
     ]
 
