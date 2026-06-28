@@ -17,7 +17,7 @@ export function Navbar() {
         </Link>
 
         {/* Menu Desktop (Escondido em telas menores que md) */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="max-md:hidden flex items-center gap-1">
           <Link
             href="/diretorio"
             className="px-3 py-1.5 inline-flex items-center gap-1.5 text-sm text-mid hover:text-bright transition-colors"
@@ -52,7 +52,7 @@ export function Navbar() {
         </div>
 
         {/* Controles Mobile (Apenas visíveis em mobile < md) */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="max-md:flex hidden items-center gap-2">
           <ThemeToggle />
           <button
             onClick={() => setMenuAberto(!menuAberto)}
@@ -66,7 +66,7 @@ export function Navbar() {
 
       {/* Dropdown Menu Mobile */}
       {menuAberto && (
-        <div className="absolute top-14 left-0 right-0 border-b border-rim/25 bg-canvas/95 backdrop-blur-md flex flex-col p-4 gap-2.5 md:hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-14 left-0 right-0 border-b border-rim/25 bg-canvas/95 backdrop-blur-md flex flex-col p-4 gap-2.5 max-md:flex hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <Link
             href="/diretorio"
             onClick={() => setMenuAberto(false)}

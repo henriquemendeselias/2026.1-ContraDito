@@ -11,7 +11,7 @@ export function SiteFooter() {
           <span className="text-coherent italic font-normal">dito</span>
         </span>
         <p className="text-xs text-dim text-center max-w-md">
-          Portal de consulta · dados oficiais da Câmara dos Deputados e do Senado Federal · projeto acadêmico MDS · UnB / FCTE · 2026
+          Portal de consulta · Dados oficiais da Câmara dos Deputados e do Senado Federal · Projeto acadêmico MDS · UnB / FCTE · 2026
         </p>
         <div className="flex items-center gap-3">
           <a

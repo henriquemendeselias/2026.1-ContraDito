@@ -1,9 +1,9 @@
 // Conteúdo institucional da Home (Sobre + Equipe + números reais do projeto).
 
 export const STORY: string[] = [
-  "O ContraDito nasceu na disciplina de Métodos de Desenvolvimento de Software (MDS), na Faculdade de Ciências e Tecnologias em Engenharia (FCTE) da Universidade de Brasília, em 2026. A pergunta que moveu a Squad 09 era simples e incômoda: por que é tão difícil, para um cidadão comum, descobrir o que um parlamentar de fato discursou — e como ele votou?",
-  "A informação existe. Está pública nos portais da Câmara dos Deputados e do Senado Federal, mas espalhada, técnica e cansativa de garimpar. O ContraDito reúne discursos, votações e proposições das duas casas num só lugar e deixa você consultar e cruzar esses dados livremente.",
-  "Sem notas, sem rótulos, sem ranking: a plataforma não decide quem é “coerente” ou “incoerente”. Ela organiza o registro oficial e devolve a leitura — e o juízo — a quem importa: você.",
+  "Transparência de verdade não é apenas disponibilizar dados na internet; é tornar a informação compreensível e acessível a qualquer cidadão. O ContraDito surge como uma ferramenta de controle social criada por estudantes de Engenharia de Software da Universidade de Brasília (UnB/FCTE) na disciplina de Métodos de Desenvolvimento de Software (MDS).",
+  "Cruzamos milhares de registros oficiais extraídos diretamente da Câmara dos Deputados e do Senado Federal. Conectamos o que os parlamentares dizem no plenário com a forma como efetivamente votam em projetos de lei, tudo em uma interface limpa e sem ruídos.",
+  "Apostamos na neutralidade absoluta: a plataforma não emite pareceres, não distribui notas nem rotula políticos. Entregamos a informação bruta organizada para que o eleitor exerça seu papel crítico com autonomia.",
 ];
 
 export type Membro = {
@@ -16,12 +16,12 @@ export type Membro = {
 };
 
 export const EQUIPE: Membro[] = [
-  { nome: "Henrique Mendes", papel: "Scrum Master · Lead Fullstack", handle: "henriquemendeselias", tags: ["Scrum Master", "Extração de Dados", "Lead Fullstack"] },
-  { nome: "Luiz Henrique Tomaz", papel: "Fullstack", handle: "luizhtmoreira", tags: ["Fullstack", "IA / NLP", "Arquitetura", "Extração", "Frontend"] },
-  { nome: "Matheus Rodrigues", papel: "Documentação & DevOps", handle: "matheus0346", tags: ["Documentação (MkDocs)", "Docker / DevOps"] },
-  { nome: "João Guilherme Amâncio", papel: "Product Owner · Lead Fullstack", handle: "jot4-ge", tags: ["Product Owner", "Lead Fullstack", "API", "Extração", "Frontend"] },
+  { nome: "Henrique Mendes", papel: "Scrum Master · Lead Fullstack", handle: "henriquemendeselias", tags: ["Tech Lead", "Arquitetura & API", "Extração de Dados", "DevOps"], linkedin: "https://www.linkedin.com/in/henriquemendeselias/" },
+  { nome: "Luiz Henrique Tomaz", papel: "Lead AI Engineer · Fullstack", handle: "luizhtmoreira", tags: ["Líder de IA & NLP", "Banco Vetorial (Vector DB)", "Arquitetura de Dados", "Frontend"], linkedin: "https://www.linkedin.com/in/luiz-henrique-tomaz-moreira" },
+  { nome: "Matheus Rodrigues", papel: "Lead Documentação · DevOps & Testes", handle: "matheus0346", tags: ["Documentação (MkDocs)", "Docker / DevOps", "Testes Automatizados & QA", "CI/CD"], linkedin: "https://www.linkedin.com/in/matheus-pontes-566840404/" },
+  { nome: "João Guilherme Amâncio", papel: "Product Owner · Fullstack", handle: "jot4-ge", tags: ["Product Owner", "Fullstack", "API", "Extração", "Frontend"], linkedin: "https://www.linkedin.com/in/joaoguiam/" },
   { nome: "Gabriel Portácio", papel: "Frontend", handle: "G2SBiell", tags: ["Frontend"] },
-  { nome: "Lucas Araújo Lima", papel: "Documentação & DevOps", handle: "lucasaraujoszz", tags: ["Documentação (MkDocs)", "Docker / DevOps"] },
+  { nome: "Lucas Araújo Lima", papel: "Lead DevOps · Testes & Documentação", handle: "lucasaraujoszz", tags: ["Docker & Conteinerização", "DevOps", "Testes Automatizados & QA", "Documentação (MkDocs)"] },
 ];
 
 // Números reais do projeto (Supabase, 2026-06-25).
