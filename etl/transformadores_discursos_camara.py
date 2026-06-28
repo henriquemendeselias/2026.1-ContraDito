@@ -62,11 +62,11 @@ def limpar_transcricao(texto_bruto: str) -> str:
         ),
         # Padrão 1: Clássico com travessão
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*(?:\s*[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"
+            r"^[\.\s]*(?:[OA]\s+S[Rr][Aa]?\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*(?:\s*[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"
         ),
         # Padrão 2: Discurso encaminhado
         re.compile(
-            r"^[\.\s]*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SR[A]?\. DEPUTAD[OA] [A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\.\s*"
+            r"^[\.\s]*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SRA?\. DEPUTAD[OA] [A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\.\s*"
         ),
         # Padrão 3: Inserção nos anais
         re.compile(
@@ -75,11 +75,11 @@ def limpar_transcricao(texto_bruto: str) -> str:
         ),
         # Padrão 4: Clássico sem travessão
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\s*[({\[][^)}\]]+[)}\]]\s*"
+            r"^[\.\s]*(?:[OA]\s+S[Rr][Aa]?\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\s*[({\[][^)}\]]+[)}\]]\s*"
         ),
         # Padrão 4b: Clássico sem fechamento de parêntese (simplificado com re.IGNORECASE)
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\s*[({\[][^)}]*?(?=\s*(?:(?:excelentíssimo\s+)?(?:sr[a]?\.\s+|senhor[a]?\s+)?presidente\b|sras?\.\s+e\s+srs?\.|senhoras\s+e\s+senhores))",
+            r"^[\.\s]*(?:[OA]\s+S[Rr][Aa]?\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ.]+)*\s*[({\[][^)}\s]*\s*(?=(?:(?:excelentíssimo\s+|sra?\.\s+|senhora?\s+)*presidente\b|sras?\.\s+e\s+srs?\.|senhoras\s+e\s+senhores))",
             re.IGNORECASE,
         ),
     ]

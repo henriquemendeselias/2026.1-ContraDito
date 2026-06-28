@@ -61,7 +61,7 @@ def limpar_transcricao_senado(texto_bruto: str) -> str:
 
     # Remove padrão de orador do Senado: "O SR. NOME (Partido/UF) - "
     # Suporta anomalias como ausência de parênteses, múltiplos espaços e travessões variados.
-    padrao = r"^.*?(?:O\s+SR\.?|A\s+SRA\.?|[OA]\s+PRESIDENTE)\s+[^(]*(?:\([^)]+\))?\s*[-—–]+\s+"
+    padrao = r"^.{0,300}?(?:O\s+SR\.?|A\s+SRA\.?|[OA]\s+PRESIDENTE)\s+[^(]*(?:\([^)]+\))?\s*[-—–]+\s+"
     texto_limpo = re.sub(padrao, "", texto_limpo, flags=re.IGNORECASE | re.DOTALL)
 
     # Converte reações da plateia/taquigrafia para o padrão de chaves e remove espaços duplos
