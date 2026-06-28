@@ -25,13 +25,13 @@ jobs:
           pip install -r requirements.api.txt -r requirements.test.txt
 
       - name: Executar testes da API com Pytest e Cobertura XML
-        run: pytest --cov=app --cov-report=xml:coverage-api.xml --cov-fail-under=90 tests/api tests/test_setup.py
+        run: pytest --cov=app --cov-report=xml --cov-fail-under=90 tests/api tests/test_setup.py
 
       - name: Subir relatório de cobertura da API
         uses: actions/upload-artifact@v4
         with:
           name: coverage-api
-          path: coverage-api.xml
+          path: coverage.xml
 
   testes-etl:
     name: Testes do ETL (Worker)
@@ -56,13 +56,13 @@ jobs:
           pip install "google-genai==2.8.0"
 
       - name: Executar testes do ETL com Pytest e Cobertura XML
-        run: pytest --cov=etl --cov=utils --cov-report=xml:coverage-etl.xml --cov-fail-under=90 tests/etl
+        run: pytest --cov=etl --cov=utils --cov-report=xml --cov-fail-under=90 tests/etl
 
       - name: Subir relatório de cobertura do ETL
         uses: actions/upload-artifact@v4
         with:
           name: coverage-etl
-          path: coverage-etl.xml
+          path: coverage.xml
 
   sonarcloud:
     name: Análise SonarQube Cloud
@@ -76,10 +76,9 @@ jobs:
 
       - name: Baixar relatórios de cobertura de testes
         uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
 
       - name: SonarQube Cloud Scan
+        if: ${{ secrets.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
