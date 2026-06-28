@@ -230,14 +230,19 @@ def listar_discursos(
         }
     except Exception as e:
         err_msg = str(e)
-        if termo and ("57014" in err_msg or "timeout" in err_msg.lower() or "search" in err_msg.lower() or "42703" in err_msg):
+        if termo and (
+            "57014" in err_msg
+            or "timeout" in err_msg.lower()
+            or "search" in err_msg.lower()
+            or "42703" in err_msg
+        ):
             return {
                 "total_registros": 0,
                 "pagina_atual": pagina,
                 "tamanho_pagina": tamanho,
                 "total_paginas": 0,
                 "itens": [],
-                "aviso": "A busca por esta palavra-chave excedeu o tempo limite do banco de dados. Tente um termo mais específico."
+                "aviso": "A busca por esta palavra-chave excedeu o tempo limite do banco de dados. Tente um termo mais específico.",
             }
 
         raise HTTPException(
@@ -346,7 +351,9 @@ def obter_chunks_discurso(
 @cache(expire=3600)
 def listar_proposicoes(
     casa: str = Path(..., description="Casa legislativa ('camara' ou 'senado')"),
-    busca: Optional[str] = Query(None, description="Busca por termo no ID, ementa ou resumo executivo"),
+    busca: Optional[str] = Query(
+        None, description="Busca por termo no ID, ementa ou resumo executivo"
+    ),
     ano: Optional[int] = Query(None, description="Filtro por ano da proposição"),
     tipo: Optional[str] = Query(
         None, description="Filtro por tipo de proposição (ex: PL, PEC)"
@@ -369,12 +376,15 @@ def listar_proposicoes(
             query = query.not_.is_("resumo_executivo", "null")
         if busca:
             import re
+
             # Substitui caracteres especiais/espaços/barras por '%' para simular busca aproximada (fuzzy)
-            normalized = re.sub(r'[^a-zA-Z0-9]+', '%', busca).strip('%')
+            normalized = re.sub(r"[^a-zA-Z0-9]+", "%", busca).strip("%")
             # Insere '%' entre letras e números (ex: PL2630 -> PL%2630)
-            normalized = re.sub(r'([a-zA-Z])([0-9])', r'\1%\2', normalized)
-            normalized = re.sub(r'([0-9])([a-zA-Z])', r'\1%\2', normalized)
-            query = query.or_(f"proposicao_id.ilike.%{normalized}%,ementa.ilike.%{normalized}%,resumo_executivo.ilike.%{normalized}%")
+            normalized = re.sub(r"([a-zA-Z])([0-9])", r"\1%\2", normalized)
+            normalized = re.sub(r"([0-9])([a-zA-Z])", r"\1%\2", normalized)
+            query = query.or_(
+                f"proposicao_id.ilike.%{normalized}%,ementa.ilike.%{normalized}%,resumo_executivo.ilike.%{normalized}%"
+            )
         if ano:
             query = query.eq("ano", ano)
         if tipo:
@@ -465,7 +475,7 @@ def listar_votos(
         tabela_proposicoes = f"{casa_clean}_proposicoes"
         query = supabase.table(tabela).select(
             f"*, proposicao:{tabela_proposicoes}(id, ementa, resumo_executivo, tipo, numero, ano)",
-            count="exact"
+            count="exact",
         )
 
         if politico_id:
@@ -473,7 +483,9 @@ def listar_votos(
         if proposicao_id:
             query = query.eq("proposicao_id", proposicao_id)
         if apenas_com_discursos:
-            query = query.not_.is_("chunks_proximos", "null").neq("chunks_proximos", "[]")
+            query = query.not_.is_("chunks_proximos", "null").neq(
+                "chunks_proximos", "[]"
+            )
 
         # Ordenação padrão
         query = query.order("id", desc=False)
@@ -648,6 +660,7 @@ def comparar_politicos(
             status_code=500, detail=f"Erro ao comparar políticos: {str(e)}"
         )
 
+
 @router.get(
     "/{casa}/politicos/{id_parlamentar}/afinidades",
     response_model=AfinidadesResponse,
@@ -786,7 +799,9 @@ def obter_fidelidade_partidaria(
             while True:
                 res = (
                     supabase.table(tabela_votos)
-                    .select("politico_id, proposicao_id, voto_oficial, partido_na_epoca")
+                    .select(
+                        "politico_id, proposicao_id, voto_oficial, partido_na_epoca"
+                    )
                     .in_("proposicao_id", props_list)
                     .in_("partido_na_epoca", partidos_list)
                     .range(offset, offset + limite_chunk - 1)
@@ -986,15 +1001,9 @@ def obter_coesao_partidos(
     tabela_votos = f"{casa_clean}_votos"
 
     try:
-        res_politicos = (
-            supabase.table(tabela_politicos)
-            .select("partido")
-            .execute()
-        )
+        res_politicos = supabase.table(tabela_politicos).select("partido").execute()
         partidos_ativos = {
-            p["partido"].strip().upper()
-            for p in res_politicos.data
-            if p.get("partido")
+            p["partido"].strip().upper() for p in res_politicos.data if p.get("partido")
         }
 
         res_votos = _obter_todos_os_votos(
@@ -1053,11 +1062,13 @@ def obter_coesao_partidos(
 
             if total_proposicoes_validas > 0:
                 coesao_media = round((soma_coesao / total_proposicoes_validas) * 100, 1)
-                itens.append({
-                    "partido": partido,
-                    "indice_coesao": coesao_media,
-                    "total_proposicoes": total_proposicoes_validas
-                })
+                itens.append(
+                    {
+                        "partido": partido,
+                        "indice_coesao": coesao_media,
+                        "total_proposicoes": total_proposicoes_validas,
+                    }
+                )
 
         itens.sort(key=lambda x: x["indice_coesao"], reverse=True)
         return {"itens": itens}
