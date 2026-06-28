@@ -8,7 +8,7 @@ O desenvolvimento do **ContraDito** representou um desafio complexo no escopo da
 
 O ecossistema político brasileiro é denso e, muitas vezes, opaco para o eleitor comum. O ContraDito cumpre seu objetivo principal: **reduzir a assimetria de informação**.
 
-Ao traduzir discursos e registros de votações em um único *Score de Coerência*, a plataforma entrega uma métrica compreensível e direta. A capacidade de expor contradições — ou confirmar integridade política — empodera a sociedade civil com inteligência de dados, promovendo um controle social fundamentado em fatos.
+<!-- Ao traduzir discursos e registros de votações em um único *Score de Coerência*, a plataforma entrega uma métrica compreensível e direta. --> A capacidade de expor contradições — ou confirmar integridade política — empodera a sociedade civil com inteligência de dados, promovendo um controle social fundamentado em fatos.
 
 ---
 
@@ -25,10 +25,10 @@ Sob a ótica da engenharia de software, o projeto estabeleceu um padrão de exce
 
 ## 3. Maturidade na Regra de Negócio
 
-O grande êxito do ContraDito foi ir além do cruzamento binário de palavras. A implementação de mitigações na fórmula do Score provou a sofisticação da análise:
-
-- Ao instruir a IA a considerar o **fator temporal** (RN05) e o contexto de votos regimentais (destaques e emendas), o sistema evita a penalização injusta de parlamentares por manobras procedimentais.
-- Isso garante uma blindagem lógica e aumenta a confiabilidade da métrica gerada.
+O grande êxito do ContraDito foi ir além do cruzamento binário de palavras.
+<!-- A implementação de mitigações na fórmula do Score provou a sofisticação da análise: -->
+<!-- - Ao instruir a IA a considerar o **fator temporal** (RN05) e o contexto de votos regimentais (destaques e emendas), o sistema evita a penalização injusta de parlamentares por manobras procedimentais. -->
+<!-- - Isso garante uma blindagem lógica e aumenta a confiabilidade da métrica gerada. -->
 
 ---
 

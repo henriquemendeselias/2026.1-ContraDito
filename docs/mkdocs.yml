@@ -24,7 +24,6 @@ theme:
     - navigation.top  # Adiciona um botão de "voltar ao topo"
 
 nav:
-
   -  O Projeto:
       - Sobre o ContraDito: index.md
       
@@ -67,10 +66,10 @@ nav:
       - Integração e API: integracaoapi.md
       - Decisões Arquiteturais (ADRs): adrs/index.md
       - Testes e Qualidade: qualidade.md
- # -  Encerramento:
+  -  Encerramento:
       #- Avaliação Final: avaliacao.md
-      #- Próximos Passos (Roadmap): roadmap.md
-      #- Links Úteis: links.md
+      - Próximos Passos (Roadmap): roadmap.md
+      - Links Úteis: links.md
 
 extra_css:
   - stylesheets/extra.css

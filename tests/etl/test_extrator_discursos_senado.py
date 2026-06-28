@@ -221,3 +221,84 @@ def test_orquestracao_pipeline_completo(mock_executar):
     assert log_enviado["nome_rotina"] == "extrator_discursos_senado"
     assert log_enviado["status"] == "Concluído"
     assert log_enviado["linhas_afetadas"] == 10
+
+
+def test_is_transient_error_false():
+    from etl.extrator_discursos_senado import _is_transient_error
+
+    # 1. ValueError não é transiente
+    assert not _is_transient_error(ValueError("erro comum"))
+    # 2. HTTPStatusError com status 404 não é transiente
+    mock_resp = MagicMock()
+    mock_resp.status_code = 404
+    err = httpx.HTTPStatusError("Not Found", request=MagicMock(), response=mock_resp)
+    assert not _is_transient_error(err)
+
+
+@patch("etl.extrator_discursos_senado._fetch_api_senado_com_retry")
+def test_obter_discursos_senador_api_erros(mock_fetch):
+    # Testar exceção de HTTPStatusError na API
+    mock_resp = MagicMock()
+    mock_resp.status_code = 404
+    mock_fetch.side_effect = httpx.HTTPStatusError(
+        "Not Found", request=MagicMock(), response=mock_resp
+    )
+    status, payload = obter_discursos_senador_api(150, "2023-01-01", "2023-12-31")
+    assert status == 404
+    assert payload == {}
+
+    # Testar exceção genérica na API
+    mock_fetch.side_effect = Exception("Erro grave")
+    status, payload = obter_discursos_senador_api(150, "2023-01-01", "2023-12-31")
+    assert status == 0
+    assert payload == {}
+
+
+def test_obter_html_discurso_senado_vazio():
+    assert obter_html_discurso_senado("") == ""
+
+
+@patch("etl.extrator_discursos_senado.obter_discursos_senador_api")
+def test_executar_extracao_senador_vazio_ou_data_fora(mock_api):
+    # 1. Sem discursos retornados
+    mock_api.return_value = (200, {})
+    mock_supabase = MagicMock()
+    assert (
+        executar_extracao_senador(150, "2023-01-01", "2023-12-31", mock_supabase) == 0
+    )
+
+    # 2. Discurso com data fora do intervalo (exclui no filtro e retorna 0)
+    mock_api.return_value = (
+        200,
+        {
+            "PesquisaPronunciamentos": {
+                "Pronunciamentos": {
+                    "Pronunciamento": {
+                        "CodigoPronunciamento": "999",
+                        "DataPronunciamento": "2022-12-31",  # Fora do intervalo
+                        "TipoUsoPalavra": {"Descricao": "Sessão"},
+                        "UrlTexto": "http://legis.senado.leg.br/texto",
+                    }
+                }
+            }
+        },
+    )
+    assert (
+        executar_extracao_senador(150, "2023-01-01", "2023-12-31", mock_supabase) == 0
+    )
+
+
+def test_pipeline_completo_excecoes():
+    mock_supabase = MagicMock()
+    # 1. Erro ao buscar senadores
+    mock_supabase.table.side_effect = Exception("Banco offline")
+
+    executar_pipeline_completo(mock_supabase, "2023-01-01", "2023-12-31")
+    # Deve continuar rodando e tentar salvar o log com "Erro"
+    assert mock_supabase.table.call_count > 0
+
+    # 2. Erro ao salvar o próprio log final
+    mock_supabase_double_fail = MagicMock()
+    mock_supabase_double_fail.table.side_effect = Exception("Erro persistente")
+    # Não deve subir exceção irrecuperável
+    executar_pipeline_completo(mock_supabase_double_fail, "2023-01-01", "2023-12-31")
