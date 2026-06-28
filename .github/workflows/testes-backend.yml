@@ -4,7 +4,8 @@ on:
   pull_request:
     branches:
       - develop
-      - main 
+      - main
+
 jobs:
   rodar-testes:
     name: Testes da API
@@ -25,13 +26,13 @@ jobs:
           pip install -r requirements.api.txt -r requirements.test.txt
 
       - name: Executar testes da API com Pytest e Cobertura XML
-        run: pytest --cov=app --cov-report=xml:coverage-api.xml --cov-fail-under=90 tests/api tests/test_setup.py
+        run: pytest --cov=app --cov-report=xml --cov-fail-under=90 tests/api tests/test_setup.py
 
       - name: Subir relatório de cobertura da API
         uses: actions/upload-artifact@v4
         with:
           name: coverage-api
-          path: coverage-api.xml
+          path: coverage.xml
 
   testes-etl:
     name: Testes do ETL (Worker)
@@ -56,18 +57,20 @@ jobs:
           pip install "google-genai==2.8.0"
 
       - name: Executar testes do ETL com Pytest e Cobertura XML
-        run: pytest --cov=etl --cov=utils --cov-report=xml:coverage-etl.xml --cov-fail-under=90 tests/etl
+        run: pytest --cov=etl --cov-report=xml --cov-fail-under=90 tests/etl
 
       - name: Subir relatório de cobertura do ETL
         uses: actions/upload-artifact@v4
         with:
           name: coverage-etl
-          path: coverage-etl.xml
+          path: coverage.xml
 
   sonarcloud:
     name: Análise SonarQube Cloud
     runs-on: ubuntu-latest
     needs: [rodar-testes, testes-etl]
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
@@ -76,11 +79,18 @@ jobs:
 
       - name: Baixar relatórios de cobertura de testes
         uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
 
       - name: SonarQube Cloud Scan
+        # Roda apenas se houver token E se estiver no seu fork OU no repositório original
+        if: ${{ env.SONAR_TOKEN != '' && (github.repository == 'henriquemendeselias/2026.1-ContraDito' || github.repository == 'unb-mds/2026.1-ContraDito') }}
         uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.projectKey=${{ github.repository == 'unb-mds/2026.1-ContraDito' && 'unb-mds_2026.1-ContraDito' || 'henriquemendeselias_2026.1-ContraDito' }}
+            -Dsonar.organization=${{ github.repository == 'unb-mds/2026.1-ContraDito' && 'unb-mds' || 'contradito' }}            
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          # Força análise de branch apenas se for o fork pessoal (para evitar erro 404). 
+          # Se for o original, usa o tipo de evento padrão do GitHub (para fazer análise de PR).
+          GITHUB_EVENT_NAME: ${{ github.repository != 'unb-mds/2026.1-ContraDito' && 'push' || github.event_name }}
