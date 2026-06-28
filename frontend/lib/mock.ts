@@ -4,7 +4,7 @@ import type {
   PaginaVotos,
   TimelinePoint,
   ParlamentarSimilar,
-} from "./types";
+} from "./types-legacy";
 import type { ParlamentaresParams } from "./api";
 
 const FOTO = (id: number) =>
@@ -499,3 +499,49 @@ export function mockGetSimilares(id: number): ParlamentarSimilar[] {
     .sort((a, b) => b.percentual_concordancia - a.percentual_concordancia)
     .slice(0, 5);
 }
+
+export function mockGetCoesaoPartidos(casa: "camara" | "senado") {
+  if (casa === "camara") {
+    return {
+      itens: [
+        { partido: "PCdoB", indice_coesao: 95.8 },
+        { partido: "PT", indice_coesao: 94.2 },
+        { partido: "PV", indice_coesao: 93.0 },
+        { partido: "PSOL", indice_coesao: 91.1 },
+        { partido: "NOVO", indice_coesao: 89.6 },
+        { partido: "PL", indice_coesao: 88.5 },
+        { partido: "REDE", indice_coesao: 88.0 },
+        { partido: "PSB", indice_coesao: 85.0 },
+        { partido: "PDT", indice_coesao: 83.4 },
+        { partido: "PP", indice_coesao: 81.3 },
+        { partido: "Cidadania", indice_coesao: 80.2 },
+        { partido: "Republicanos", indice_coesao: 79.8 },
+        { partido: "PSD", indice_coesao: 78.4 },
+        { partido: "AVANTE", indice_coesao: 77.5 },
+        { partido: "Podemos", indice_coesao: 74.2 },
+        { partido: "MDB", indice_coesao: 72.1 },
+        { partido: "Solidariedade", indice_coesao: 71.3 },
+        { partido: "UNIÃO", indice_coesao: 70.5 },
+      ]
+    };
+  } else {
+    return {
+      itens: [
+        { partido: "PT", indice_coesao: 95.1 },
+        { partido: "NOVO", indice_coesao: 92.0 },
+        { partido: "PL", indice_coesao: 90.4 },
+        { partido: "REDE", indice_coesao: 90.0 },
+        { partido: "PSB", indice_coesao: 87.2 },
+        { partido: "PDT", indice_coesao: 84.5 },
+        { partido: "PP", indice_coesao: 83.2 },
+        { partido: "PSD", indice_coesao: 82.1 },
+        { partido: "Republicanos", indice_coesao: 81.4 },
+        { partido: "PSDB", indice_coesao: 79.0 },
+        { partido: "Podemos", indice_coesao: 78.0 },
+        { partido: "MDB", indice_coesao: 76.5 },
+        { partido: "UNIÃO", indice_coesao: 75.3 },
+      ]
+    };
+  }
+}
+

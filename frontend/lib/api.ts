@@ -4,7 +4,7 @@ import type {
   PaginaVotos,
   TimelinePoint,
   ParlamentarSimilar,
-} from "./types";
+} from "./types-legacy";
 import {
   mockGetParlamentares,
   mockGetParlamentar,
@@ -14,11 +14,14 @@ import {
 } from "./mock";
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
-const BASE =
-  (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+const API_BASE = (
+  process.env.API_INTERNAL_URL ?? 
+  process.env.NEXT_PUBLIC_API_URL ?? 
+  "http://localhost:8001"
+).replace(/\/$/, "");
 
 async function get<T>(path: string, opts?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { next: { revalidate: 60 }, ...opts });
+  const res = await fetch(`${API_BASE}${path}`, { next: { revalidate: 60 }, ...opts });
   if (!res.ok) throw new Error(`${res.status}: ${path}`);
   return res.json() as Promise<T>;
 }

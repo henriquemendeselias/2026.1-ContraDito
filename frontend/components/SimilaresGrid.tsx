@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
 import { scoreHex } from "@/lib/utils";
-import type { ParlamentarSimilar } from "@/lib/types";
+import type { ParlamentarSimilar } from "@/lib/types-legacy";
 
 export function SimilaresGrid({ similares }: { similares: ParlamentarSimilar[] }) {
   if (similares.length === 0) {

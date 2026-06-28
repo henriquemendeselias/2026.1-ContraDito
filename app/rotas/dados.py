@@ -34,6 +34,26 @@ def validar_casa(casa: str) -> str:
     return casa_clean
 
 
+def _obter_todos_os_votos(tabela_votos: str, colunas: str) -> list:
+    todos_votos = []
+    offset = 0
+    limite_chunk = 1000
+    while True:
+        res = (
+            supabase.table(tabela_votos)
+            .select(colunas)
+            .range(offset, offset + limite_chunk - 1)
+            .execute()
+        )
+        if not res.data:
+            break
+        todos_votos.extend(res.data)
+        if len(res.data) < limite_chunk:
+            break
+        offset += limite_chunk
+    return todos_votos
+
+
 @router.get(
     "/{casa}/politicos",
     response_model=PaginaPoliticosDB,
@@ -130,7 +150,7 @@ def obter_politico_detalhado(
             supabase.table("politico_resumo_votos")
             .select("*")
             .eq("politico_id", id_parlamentar)
-            .eq("casa", casa_clean.upper())
+            .eq("casa", casa_clean)
             .execute()
         )
 
@@ -157,6 +177,9 @@ def listar_discursos(
     politico_id: Optional[int] = Query(
         None, description="ID do político para filtrar discursos"
     ),
+    termo: Optional[str] = Query(
+        None, description="Termo para pesquisar no texto do discurso"
+    ),
     pagina: int = Query(1, ge=1, description="Número da página"),
     tamanho: int = Query(
         20, ge=1, le=100, description="Quantidade de itens por página"
@@ -166,10 +189,17 @@ def listar_discursos(
     tabela = f"{casa_clean}_discursos"
 
     try:
-        query = supabase.table(tabela).select("*", count="exact")
+        if termo:
+            # Não usa count="exact" para buscas textuais (evita timeout na tabela de ~50k discursos)
+            query = supabase.table(tabela).select("*")
+        else:
+            query = supabase.table(tabela).select("*", count="exact")
 
         if politico_id:
             query = query.eq("politico_id", politico_id)
+
+        if termo:
+            query = query.ilike("texto_bruto", f"%{termo}%")
 
         query = query.order("data_discurso", desc=True)
 
@@ -179,10 +209,16 @@ def listar_discursos(
 
         resultado = query.execute()
 
-        total_registros = resultado.count if resultado.count is not None else 0
-        total_paginas = (
-            math.ceil(total_registros / tamanho) if total_registros > 0 else 0
-        )
+        if termo:
+            # Paginação dinâmica sem contagem total lenta
+            total_registros = -1  # Sinaliza contagem simplificada/indisponível
+            tem_mais = len(resultado.data) == tamanho
+            total_paginas = pagina + 1 if tem_mais else pagina
+        else:
+            total_registros = resultado.count if resultado.count is not None else 0
+            total_paginas = (
+                math.ceil(total_registros / tamanho) if total_registros > 0 else 0
+            )
 
         return {
             "total_registros": total_registros,
@@ -192,6 +228,22 @@ def listar_discursos(
             "itens": resultado.data,
         }
     except Exception as e:
+        err_msg = str(e)
+        if termo and (
+            "57014" in err_msg
+            or "timeout" in err_msg.lower()
+            or "search" in err_msg.lower()
+            or "42703" in err_msg
+        ):
+            return {
+                "total_registros": 0,
+                "pagina_atual": pagina,
+                "tamanho_pagina": tamanho,
+                "total_paginas": 0,
+                "itens": [],
+                "aviso": "A busca por esta palavra-chave excedeu o tempo limite do banco de dados. Tente um termo mais específico.",
+            }
+
         raise HTTPException(
             status_code=500, detail=f"Erro ao buscar discursos: {str(e)}"
         )
@@ -293,14 +345,20 @@ def obter_chunks_discurso(
     "/{casa}/proposicoes",
     response_model=PaginaProposicoesDB,
     summary="Listar Proposições",
-    description="Retorna a listagem paginada das proposições (Câmara ou Senado) com filtros por ano e tipo.",
+    description="Retorna a listagem paginada das proposições (Câmara ou Senado) com filtros por busca textual, ano, tipo e status de análise IA.",
 )
 @cache(expire=3600)
 def listar_proposicoes(
     casa: str = Path(..., description="Casa legislativa ('camara' ou 'senado')"),
+    busca: Optional[str] = Query(
+        None, description="Busca por termo no ID, ementa ou resumo executivo"
+    ),
     ano: Optional[int] = Query(None, description="Filtro por ano da proposição"),
     tipo: Optional[str] = Query(
         None, description="Filtro por tipo de proposição (ex: PL, PEC)"
+    ),
+    apenas_analisadas: bool = Query(
+        False, description="Exibir apenas proposições com resumo da IA (analisadas)"
     ),
     pagina: int = Query(1, ge=1, description="Número da página"),
     tamanho: int = Query(
@@ -313,6 +371,19 @@ def listar_proposicoes(
     try:
         query = supabase.table(tabela).select("*", count="exact")
 
+        if apenas_analisadas:
+            query = query.not_.is_("resumo_executivo", "null")
+        if busca:
+            import re
+
+            # Substitui caracteres especiais/espaços/barras por '%' para simular busca aproximada (fuzzy)
+            normalized = re.sub(r"[^a-zA-Z0-9]+", "%", busca).strip("%")
+            # Insere '%' entre letras e números (ex: PL2630 -> PL%2630)
+            normalized = re.sub(r"([a-zA-Z])([0-9])", r"\1%\2", normalized)
+            normalized = re.sub(r"([0-9])([a-zA-Z])", r"\1%\2", normalized)
+            query = query.or_(
+                f"proposicao_id.ilike.%{normalized}%,ementa.ilike.%{normalized}%,resumo_executivo.ilike.%{normalized}%"
+            )
         if ano:
             query = query.eq("ano", ano)
         if tipo:
@@ -388,6 +459,9 @@ def listar_votos(
     proposicao_id: Optional[str] = Query(
         None, description="Filtro por ID da proposição (código de texto)"
     ),
+    apenas_com_discursos: Optional[bool] = Query(
+        None, description="Filtrar apenas votos que possuem discursos associados"
+    ),
     pagina: int = Query(1, ge=1, description="Número da página"),
     tamanho: int = Query(
         20, ge=1, le=100, description="Quantidade de itens por página"
@@ -397,12 +471,20 @@ def listar_votos(
     tabela = f"{casa_clean}_votos"
 
     try:
-        query = supabase.table(tabela).select("*", count="exact")
+        tabela_proposicoes = f"{casa_clean}_proposicoes"
+        query = supabase.table(tabela).select(
+            f"*, proposicao:{tabela_proposicoes}(id, ementa, resumo_executivo, tipo, numero, ano)",
+            count="exact",
+        )
 
         if politico_id:
             query = query.eq("politico_id", politico_id)
         if proposicao_id:
             query = query.eq("proposicao_id", proposicao_id)
+        if apenas_com_discursos:
+            query = query.not_.is_("chunks_proximos", "null").neq(
+                "chunks_proximos", "[]"
+            )
 
         # Ordenação padrão
         query = query.order("id", desc=False)
@@ -447,7 +529,7 @@ def obter_timeline_votos(
         resultado = (
             supabase.table(tabela_votos)
             .select(
-                f"voto_oficial, proposicao_id, {tabela_proposicoes}(data_votacao, tipo, numero, ano, ementa)"
+                f"voto_oficial, proposicao_id, {tabela_proposicoes}(id, data_votacao, tipo, numero, ano, ementa)"
             )
             .eq("politico_id", id_parlamentar)
             .execute()
@@ -467,6 +549,7 @@ def obter_timeline_votos(
                 {
                     "data_votacao": prop.get("data_votacao"),
                     "proposicao_id": v.get("proposicao_id"),
+                    "proposicao_uuid": prop.get("id"),
                     "tipo": prop.get("tipo"),
                     "numero": prop.get("numero"),
                     "ano": prop.get("ano"),
@@ -589,7 +672,7 @@ def obter_afinidades_politico(
 ):
     casa_clean = validar_casa(casa)
     tabela_politicos = f"{casa_clean}_politicos"
-    tabela_votos = f"{casa_clean}_votos"
+    tabela_afinidades = f"{casa_clean}_afinidades"
 
     try:
         res_politico = (
@@ -601,80 +684,46 @@ def obter_afinidades_politico(
         if not res_politico.data:
             raise HTTPException(status_code=404, detail="Político não encontrado")
 
-        res_votos_alvo = (
-            supabase.table(tabela_votos)
-            .select("proposicao_id, voto_oficial")
+        res_afinidades = (
+            supabase.table(tabela_afinidades)
+            .select("*")
             .eq("politico_id", id_parlamentar)
             .execute()
         )
 
-        votos_alvo = {
-            v["proposicao_id"]: v["voto_oficial"].strip().upper()
-            for v in res_votos_alvo.data
-            if v.get("voto_oficial")
-            and v["voto_oficial"].strip().upper() in ["SIM", "NÃO", "NAO"]
-        }
-
-        if not votos_alvo:
+        if not res_afinidades.data:
             return {"gemeo": None, "antipoda": None}
 
-        res_todos_politicos = supabase.table(tabela_politicos).select("*").execute()
-        politicos_map = {
-            p["id"]: p for p in res_todos_politicos.data if p["id"] != id_parlamentar
-        }
+        dados_afinidade = res_afinidades.data[0]
 
-        if not politicos_map:
-            return {"gemeo": None, "antipoda": None}
-
-        res_todos_votos = (
-            supabase.table(tabela_votos)
-            .select("politico_id, proposicao_id, voto_oficial")
+        ids_relacionados = [dados_afinidade["gemeo_id"], dados_afinidade["antipoda_id"]]
+        res_cadastro = (
+            supabase.table(tabela_politicos)
+            .select("*")
+            .in_("id", ids_relacionados)
             .execute()
         )
 
-        votos_por_politico = {}
-        for v in res_todos_votos.data:
-            p_id = v.get("politico_id")
-            if not p_id or p_id == id_parlamentar or p_id not in politicos_map:
-                continue
-            voto_of = v.get("voto_oficial")
-            if not voto_of or voto_of.strip().upper() not in ["SIM", "NÃO", "NAO"]:
-                continue
-            if p_id not in votos_por_politico:
-                votos_por_politico[p_id] = {}
-            votos_por_politico[p_id][v["proposicao_id"]] = voto_of.strip().upper()
+        cadastro_map = {p["id"]: p for p in res_cadastro.data}
 
-        comparacoes = []
-        for p_id, votos_outro in votos_por_politico.items():
-            comuns = set(votos_alvo.keys()).intersection(votos_outro.keys())
-            total_comuns = len(comuns)
+        gemeo_cadastro = cadastro_map.get(dados_afinidade["gemeo_id"])
+        antipoda_cadastro = cadastro_map.get(dados_afinidade["antipoda_id"])
 
-            if total_comuns < 5:
-                continue
+        gemeo = None
+        if gemeo_cadastro:
+            gemeo = {
+                "politico": gemeo_cadastro,
+                "concordancia": dados_afinidade["gemeo_concordancia"],
+                "votos_comuns": dados_afinidade["gemeo_votos_comuns"],
+            }
 
-            concordancias = sum(
-                1 for pid in comuns if votos_alvo[pid] == votos_outro[pid]
-            )
-            percentual = round((concordancias / total_comuns) * 100, 1)
-
-            comparacoes.append(
-                {
-                    "politico": politicos_map[p_id],
-                    "concordancia": percentual,
-                    "votos_comuns": total_comuns,
-                }
-            )
-
-        if not comparacoes:
-            return {"gemeo": None, "antipoda": None}
-
-        comparacoes.sort(
-            key=lambda x: (x["concordancia"], x["votos_comuns"]), reverse=True
-        )
-        gemeo = comparacoes[0]
-
-        comparacoes.sort(key=lambda x: (x["concordancia"], -x["votos_comuns"]))
-        antipoda = comparacoes[0]
+        antipoda = None
+        if antipoda_cadastro:
+            antipoda = {
+                "politico": antipoda_cadastro,
+                "concordancia": dados_afinidade["antipoda_concordancia"],
+                "votos_comuns": dados_afinidade["antipoda_votos_comuns"],
+            }
 
         return {"gemeo": gemeo, "antipoda": antipoda}
     except HTTPException:
@@ -739,14 +788,33 @@ def obter_fidelidade_partidaria(
                 "total_votos_com_orientacao": 0,
             }
 
-        res_todos_votos = (
-            supabase.table(tabela_votos)
-            .select("politico_id, proposicao_id, voto_oficial, partido_na_epoca")
-            .execute()
-        )
+        props_list = [v["proposicao_id"] for v in votos_alvo]
+        partidos_list = list(set([v["partido"] for v in votos_alvo]))
+
+        votos_data = []
+        if props_list and partidos_list:
+            offset = 0
+            limite_chunk = 1000
+            while True:
+                res = (
+                    supabase.table(tabela_votos)
+                    .select(
+                        "politico_id, proposicao_id, voto_oficial, partido_na_epoca"
+                    )
+                    .in_("proposicao_id", props_list)
+                    .in_("partido_na_epoca", partidos_list)
+                    .range(offset, offset + limite_chunk - 1)
+                    .execute()
+                )
+                if not res.data:
+                    break
+                votos_data.extend(res.data)
+                if len(res.data) < limite_chunk:
+                    break
+                offset += limite_chunk
 
         votos_partidarios = {}
-        for v in res_todos_votos.data:
+        for v in votos_data:
             p_id = v.get("politico_id")
             prop_id = v.get("proposicao_id")
             voto_of = v.get("voto_oficial")
@@ -923,22 +991,27 @@ def obter_polarizacao_proposicao(
     summary="Obter Índice de Coesão dos Partidos",
     description="Retorna o índice médio de disciplina e coesão de votos de todos os partidos políticos na casa legislativa.",
 )
+@cache(expire=3600)
 def obter_coesao_partidos(
     casa: str = Path(..., description="Casa legislativa ('camara' ou 'senado')"),
 ):
     casa_clean = validar_casa(casa)
+    tabela_politicos = f"{casa_clean}_politicos"
     tabela_votos = f"{casa_clean}_votos"
 
     try:
-        res_votos = (
-            supabase.table(tabela_votos)
-            .select("proposicao_id, voto_oficial, partido_na_epoca")
-            .execute()
+        res_politicos = supabase.table(tabela_politicos).select("partido").execute()
+        partidos_ativos = {
+            p["partido"].strip().upper() for p in res_politicos.data if p.get("partido")
+        }
+
+        res_votos = _obter_todos_os_votos(
+            tabela_votos, "proposicao_id, voto_oficial, partido_na_epoca"
         )
 
         partidos_votos = {}
 
-        for v in res_votos.data:
+        for v in res_votos:
             prop_id = v.get("proposicao_id")
             voto_of = v.get("voto_oficial")
             partido = v.get("partido_na_epoca")
@@ -952,6 +1025,14 @@ def obter_coesao_partidos(
 
             voto_norm = "NÃO" if voto_upper in ["NÃO", "NAO"] else "SIM"
             partido_upper = partido.strip().upper()
+
+            if (
+                partido_upper.startswith("S.PART")
+                or partido_upper.startswith("S/PART")
+                or partido_upper.startswith("SEM PART")
+                or partido_upper not in partidos_ativos
+            ):
+                continue
 
             if partido_upper not in partidos_votos:
                 partidos_votos[partido_upper] = {}
@@ -980,7 +1061,13 @@ def obter_coesao_partidos(
 
             if total_proposicoes_validas > 0:
                 coesao_media = round((soma_coesao / total_proposicoes_validas) * 100, 1)
-                itens.append({"partido": partido, "indice_coesao": coesao_media})
+                itens.append(
+                    {
+                        "partido": partido,
+                        "indice_coesao": coesao_media,
+                        "total_proposicoes": total_proposicoes_validas,
+                    }
+                )
 
         itens.sort(key=lambda x: x["indice_coesao"], reverse=True)
         return {"itens": itens}
