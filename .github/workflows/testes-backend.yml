@@ -4,7 +4,8 @@ on:
   pull_request:
     branches:
       - develop
-      - main 
+      - main
+
 jobs:
   rodar-testes:
     name: Testes da API
@@ -68,6 +69,9 @@ jobs:
     name: Análise SonarQube Cloud
     runs-on: ubuntu-latest
     needs: [rodar-testes, testes-etl]
+    # Mapeamos o segredo como variável de ambiente do JOB para que o "if" consiga lê-lo
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
@@ -78,8 +82,9 @@ jobs:
         uses: actions/download-artifact@v4
 
       - name: SonarQube Cloud Scan
-        if: ${{ secrets.SONAR_TOKEN != '' }}
+        # Agora validamos usando 'env' ao invés de 'secrets'
+        if: ${{ env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
