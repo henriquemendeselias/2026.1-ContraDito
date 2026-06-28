@@ -9,10 +9,10 @@ export default function NotFound() {
         Este parlamentar não está na nossa base de dados ou o endereço está incorreto.
       </p>
       <Link
-        href="/"
+        href="/diretorio"
         className="mt-2 px-5 py-2 text-sm text-mid border border-white/10 rounded-full hover:bg-card-alt hover:text-bright transition-colors"
       >
-        Voltar ao Diretório
+        Voltar para Parlamentares
       </Link>
     </div>
   );

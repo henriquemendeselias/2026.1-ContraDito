@@ -149,7 +149,6 @@ def test_afinidades_sucesso(client, mock_supabase):
         mock_query = MagicMock()
         if tabela == "camara_politicos":
             mock_builder = MagicMock()
-            # eq("id", 1) call
             mock_builder.eq.return_value.execute.return_value.data = [
                 {
                     "id": 1,
@@ -162,18 +161,7 @@ def test_afinidades_sucesso(client, mock_supabase):
                     "url_foto": "http://foto.jpg",
                 }
             ]
-            # execute for all politicos call
-            mock_builder.execute.return_value.data = [
-                {
-                    "id": 1,
-                    "nome_civil": "P1",
-                    "nome_urna": "P1",
-                    "partido": "PT",
-                    "cargo": "Deputado Federal",
-                    "estado": "DF",
-                    "status_mandato": "Ativo",
-                    "url_foto": "http://foto.jpg",
-                },
+            mock_builder.in_.return_value.execute.return_value.data = [
                 {
                     "id": 2,
                     "nome_civil": "P2",
@@ -196,27 +184,24 @@ def test_afinidades_sucesso(client, mock_supabase):
                 },
             ]
             mock_query.select.return_value = mock_builder
-        elif tabela == "camara_votos":
-            mock_builder_votos = MagicMock()
-            # target votes query
-            mock_target_result = MagicMock()
-            mock_target_result.data = [
-                {"proposicao_id": f"P-{i}", "voto_oficial": "SIM"} for i in range(5)
+        elif tabela == "camara_afinidades":
+            mock_builder_afinidades = MagicMock()
+            mock_afinidades_result = MagicMock()
+            mock_afinidades_result.data = [
+                {
+                    "politico_id": 1,
+                    "gemeo_id": 2,
+                    "gemeo_concordancia": 100.0,
+                    "gemeo_votos_comuns": 5,
+                    "antipoda_id": 3,
+                    "antipoda_concordancia": 0.0,
+                    "antipoda_votos_comuns": 5,
+                }
             ]
-
-            # all votes query
-            mock_all_result = MagicMock()
-            mock_all_result.data = [
-                {"proposicao_id": f"P-{i}", "voto_oficial": "SIM", "politico_id": 2}
-                for i in range(5)
-            ] + [
-                {"proposicao_id": f"P-{i}", "voto_oficial": "NÃO", "politico_id": 3}
-                for i in range(5)
-            ]
-
-            mock_builder_votos.eq.return_value.execute.return_value = mock_target_result
-            mock_builder_votos.execute.return_value = mock_all_result
-            mock_query.select.return_value = mock_builder_votos
+            mock_builder_afinidades.eq.return_value.execute.return_value = (
+                mock_afinidades_result
+            )
+            mock_query.select.return_value = mock_builder_afinidades
         return mock_query
 
     mock_supabase.table.side_effect = mock_table_routing_afinidades
@@ -396,6 +381,8 @@ def test_fidelidade_sucesso_calculo(client, mock_supabase):
             ]
 
             mock_builder_votos.eq.return_value.execute.return_value = mock_target_result
+            mock_builder_votos.in_.return_value = mock_builder_votos
+            mock_builder_votos.range.return_value = mock_builder_votos
             mock_builder_votos.execute.return_value = mock_all_result
             mock_query.select.return_value = mock_builder_votos
         return mock_query
@@ -474,109 +461,122 @@ def test_coesao_partidos_casa_invalida(client):
 
 
 def test_coesao_partidos_sucesso(client, mock_supabase):
-    mock_result_votos = MagicMock()
-    mock_result_votos.data = [
-        {
-            "proposicao_id": "Prop-1",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PT",
-            "politico_id": 1,
-        },
-        {
-            "proposicao_id": "Prop-1",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PT",
-            "politico_id": 2,
-        },
-        {
-            "proposicao_id": "Prop-1",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PT",
-            "politico_id": 3,
-        },
-        {
-            "proposicao_id": "Prop-1",
-            "voto_oficial": "NÃO",
-            "partido_na_epoca": "PT",
-            "politico_id": 4,
-        },
-        {
-            "proposicao_id": "Prop-1",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PL",
-            "politico_id": 5,
-        },
-        {
-            "proposicao_id": "Prop-1",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PL",
-            "politico_id": 6,
-        },
-        {
-            "proposicao_id": "Prop-1",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PL",
-            "politico_id": 7,
-        },
-        {
-            "proposicao_id": "Prop-1",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PL",
-            "politico_id": 8,
-        },
-        {
-            "proposicao_id": "Prop-2",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PT",
-            "politico_id": 1,
-        },
-        {
-            "proposicao_id": "Prop-2",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PT",
-            "politico_id": 2,
-        },
-        {
-            "proposicao_id": "Prop-2",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PT",
-            "politico_id": 3,
-        },
-        {
-            "proposicao_id": "Prop-2",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PT",
-            "politico_id": 4,
-        },
-        {
-            "proposicao_id": "Prop-2",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PL",
-            "politico_id": 5,
-        },
-        {
-            "proposicao_id": "Prop-2",
-            "voto_oficial": "SIM",
-            "partido_na_epoca": "PL",
-            "politico_id": 6,
-        },
-        {
-            "proposicao_id": "Prop-2",
-            "voto_oficial": "NÃO",
-            "partido_na_epoca": "PL",
-            "politico_id": 7,
-        },
-        {
-            "proposicao_id": "Prop-2",
-            "voto_oficial": "NÃO",
-            "partido_na_epoca": "PL",
-            "politico_id": 8,
-        },
-    ]
+    def mock_table_routing_coesao(tabela):
+        mock_query = MagicMock()
+        if tabela == "camara_politicos":
+            mock_builder = MagicMock()
+            mock_builder.execute.return_value.data = [
+                {"partido": "PT"},
+                {"partido": "PL"},
+            ]
+            mock_query.select.return_value = mock_builder
+        elif tabela == "camara_votos":
+            mock_builder_votos = MagicMock()
+            mock_result_votos = MagicMock()
+            mock_result_votos.data = [
+                {
+                    "proposicao_id": "Prop-1",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PT",
+                    "politico_id": 1,
+                },
+                {
+                    "proposicao_id": "Prop-1",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PT",
+                    "politico_id": 2,
+                },
+                {
+                    "proposicao_id": "Prop-1",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PT",
+                    "politico_id": 3,
+                },
+                {
+                    "proposicao_id": "Prop-1",
+                    "voto_oficial": "NÃO",
+                    "partido_na_epoca": "PT",
+                    "politico_id": 4,
+                },
+                {
+                    "proposicao_id": "Prop-1",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PL",
+                    "politico_id": 5,
+                },
+                {
+                    "proposicao_id": "Prop-1",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PL",
+                    "politico_id": 6,
+                },
+                {
+                    "proposicao_id": "Prop-1",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PL",
+                    "politico_id": 7,
+                },
+                {
+                    "proposicao_id": "Prop-1",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PL",
+                    "politico_id": 8,
+                },
+                {
+                    "proposicao_id": "Prop-2",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PT",
+                    "politico_id": 1,
+                },
+                {
+                    "proposicao_id": "Prop-2",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PT",
+                    "politico_id": 2,
+                },
+                {
+                    "proposicao_id": "Prop-2",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PT",
+                    "politico_id": 3,
+                },
+                {
+                    "proposicao_id": "Prop-2",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PT",
+                    "politico_id": 4,
+                },
+                {
+                    "proposicao_id": "Prop-2",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PL",
+                    "politico_id": 5,
+                },
+                {
+                    "proposicao_id": "Prop-2",
+                    "voto_oficial": "SIM",
+                    "partido_na_epoca": "PL",
+                    "politico_id": 6,
+                },
+                {
+                    "proposicao_id": "Prop-2",
+                    "voto_oficial": "NÃO",
+                    "partido_na_epoca": "PL",
+                    "politico_id": 7,
+                },
+                {
+                    "proposicao_id": "Prop-2",
+                    "voto_oficial": "NÃO",
+                    "partido_na_epoca": "PL",
+                    "politico_id": 8,
+                },
+            ]
+            mock_builder_votos.range.return_value = mock_builder_votos
+            mock_builder_votos.execute.return_value = mock_result_votos
+            mock_query.select.return_value = mock_builder_votos
+        return mock_query
 
-    mock_query = MagicMock()
-    mock_query.select.return_value.execute.return_value = mock_result_votos
-    mock_supabase.table.return_value = mock_query
+    mock_supabase.table.side_effect = mock_table_routing_coesao
 
     resposta = client.get("/api/camara/partidos/coesao")
     assert resposta.status_code == 200

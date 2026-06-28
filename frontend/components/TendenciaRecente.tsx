@@ -1,7 +1,7 @@
 "use client";
 
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import type { TimelinePoint } from "@/lib/types";
+import type { TimelinePoint } from "@/lib/types-legacy";
 
 const MIN_TOTAL = 12; // requer ao menos 2 pontos "históricos" fora da janela recente
 const RECENT_N = 10;

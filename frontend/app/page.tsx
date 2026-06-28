@@ -1,90 +1,83 @@
-"use client";
+// Home (vitrine) do portal de consulta ContraDito.
+// Hero com a silhueta do Congresso Nacional + storytelling + números reais + busca/
+// seletor de Casa + pré-visualização do diretório (inspiração ranking.org.br) + equipe.
 
-import { useState, useEffect, useCallback } from "react";
-import { getParlamentares } from "@/lib/api";
-import type { Filters } from "@/components/FilterBar";
-import { FilterBar } from "@/components/FilterBar";
-import type { PaginaParlamentares } from "@/lib/types";
-import { Hero } from "@/components/Hero";
-import { HowItWorks } from "@/components/HowItWorks";
-import { DirectoryTable } from "@/components/DirectoryTable";
-import { Pagination } from "@/components/Pagination";
+import { CongressoFoto } from "@/components/CongressoFoto";
+import { HomeBusca } from "@/components/home/HomeBusca";
+import { DiretorioPreview } from "@/components/home/DiretorioPreview";
+import { SobreSection, EquipeSection } from "@/components/SobreEquipe";
+import { SiteFooter } from "@/components/SiteFooter";
+import { PROJECT_STATS } from "@/lib/equipe";
+import { CASA, tint } from "@/lib/casa";
+import { fetchDiretorioCompleto } from "@/lib/diretorio";
+import type { Parlamentar } from "@/lib/types";
 
-export default function HomePage() {
-  const [filters, setFilters] = useState<Filters>({
-    busca: "", partido: "", estado: "", cargo: "", ordem: "mais_coerentes", incluirSemDados: false,
-  });
-  const [pagina, setPagina] = useState(1);
-  const [data, setData] = useState<PaginaParlamentares | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const dynamic = "force-dynamic";
 
-  const load = useCallback(async (f: Filters, p: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await getParlamentares({
-        busca: f.busca || undefined,
-        partido: f.partido || undefined,
-        estado: f.estado || undefined,
-        cargo: f.cargo || undefined,
-        ordem: f.ordem || undefined,
-        pagina: p,
-        tamanho: 20,
-      });
-      setData(result);
-    } catch {
-      setError("Não foi possível carregar os parlamentares. Verifique se a API está disponível.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(filters, pagina); }, [filters, pagina, load]);
-
-  const handleFilters = useCallback((f: Filters) => {
-    setFilters(f);
-    setPagina(1);
-  }, []);
+export default async function HomePage() {
+  let parlamentares: Parlamentar[] = [];
+  try {
+    parlamentares = await fetchDiretorioCompleto();
+  } catch (error) {
+    console.error("Erro ao carregar parlamentares para a homepage:", error);
+  }
 
   return (
-    <div className="pt-14 min-h-screen">
-      <Hero />
-      <HowItWorks />
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        <FilterBar onChange={handleFilters} />
-        {data && !loading && (() => {
-          const semDados = data.itens.filter((p) => p.score_coerencia === null).length;
-          const ocultos = !filters.incluirSemDados ? semDados : 0;
-          return (
-            <p className="mt-3 text-xs text-dim">
-              {data.total_registros.toLocaleString("pt-BR")} parlamentares
-              {filters.busca ? ` para "${filters.busca}"` : ""}
-              {ocultos > 0 && (
-                <span className="ml-2 text-dim/60">
-                  · {ocultos} sem dados suficientes ocultos
-                </span>
-              )}
-            </p>
-          );
-        })()}
-        <DirectoryTable
-          loading={loading}
-          error={error}
-          data={data}
-          filters={filters}
-          pagina={pagina}
-          onRetry={() => load(filters, pagina)}
+    <div className="pt-14">
+      {/* HERO */}
+      <header className="relative min-h-[86vh] flex items-center justify-center overflow-hidden px-5 text-center">
+        {/* brilho ambiente (pulse/aurum) */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            background: `radial-gradient(80% 60% at 50% -10%, ${tint(CASA.camara.hex, 18)}, transparent 60%), radial-gradient(55% 50% at 85% 15%, ${tint(CASA.senado.hex, 14)}, transparent 55%)`,
+          }}
         />
-        {data && data.total_paginas > 1 && (
-          <Pagination
-            pagina={pagina}
-            totalPaginas={data.total_paginas}
-            loading={loading}
-            onChange={setPagina}
-          />
-        )}
+
+        {/* Foto real do Congresso (Dia/Noite com transição suave de tema) */}
+        <CongressoFoto />
+
+        {/* conteúdo */}
+        <div className="relative z-10 max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-coherent drop-shadow-sm">
+            Portal de consulta · Câmara e Senado
+          </p>
+          <h1 className="font-display text-bright font-black leading-[0.92] mt-5 text-6xl sm:text-8xl">
+            O que dizem.<br />
+            <span className="text-coherent italic font-normal">Como votam.</span>
+          </h1>
+          <p className="text-mid font-medium max-w-xl mx-auto mt-6 text-lg sm:text-xl leading-relaxed">
+            Discursos, votações e proposições das duas casas legislativas, reunidos e abertos para você consultar.
+          </p>
+          <div className="mt-8">
+            <HomeBusca />
+          </div>
+        </div>
+      </header>
+
+      {/* faixa de números reais do projeto */}
+      <section className="relative z-10 border-y border-rim/30 bg-card/30">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 grid grid-cols-2 lg:grid-cols-4 divide-x divide-rim/20">
+          {PROJECT_STATS.map((s) => (
+            <div key={s.label} className="px-5 py-7 text-center">
+              <p className="font-display text-4xl text-bright">{s.value}</p>
+              <p className="text-sm text-mid mt-1 capitalize">{s.label}</p>
+              <p className="text-[11px] text-dim mt-0.5">{s.sub}</p>
+            </div>
+          ))}
+        </div>
       </section>
+
+      {/* 1. Sobre o ContraDito */}
+      <SobreSection />
+
+      {/* 2. Pré-visualização do Diretório (posicionado exatamente entre Sobre e Equipe, inspiração ranking.org.br) */}
+      <DiretorioPreview parlamentares={parlamentares} />
+
+      {/* 3. A equipe - Squad 09 */}
+      <EquipeSection />
+
+      <SiteFooter />
     </div>
   );
 }

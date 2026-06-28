@@ -1,13 +1,8 @@
-import type { TimelinePoint, TimelinePointComputed } from "./types";
+import type { TimelinePoint, TimelinePointComputed } from "./types-legacy";
 
 export function scoreHex(score: number | null): string {
   if (score === null) return "#475569";
   return score >= 70 ? "#10b981" : "#f43f5e";
-}
-
-export function scoreColorClass(score: number | null): string {
-  if (score === null) return "text-pending";
-  return score >= 70 ? "text-coherent" : "text-incoherent";
 }
 
 export function formatScore(score: number | null): string {
@@ -46,20 +41,4 @@ export function computeTimeline(points: TimelinePoint[]): TimelinePointComputed[
     const total = i + 1;
     return { ...p, index: total, score: Math.round((coerentes / total) * 1000) / 10 };
   });
-}
-
-export type MergedPoint = { date: string; scoreA: number | null; scoreB: number | null };
-
-export function mergeTimelines(
-  a: TimelinePointComputed[],
-  b: TimelinePointComputed[]
-): MergedPoint[] {
-  const map = new Map<string, MergedPoint>();
-  a.forEach((p) => map.set(p.data_votacao, { date: p.data_votacao, scoreA: p.score, scoreB: null }));
-  b.forEach((p) => {
-    const ex = map.get(p.data_votacao);
-    if (ex) ex.scoreB = p.score;
-    else map.set(p.data_votacao, { date: p.data_votacao, scoreA: null, scoreB: p.score });
-  });
-  return [...map.values()].sort((x, y) => x.date.localeCompare(y.date));
 }

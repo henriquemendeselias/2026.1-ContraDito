@@ -1,13 +1,45 @@
 # ContraDito
 
-Plataforma de transparência política que cruza discursos e votos de parlamentares brasileiros, calculando um Score de Coerência com IA.
+Portal de consulta de transparência política que reúne votos, discursos e
+proposições de parlamentares brasileiros (Câmara e Senado). O cruzamento
+discurso↔voto via IA permanece no backend, mas o produto deixou de ser um
+**ranking de coerência**.
 
 ## Language
+
+### Domínio do Portal
+
+**Portal de Consulta**:
+Modelo de produto atual: diretório navegável de parlamentares, proposições, votos e
+discursos, voltado à consulta e ao cruzamento factual. Não há ordenação por nota nem
+exposição de score.
+_Avoid_: Ranking, plataforma de coerência.
+
+**Ranking** _(descontinuado)_:
+Conceito antigo de ordenar parlamentares por Score de Coerência. **Removido do
+produto.** Não exibir ordenação, posição, top/piores ou nota.
+_Avoid_: usar em qualquer contexto de UI.
+
+**Casa**:
+Câmara dos Deputados (`"camara"`) ou Senado Federal (`"senado"`). Segmenta todas as
+rotas da API (`/api/{casa}/...`), exceto `GET /api/comparar`. Na Home, define os modos
+de visualização Todos / Só Câmara / Só Senado.
+_Avoid_: Órgão, instituição, legislativo.
+
+**Concordância**:
+Conceito central da comparação entre dois parlamentares: percentual de proposições em
+que ambos votaram identicamente (Sim/Sim ou Não/Não). **Substituiu o "Score de
+Coerência" como base de comparação par a par.** Exposto via `GET /api/comparar`
+(`concordancia_percentual`) e nas afinidades (gêmeo/antípoda). Requer mínimo de 5
+proposições em comum.
+_Avoid_: Similaridade, alinhamento, score comparativo.
 
 ### Parlamentares
 
 **Parlamentar**:
-Deputado Federal ou Senador rastreado pelo sistema.
+Deputado Federal ou Senador rastreado pelo sistema. Identificado de forma única pela
+combinação **casa + id** (o `id` numérico não é único entre casas). Toda navegação e
+busca de dados de um parlamentar exige a sua [[casa]].
 _Avoid_: Político, candidato.
 
 **Dossiê**:
@@ -18,43 +50,82 @@ _Avoid_: Perfil, página do político.
 Estado atual do exercício do cargo (ex: "Em Exercício", "Licenciado"). Distinto de cargo ou partido.
 _Avoid_: Situação.
 
-### Votos e Coerência
+### Votos
 
-**Votação Analisada**:
-Um `Voto` onde a IA encontrou discurso suficiente e produziu um veredito (`eh_coerente IS NOT NULL`). Apenas votações analisadas entram no denominador do Score e na Timeline.
-_Avoid_: Votação válida, prova de contradição.
+**Voto Nominal**:
+Posição oficial de um parlamentar em uma votação de proposição (`voto_oficial`: Sim,
+Não, Abstenção, Obstrução, Ausente, etc.). É o dado bruto de votação do portal.
+_Avoid_: Voto válido, posicionamento.
 
-**Score de Coerência**:
-Percentual (0–100, uma casa decimal) de votações analisadas onde o parlamentar votou em linha com seus discursos. Nulo quando há menos de 3 votações analisadas.
-_Avoid_: Índice de coerência, nota.
+**Timeline de Votações**:
+Cronologia **puramente visual** dos votos nominais de um parlamentar: eixo X = tempo
+(`data_votacao`), eixo Y = categórico com os valores de `voto_oficial`. **Sem cálculo
+de coerência e sem acúmulo.** Exposta via `GET /api/{casa}/politicos/{id}/timeline`.
+_Avoid_: Timeline de coerência, gráfico de evolução, coerência acumulada.
 
-**Timeline de Coerência**:
-Série cronológica do Score de Coerência acumulado, onde cada ponto representa uma votação analisada. O score de cada ponto é calculado considerando todas as votações analisadas até aquela data.
-_Avoid_: Histórico de coerência, gráfico de evolução.
-
-**Concordância**:
-Percentual de proposições em que dois parlamentares votaram identicamente (somente votos "Sim" e "Não"). Requer mínimo de 5 proposições em comum para ser calculada.
-_Avoid_: Similaridade, alinhamento.
-
-**Dados Suficientes**:
-Condição em que um parlamentar possui ao menos 3 votações analisadas, habilitando cálculo de Score e exibição no ranking ordenado. Abaixo desse limiar, métricas são exibidas com denominador explícito (ex: "100% — 1 votação") e o parlamentar é excluído do ranking por padrão (visível via toggle).
-_Avoid_: Dados válidos, threshold mínimo.
+**Fidelidade Partidária**:
+Taxa bruta de quantas vezes o parlamentar votou alinhado à maioria do seu partido na
+época de cada votação (`taxa_fidelidade`, `votos_alinhados`, `votos_rebeldes`,
+`total_votos_com_orientacao`). Exposta via `GET /api/{casa}/politicos/{id}/fidelidade`.
+**Não há "Quadrantes de Comportamento"** (cruzamento fidelidade × coerência): dependeriam
+de `eh_coerente`, que nunca será preenchida.
+_Avoid_: Disciplina partidária, quadrantes de comportamento.
 
 **Taxa de Presença**:
-Percentual de votações registradas (incluindo ausências) em que o parlamentar efetivamente votou (voto_oficial ≠ "Ausente" / "NÃO COMPARECEU"). Denominador distinto do Score de Coerência, que usa apenas votações analisadas.
+Percentual de votações registradas (incluindo ausências) em que o parlamentar
+efetivamente votou (voto_oficial ≠ "Ausente" / "NÃO COMPARECEU"). Derivada de
+`politico_resumo_votos`.
 _Avoid_: Frequência, assiduidade.
 
-**Benchmark de Coerência**:
-Contexto comparativo exibido no Dossiê (aba Perfil) junto ao Score de Coerência. Compara o score do parlamentar contra dois referenciais: média do partido (primária) e média do cargo (secundária). Calculado apenas sobre parlamentares com Dados Suficientes.
-_Avoid_: Média geral, ranking comparativo.
-
-**Tendência Recente**:
-Indicador de momentum calculado no frontend a partir da Timeline de Coerência. Compara o score acumulado das últimas 10 votações analisadas contra o score histórico total. Exibido apenas quando o parlamentar possui ao menos 15 votações analisadas. Aparece no Dossiê (aba Perfil) e na página de Comparação.
-_Avoid_: Histórico recente, evolução curta.
-
 **Parlamentar Similar**:
-Parlamentar que apresenta alta concordância com outro, com ao menos 5 proposições analisadas em comum.
+Parlamentar que apresenta alta concordância com outro, com ao menos 5 proposições em
+comum. Base do gêmeo (maior concordância) e antípoda (menor) nas afinidades.
 _Avoid_: Parlamentar aliado, votante parecido.
+
+### Partidos
+
+**Coesão Partidária (Índice de Rice)**:
+Índice que mede o grau de consenso ou unidade de votação interna de um partido
+(bancada) nas votações nominais da [[casa]] legislativa. É calculado em escala de
+0% (bancada dividida igualmente com 50% de votos Sim e 50% Não) a 100%
+(unanimidade, onde todos votam Sim ou todos votam Não). Exposta via
+`GET /api/{casa}/partidos/coesao`.
+_Avoid_: Alinhamento ideológico, disciplina partidária.
+
+### Discursos
+
+**Discurso**:
+Pronunciamento oficial realizado por um parlamentar em plenário, obtido a partir
+dos diários e canais oficiais da Câmara ou do Senado. O portal exibe sua
+data, fase do evento (ex: Grande Expediente) e o texto bruto da transcrição
+integral. Exposta via `GET /api/{casa}/discursos` e `GET /api/{casa}/discursos/{id}`.
+_Avoid_: Pronunciamento informal, fala do político.
+
+### Termos descontinuados (limitação de dado permanente)
+
+A coluna `eh_coerente` **não é mais preenchida no banco** (confirmado pelo responsável
+da API). Não é estado temporário: é definitivo. Por isso os termos abaixo saíram do
+produto e não devem ser usados em UI nem em novas features.
+
+**Votação Analisada** _(descontinuado)_:
+Antes era um `Voto` com `eh_coerente IS NOT NULL`. Como `eh_coerente` não é mais
+preenchida, o conceito deixa de existir.
+
+**Score de Coerência** _(descontinuado)_:
+Percentual de coerência discurso↔voto. A coluna `score_coerencia` ainda existe no banco,
+mas é dado morto: nunca exibido no produto.
+_Avoid_: nota, índice de coerência.
+
+**Dados Suficientes / `dados_insuficientes`** _(descontinuado)_:
+Limiar antigo de 3 votações para habilitar score/ranking. Sem score e sem ranking, não
+há toggle, ocultação de parlamentares nem denominador explícito. A flag não existe no
+backend.
+
+**Benchmark de Coerência** _(descontinuado)_:
+Comparava o score contra média de partido/cargo. Dependia de score exposto.
+
+**Tendência Recente** _(descontinuado)_:
+Momentum calculado sobre a timeline de coerência acumulada. Dependia de `eh_coerente`.
 
 ### Proposições
 
