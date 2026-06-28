@@ -62,25 +62,25 @@ def limpar_transcricao(texto_bruto: str) -> str:
         ),
         # Padrão 1: Clássico com travessão, flexibilizado para aceitar 'Sra.', chaves {} ou colchetes [].
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+(?:[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"
+            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+)*(?:\s*[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"
         ),
         # Padrão 2: Discurso encaminhado.
         re.compile(
-            r"^[\.\s]*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SR[A]?\. DEPUTAD[OA] [A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+\.\s*"
+            r"^[\.\s]*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SR[A]?\. DEPUTAD[OA] [A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+)*\.\s*"
         ),
         # Padrão 3: Inserção nos anais ("pronuncia o seguinte discurso:").
-        # Extremamente flexível pois a frase de gatilho é inconfundível.
+        # Limitamos o wildcard a no máximo 150 caracteres para evitar backtracking catastrófico em textos longos.
         re.compile(
-            r"^[\.\s]*.*?(?:pronuncia|pronunciou|pronunciar) o seguinte discurso:\s*",
+            r"^[\.\s]*.{0,150}?(?:pronuncia|pronunciou|pronunciar) o seguinte discurso:\s*",
             re.IGNORECASE,
         ),
         # Padrão 4: Clássico sem travessão (agora flexível para chaves e colchetes).
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+[({\[][^)}\]]+[)}\]]\s*"
+            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+)*\s*[({\[][^)}\]]+[)}\]]\s*"
         ),
         # Padrão 4b: Clássico faltando fechamento de parêntese, emendando direto no pronome de tratamento.
         re.compile(
-            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.\s]+[({\[][^)}\]]*?(?=\s*(?:(?:[Ee]xcelentíssimo\s+)?(?:[Ss]r[a]?\.\s+|[Ss]enhor[a]?\s+)?[Pp]residente\b|[Ss]ras?\.\s+e\s+[Ss]rs?\.|[Ss]enhoras\s+e\s+[Ss]enhores))"
+            r"^[\.\s]*(?:O SR\.|A SRA\.|O Sr\.|A Sra\.)?\s*[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\.]+)*\s*[({\[][^)}\]]*?(?=\s*(?:(?:[Ee]xcelentíssimo\s+)?(?:[Ss]r[a]?\.\s+|[Ss]enhor[a]?\s+)?[Pp]residente\b|[Ss]ras?\.\s+e\s+[Ss]rs?\.|[Ss]enhoras\s+e\s+[Ss]enhores))"
         ),
     ]
 
@@ -102,7 +102,7 @@ def limpar_transcricao(texto_bruto: str) -> str:
 
     # Estágio 3: Normalização de espaços duplos e remoção de espaços antes de pontuação deixados pelo HTML
     texto = re.sub(r"\s+", " ", texto)
-    texto = re.sub(r"\s+([.,?!;:])", r"\1", texto)  # Junta "negrito ." para "negrito."
+    texto = re.sub(r"\s([.,?!;:])", r"\1", texto)  # Junta "negrito ." para "negrito."
 
     # Limpeza Final: Remove quaisquer pontos espúrios que sobraram soltos no início (ex: ". Excelentíssimo...")
     texto = re.sub(r"^[\.\s\-]+", "", texto)
