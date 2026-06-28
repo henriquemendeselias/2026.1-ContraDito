@@ -69,6 +69,9 @@ Esta documentação especifica todas as rotas ativas da API **ContraDito**. Ela 
 * **Parâmetros**:
   * `{casa}` (Path): `"camara"` ou `"senado"`.
 
+> [!IMPORTANT]
+> **Processamento e Cache**: Este endpoint calcula a coesão média de todos os partidos de forma analítica e dinâmica. Para isso, o backend executa internamente a função `_obter_todos_os_votos`, que busca sequencialmente a totalidade de votos do banco de dados em lotes (chunks de 1000 registros). Devido à alta carga dessa operação, **a ativação e respeito ao cache de 1 hora (`expire=3600`) são críticos** para evitar degradação de performance na API e sobrecarga no Supabase.
+
 ---
 
 ### Categoria C: Proposições (Matérias e Polarização)
@@ -76,9 +79,11 @@ Esta documentação especifica todas as rotas ativas da API **ContraDito**. Ela 
 #### 8. Listar Proposições
 * **Método / Path**: `GET /api/{casa}/proposicoes`
 * **Parâmetros**:
-  * `{casa}` (Path): `"camara"` ou `"senado"`.
+  * `{casa}` (Path): `"camara"` ou `"senado"` (obrigatório).
+  * `busca` (Query, opcional): Busca por termo no ID, ementa ou resumo executivo.
   * `ano` (Query, opcional): Filtro por ano.
   * `tipo` (Query, opcional): Tipo de matéria (ex: `PL`, `PEC`).
+  * `apenas_analisadas` (Query, opcional): Exibir apenas proposições com resumo da IA (analisadas) (`true` ou `false`).
   * `pagina` (Query, opcional): Inteiro (padrão `1`).
   * `tamanho` (Query, opcional): Inteiro (padrão `20`).
 
@@ -103,6 +108,7 @@ Esta documentação especifica todas as rotas ativas da API **ContraDito**. Ela 
 * **Parâmetros**:
   * `{casa}` (Path): `"camara"` ou `"senado"`.
   * `politico_id` (Query, opcional): Filtro por ID do parlamentar.
+  * `termo` (Query, opcional): Termo para pesquisar no texto do discurso.
   * `pagina` (Query, opcional): Inteiro (padrão `1`).
   * `tamanho` (Query, opcional): Inteiro (padrão `20`).
 
@@ -132,5 +138,6 @@ Esta documentação especifica todas as rotas ativas da API **ContraDito**. Ela 
   * `{casa}` (Path): `"camara"` ou `"senado"`.
   * `politico_id` (Query, opcional): Filtro por político.
   * `proposicao_id` (Query, opcional): Filtro por proposição.
+  * `apenas_com_discursos` (Query, opcional): Filtrar apenas votos que possuem discursos associados (`true` ou `false`).
   * `pagina` (Query, opcional): Inteiro (padrão `1`).
   * `tamanho` (Query, opcional): Inteiro (padrão `20`).
