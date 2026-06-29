@@ -214,7 +214,10 @@ function PartidosInner({
                     {/* Coluna Esquerda: Explicação + Fórmula */}
                     <div className="flex-1">
                       <strong className="text-bright block font-semibold mb-1">Como funciona o cálculo?</strong>
-                      Mede o consenso de voto das bancadas pelo <strong className="text-bright font-medium">Índice de Rice</strong>: de 0% (rachado) a 100% (unânime).
+                      <p>
+                        Mede o consenso de voto das bancadas pelo{" "}
+                        <strong className="text-bright font-medium">Índice de Rice</strong>: de 0% (rachado) a 100% (unânime).
+                      </p>
                     <div className="bg-card-alt/50 p-2.5 rounded border border-rim/20 mt-2 flex items-center justify-center gap-2 select-none font-serif text-bright">
                       <span className="text-xs font-semibold">Índice =</span>
                       <div className="flex flex-col items-center text-[10px]">

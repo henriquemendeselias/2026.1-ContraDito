@@ -134,7 +134,7 @@ export function DiretorioPreview({ parlamentares }: { parlamentares: Parlamentar
               onChange={(e) => setMostrarInativos(e.target.checked)}
               className="rounded bg-canvas border-rim/40 text-coherent focus:ring-0 focus:ring-offset-0 accent-coherent w-3.5 h-3.5"
             />
-            Incluir inativos/suplentes
+            <span>Incluir inativos/suplentes</span>
           </label>
 
           {/* Input de busca rápida na amostra */}

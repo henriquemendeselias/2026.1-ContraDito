@@ -209,9 +209,10 @@ function Picker({
 
   return (
     <>
-      <div
+      <button
+        type="button"
         onClick={() => setModalOpen(true)}
-        className="glass rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:border-rim/80 hover:bg-card-alt/30 transition-all cursor-pointer group min-h-[220px]"
+        className="w-full glass rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:border-rim/80 hover:bg-card-alt/30 transition-all cursor-pointer group min-h-[220px]"
         style={{ borderColor: tint(accent, 20) }}
       >
         <p className="text-[10px] uppercase tracking-widest text-dim group-hover:text-bright transition-colors">{label}</p>
@@ -224,7 +225,7 @@ function Picker({
         <span className="text-sm font-semibold text-mid group-hover:text-bright transition-colors">
           Selecionar Parlamentar
         </span>
-      </div>
+      </button>
 
       {modalOpen && (
         <SelectionModal

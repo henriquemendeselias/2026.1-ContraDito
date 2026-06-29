@@ -214,7 +214,7 @@ export function ProposicaoDetalheClient({
                       <div className="flex items-center justify-between text-xs text-mid">
                         <span className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--color-voto-sim)" }} />
-                          Sim
+                          <span>Sim</span>
                         </span>
                         <span className="font-data text-bright">
                           {pol.qtd_sim} <span className="text-dim text-[11px]">({pol.pct_sim.toFixed(1)}%)</span>
@@ -223,7 +223,7 @@ export function ProposicaoDetalheClient({
                       <div className="flex items-center justify-between text-xs text-mid">
                         <span className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--color-voto-nao)" }} />
-                          Não
+                          <span>Não</span>
                         </span>
                         <span className="font-data text-bright">
                           {pol.qtd_nao} <span className="text-dim text-[11px]">({pol.pct_nao.toFixed(1)}%)</span>
