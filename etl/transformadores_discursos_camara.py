@@ -67,7 +67,7 @@ def limpar_transcricao(texto_bruto: str) -> str:
         match_saudacao = regex_saudacao.search(texto, pos=match_cabecalho.end())
         if match_saudacao:
             # Ação de Corte: realiza o corte fatiando a string a partir de match_saudacao.start()
-            texto = texto[match_saudacao.start():]
+            texto = texto[match_saudacao.start() :]
             encontrou_padrao = True
 
     padroes_cabecalho = [
