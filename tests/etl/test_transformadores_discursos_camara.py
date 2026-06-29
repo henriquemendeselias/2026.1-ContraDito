@@ -316,7 +316,9 @@ def test_nao_casamento_geral(mock_warning):
     Garante que se nenhum padrão casar, o texto original é preservado
     e um aviso de aviso de falha (warning) é registrado de forma segura.
     """
-    texto_atipico = "Texto totalmente atípico sem nenhum padrão de cabeçalho conhecido no parser."
+    texto_atipico = (
+        "Texto totalmente atípico sem nenhum padrão de cabeçalho conhecido no parser."
+    )
     texto_limpo = limpar_transcricao(texto_atipico)
     assert texto_limpo == texto_atipico
     mock_warning.assert_called_once()
@@ -331,15 +333,19 @@ def test_casos_de_borda_padrao_3(mock_warning):
     """
     # Caso 1: Preâmbulo com exatamente 200 caracteres (dentro do limite)
     preambulo_200 = "A" * 200
-    texto_dentro = preambulo_200 + "pronuncia o seguinte discurso: Meu discurso começa aqui."
+    texto_dentro = (
+        preambulo_200 + "pronuncia o seguinte discurso: Meu discurso começa aqui."
+    )
     texto_limpo_dentro = limpar_transcricao(texto_dentro)
     assert texto_limpo_dentro == "Meu discurso começa aqui."
 
     # Caso 2: Preâmbulo com 250 caracteres (acima do limite)
     preambulo_250 = "A" * 250
-    texto_fora = preambulo_250 + "pronuncia o seguinte discurso: Meu discurso começa aqui."
+    texto_fora = (
+        preambulo_250 + "pronuncia o seguinte discurso: Meu discurso começa aqui."
+    )
     texto_limpo_fora = limpar_transcricao(texto_fora)
-    
+
     # Não deve casar com o Padrão 3 e deve cair no log de fallback, mantendo o texto intacto
     assert texto_limpo_fora == texto_fora
     mock_warning.assert_called_once()
@@ -380,8 +386,13 @@ def test_padrao_4b_casos():
     ou outras saudações sejam limpos corretamente.
     """
     # Caso 1: Com Excelentíssimo Senhor Presidente
-    texto1 = "O Sr. Ricardo (PT-TO Excelentíssimo Senhor Presidente, inicio meu discurso."
-    assert limpar_transcricao(texto1) == "Excelentíssimo Senhor Presidente, inicio meu discurso."
+    texto1 = (
+        "O Sr. Ricardo (PT-TO Excelentíssimo Senhor Presidente, inicio meu discurso."
+    )
+    assert (
+        limpar_transcricao(texto1)
+        == "Excelentíssimo Senhor Presidente, inicio meu discurso."
+    )
 
     # Caso 2: Com Senhoras e Senhores
     texto2 = "O Sr. Ricardo (PT-TO Senhoras e Senhores, inicio meu discurso."
