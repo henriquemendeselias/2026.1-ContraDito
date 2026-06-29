@@ -59,8 +59,8 @@ export function DiretorioPreview({ parlamentares }: { parlamentares: Parlamentar
       );
   }, [parlamentares, mode, busca, mostrarInativos]);
 
-  // Exibe uma amostra de 6 a 8 parlamentares no preview da homepage
-  const amostra = useMemo(() => filtrados.slice(0, 8), [filtrados]);
+  // Exibição de amostra de 6 parlamentares no preview da homepage (Estilo Lista Ranking)
+  const amostra = useMemo(() => filtrados.slice(0, 6), [filtrados]);
 
   return (
     <section id="diretorio-preview" className="relative py-20 bg-card/20 border-y border-rim/30 overflow-hidden">
@@ -159,71 +159,53 @@ export function DiretorioPreview({ parlamentares }: { parlamentares: Parlamentar
           </div>
         </div>
 
-        {/* Grid de Cards de Parlamentares (Visual Inspirado no Ranking) */}
+        {/* Lista de Parlamentares Compacta (Estilo Ranking) */}
         {amostra.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex flex-col gap-2.5 w-full">
             {amostra.map((p) => {
               const casaHex = CASA[p.casa].hex;
               return (
                 <Link
                   key={`${p.casa}-${p.id}`}
                   href={`/politico/${p.id}?casa=${p.casa}`}
-                  className="group relative rounded-2xl border border-rim/40 bg-card/70 hover:bg-card-alt/80 hover:border-rim/80 p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer overflow-hidden"
+                  className="group relative rounded-xl border border-rim/40 bg-card/70 hover:bg-card-alt/90 hover:border-rim/80 p-3 sm:p-3.5 flex items-center justify-between transition-all duration-200 hover:shadow-md cursor-pointer overflow-hidden gap-3"
                 >
-                  {/* Linha topo indicadora de Casa */}
+                  {/* Linha lateral indicadora de Casa */}
                   <div
-                    className="absolute top-0 left-0 right-0 h-1 transition-opacity opacity-70 group-hover:opacity-100"
+                    className="absolute left-0 top-0 bottom-0 w-1 transition-opacity opacity-70 group-hover:opacity-100"
                     style={{ background: casaHex }}
                   />
 
-                  <div>
-                    {/* Topo do Card: Avatar e Casa */}
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <Avatar
-                        name={p.nome_urna}
-                        url={p.url_foto}
-                        size={52}
-                        ringColor={tint(casaHex, 50)}
-                      />
-                      <CasaBadge casa={p.casa} />
-                    </div>
-
-                    {/* Identificação do Parlamentar */}
-                    <div className="flex items-center gap-2 mb-0.5 min-w-0">
-                      <h3 className={`font-display text-lg font-bold leading-snug group-hover:text-coherent transition-colors truncate ${p.status_mandato === "Inativo" ? "text-dim/60" : p.status_mandato === "Suplente" ? "text-dim/80" : "text-bright"}`}>
-                        {p.nome_urna}
-                      </h3>
-                      {p.status_mandato === "Inativo" && (
-                        <span className="text-[8px] px-1.5 py-0.5 bg-dim/15 text-dim border border-rim/20 rounded uppercase tracking-wider shrink-0 font-medium font-data">
-                          Inativo
-                        </span>
-                      )}
-                      {p.status_mandato === "Suplente" && (
-                        <span className="text-[8px] px-1.5 py-0.5 bg-coherent/15 text-coherent border border-coherent/20 rounded uppercase tracking-wider shrink-0 font-medium font-data">
-                          Suplente
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-dim truncate mt-0.5" title={p.nome_civil}>
-                      {p.nome_civil}
-                    </p>
-
-                    {/* Informações Partidárias e Mandato */}
-                    <div className="mt-4 pt-3 border-t border-rim/25 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-mid bg-card-alt px-2 py-0.5 rounded border border-rim/30">
-                          {p.partido}
-                        </span>
-                        <span className="font-data text-dim">{p.estado}</span>
+                  {/* Informações Principais */}
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1 pl-1">
+                    <Avatar
+                      name={p.nome_urna}
+                      url={p.url_foto}
+                      size={44}
+                      ringColor={tint(casaHex, 50)}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className={`font-display text-base font-bold leading-tight group-hover:text-coherent transition-colors truncate ${p.status_mandato === "Inativo" ? "text-dim/60" : p.status_mandato === "Suplente" ? "text-dim/80" : "text-bright"}`}>
+                          {p.nome_urna}
+                        </h3>
+                        {p.status_mandato === "Inativo" && (
+                          <span className="text-[9px] px-1.5 py-0.5 bg-dim/15 text-dim border border-rim/20 rounded font-medium shrink-0 font-data">Inativo</span>
+                        )}
+                        {p.status_mandato === "Suplente" && (
+                          <span className="text-[9px] px-1.5 py-0.5 bg-coherent/15 text-coherent border border-coherent/20 rounded font-medium shrink-0 font-data">Suplente</span>
+                        )}
                       </div>
-                      <span className="text-[11px] text-dim">{p.cargo}</span>
+                      <p className="text-xs text-dim truncate mt-0.5">
+                        <span>{p.cargo}</span> <span className="text-mid font-semibold">| {p.partido} - {p.estado}</span>
+                      </p>
                     </div>
                   </div>
 
-                  {/* Rodapé do Card com Ação */}
-                  <div className="mt-5 flex items-center justify-between text-xs text-mid group-hover:text-bright pt-3 border-t border-rim/15">
-                    <span className="font-medium text-[11px] tracking-wide uppercase">Consultar Dossiê</span>
-                    <ChevronRight size={16} className="text-dim group-hover:text-coherent group-hover:translate-x-1 transition-all" />
+                  {/* Lado Direito: Badge de Casa & Seta */}
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <CasaBadge casa={p.casa} />
+                    <ChevronRight size={18} className="text-dim group-hover:text-coherent group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </Link>
               );
