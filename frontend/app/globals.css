@@ -108,4 +108,7 @@
   [data-theme="light"] .hero-photo-noite {
     opacity: 0;
   }
+  [data-theme="light"] .hero-subtitle {
+    color: var(--color-bright);
+  }
 }
