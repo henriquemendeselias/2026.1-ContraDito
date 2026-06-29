@@ -101,8 +101,8 @@ function DiretorioInner({ parlamentares, erro }: { parlamentares: Parlamentar[];
         ),
     [parlamentares, mode, mostrarInativos]
   );
-  const partidos = useMemo(() => [...new Set(scoped.map((p) => p.partido))].sort(), [scoped]);
-  const estados = useMemo(() => [...new Set(scoped.map((p) => p.estado))].sort(), [scoped]);
+  const partidos = useMemo(() => [...new Set(scoped.map((p) => p.partido))].sort((a, b) => a.localeCompare(b, "pt-BR")), [scoped]);
+  const estados = useMemo(() => [...new Set(scoped.map((p) => p.estado))].sort((a, b) => a.localeCompare(b, "pt-BR")), [scoped]);
 
   const rows = useMemo(() => {
     const q = busca.trim().toLowerCase();
