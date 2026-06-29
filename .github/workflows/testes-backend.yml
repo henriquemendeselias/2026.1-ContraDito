@@ -13,7 +13,6 @@ on:
 
 jobs:
   rodar-testes:
-    name: Testes da API
     runs-on: ubuntu-latest
     steps:
       - name: Baixar o código
