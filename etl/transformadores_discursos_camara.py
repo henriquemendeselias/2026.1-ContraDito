@@ -48,30 +48,53 @@ def limpar_transcricao(texto_bruto: str) -> str:
     texto = html.unescape(texto)
 
     # Estágio 2: Remoção do cabeçalho protocolar (Regex Agressivo)
+    encontrou_padrao = False
+
+    # Processamento do antigo Padrão 5 em duas etapas para evitar complexidade excessiva de regex (evitando backtracking)
+    # Etapa 1 (Detecção de Cabeçalho): Verifique se o texto inicia com o cabeçalho
+    regex_cabecalho = re.compile(
+        r"^[\.\s]*(?:Discurso feito|Discurso pronunciado|DISCURSO|CÂMARA DOS DEPUTADOS|A VOLTA|PRONUN?CIAMENTO)",
+        re.IGNORECASE,
+    )
+    # Etapa 2 (Busca de Saudação): Procure pela saudação formal usando regex sem \s* opcional no início
+    regex_saudacao = re.compile(
+        r"(?:(?:Sra?\.\s+|Senhora?\s+)?Presidente|Sras?\.\s+e\s+Srs\.|Senhoras\s+e\s+Senhores)",
+        re.IGNORECASE,
+    )
+
+    match_cabecalho = regex_cabecalho.match(texto)
+    if match_cabecalho:
+        match_saudacao = regex_saudacao.search(texto, pos=match_cabecalho.end())
+        if match_saudacao:
+            # Ação de Corte: realiza o corte fatiando a string a partir de match_saudacao.start()
+            texto = texto[match_saudacao.start():]
+            encontrou_padrao = True
+
     padroes_cabecalho = [
-        # Padrão 5: Lixo de ofícios inseridos nos anais ou falsos cabeçalhos longos.
-        # Usa lookahead ultra-específico para parar apenas nas saudações reais de abertura da fala.
-        re.compile(
-            r"^[\.\s]*(?:Discurso feito|Discurso pronunciado|DISCURSO|CÂMARA DOS DEPUTADOS|A VOLTA|PRONUN?CIAMENTO).*?(?=\s*(?:Sra?\.\s+|Senhora?\s+)?Presidente|Sras?\.\s+e\s+Srs\.|Senhoras\s+e\s+Senhores)",
-            re.IGNORECASE,
-        ),
         # Padrão 6: Fallback de ofícios e falsos cabeçalhos encabeçados quando não há saudação formal (corta no primeiro ponto final).
         re.compile(
             r"^[\.\s]*(?:Discurso feito|Discurso pronunciado|DISCURSO|CÂMARA DOS DEPUTADOS|A VOLTA|PRONUN?CIAMENTO)[^()]*?\.\s+",
             re.IGNORECASE,
         ),
-        # Padrão 1: Clássico com travessão
-        # Colapsado loop de palavras em uma classe de caracteres contínua
+        # Padrão 1a: Orador com Partido e Travessão
         re.compile(
-            r"^\.?\s*(?:[OA]\s+S[Rr][Aa]?\.\s*)?[A-Z\u00C0-\u00DC\s\.]+(?:\s*[({\[][^)}\]]+[)}\]])?\s*[-—]\s*"
+            r"^\.?\s*(?:[oa]\s+sra?\.\s*)?[a-z\u00c0-\u00dc\s\.]+\s*[({\[][^)}\]]+[)}\]]\s*[-—]\s*",
+            re.IGNORECASE,
+        ),
+        # Padrão 1b: Orador sem Partido e com Travessão
+        re.compile(
+            r"^\.?\s*(?:[oa]\s+sra?\.\s*)?[a-z\u00c0-\u00dc\s\.]+\s*[-—]\s*",
+            re.IGNORECASE,
         ),
         # Padrão 2: Discurso encaminhado
         re.compile(
             r"^\.?\s*DISCURSO NA ÍNTEGRA ENCAMINHADO PEL[OA] SRA?\. DEPUTAD[OA] [A-Z\u00C0-\u00DC\s\.]+\.\s*"
         ),
         # Padrão 3: Inserção nos anais
+        # Aumentado o limite de {0,150}? para {0,200}? para dar uma margem de segurança maior contra preâmbulos
+        # reais muito longos em produção (evitando falsos negativos em textos de introdução extensos).
         re.compile(
-            r"^\.?\s*.{0,150}?(?:pronuncia|pronunciou|pronunciar) o seguinte discurso:\s*",
+            r"^\.?\s*.{0,200}?(?:pronuncia|pronunciou|pronunciar) o seguinte discurso:\s*",
             re.IGNORECASE,
         ),
         # Padrão 4: Clássico sem travessão
@@ -79,20 +102,21 @@ def limpar_transcricao(texto_bruto: str) -> str:
         re.compile(
             r"^\.?\s*(?:[OA]\s+S[Rr][Aa]?\.\s*)?[A-Z\u00C0-\u00DC\s\.]+\s*[\(\[\{][^)\}\]]+[\)\}\]]\s*"
         ),
-        # Padrão 4b: Clássico sem fechamento de parêntese (simplificado com re.IGNORECASE)
+        # Padrão 4b: Clássico sem fechamento de parêntese.
+        # Resolvida a complexidade excessiva de 72 no Sonar ao trocar a alternância repetível '*' no lookahead por grupos opcionais ordenados sequencialmente.
         re.compile(
-            r"^\.?\s*(?:[oa]\s+sra?\.\s*)?[A-Z\u00C0-\u00DC\s\.]+\s*[\(\[\{][^)\}\s]*\s*(?=(?:(?:excelentíssimo\s+|sra?\.\s+|senhora?\s+)*presidente\b|sras?\.\s+e\s+srs?\.|senhoras\s+e\s+senhores))",
+            r"^\.?\s*(?:[oa]\s+sra?\.\s*)?[a-z\u00c0-\u00dc\s\.]+\s*[\(\[\{][^)\}\s]*\s*(?=(?:(?:excelentíssimo\s+)?(?:sra?\.\s+|senhora?\s+)?presidente\b|sras?\.\s+e\s+srs?\.|senhoras\s+e\s+senhores))",
             re.IGNORECASE,
         ),
     ]
 
-    encontrou_padrao = False
-    for padrao in padroes_cabecalho:
-        texto_substituido, substituicoes = padrao.subn("", texto, count=1)
-        if substituicoes > 0:
-            texto = texto_substituido
-            encontrou_padrao = True
-            break
+    if not encontrou_padrao:
+        for padrao in padroes_cabecalho:
+            texto_substituido, substituicoes = padrao.subn("", texto, count=1)
+            if substituicoes > 0:
+                texto = texto_substituido
+                encontrou_padrao = True
+                break
 
     if not encontrou_padrao:
         # Plano B: Mantém o texto sujo retido e alerta a engenharia
