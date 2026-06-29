@@ -39,7 +39,7 @@ export default async function HomePage() {
 
         {/* conteúdo */}
         <div className="relative z-10 max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-coherent drop-shadow-sm">
+          <p className="hero-subtitle text-xs font-bold uppercase tracking-[0.3em] text-coherent drop-shadow-sm">
             Portal de consulta · Câmara e Senado
           </p>
           <h1 className="font-display text-bright font-black leading-[0.92] mt-5 text-6xl sm:text-8xl">
