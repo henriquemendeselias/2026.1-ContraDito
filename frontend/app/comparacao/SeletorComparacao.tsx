@@ -46,11 +46,11 @@ function SelectionModal({
   }, [onClose]);
 
   const parties = useMemo(() => {
-    return ["todos", ...new Set(pool.filter((p) => p.id !== excludeId).map((p) => p.partido))].sort();
+    return ["todos", ...new Set(pool.filter((p) => p.id !== excludeId).map((p) => p.partido))].sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [pool, excludeId]);
 
   const ufs = useMemo(() => {
-    return ["todos", ...new Set(pool.filter((p) => p.id !== excludeId).map((p) => p.estado))].sort();
+    return ["todos", ...new Set(pool.filter((p) => p.id !== excludeId).map((p) => p.estado))].sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [pool, excludeId]);
 
   const filteredList = useMemo(() => {
