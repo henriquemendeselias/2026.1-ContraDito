@@ -10,11 +10,14 @@ function VotoRow({ v }: { v: Voto }) {
   const hasDetails = !!(v.justificativa || v.inferencia_ia);
   const vColor = votoHex(v.voto_oficial);
 
+  const Tag = hasDetails ? "button" : "div";
+
   return (
     <>
-      <div
+      <Tag
+        type={hasDetails ? "button" : undefined}
         onClick={() => hasDetails && setOpen((o) => !o)}
-        className={`grid grid-cols-[1fr_auto_auto_auto] md:grid-cols-[2fr_auto_auto_auto_auto] gap-x-4 items-center px-4 py-3.5 border-b border-white/[0.05] transition-colors ${hasDetails ? "cursor-pointer" : ""} ${open ? "bg-card-alt" : "hover:bg-card-alt/60"}`}
+        className={`w-full text-left grid grid-cols-[1fr_auto_auto_auto] md:grid-cols-[2fr_auto_auto_auto_auto] gap-x-4 items-center px-4 py-3.5 border-b border-white/[0.05] transition-colors ${hasDetails ? "cursor-pointer" : ""} ${open ? "bg-card-alt" : hasDetails ? "hover:bg-card-alt/60" : ""}`}
       >
         <div className="min-w-0">
           <p className="text-sm font-medium text-bright truncate">
@@ -52,7 +55,7 @@ function VotoRow({ v }: { v: Voto }) {
             </span>
           )}
         </div>
-      </div>
+      </Tag>
 
       {open && (
         <div className="bg-card-alt/50 border-b border-white/[0.05] px-6 py-4 space-y-3">

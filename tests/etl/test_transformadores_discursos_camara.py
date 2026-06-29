@@ -281,3 +281,123 @@ def test_limpeza_pronuncia_variacoes():
     """Reforça a verificação da frase 'pronuncia o seguinte discurso' com variações."""
     texto_sujo = "O Sr. STEFANO AGUIAR {PSD-MG} pronunciou o seguinte discurso: Senhor Presidente..."
     assert limpar_transcricao(texto_sujo) == "Senhor Presidente..."
+
+
+def test_padrao_5_saudacoes():
+    """
+    Testa o Padrão 5 e suas variações de saudações formais após um cabeçalho reconhecido,
+    garantindo que o fatiamento seja feito na primeira letra visível da saudação
+    e não restem espaços em branco à esquerda.
+    """
+    # Presidente sem prefixo
+    texto1 = "DISCURSO Presidente, boa tarde."
+    assert limpar_transcricao(texto1) == "Presidente, boa tarde."
+
+    # Presidente com prefixo Sra.
+    texto2 = "Discurso pronunciado Sra. Presidente, boa tarde."
+    assert limpar_transcricao(texto2) == "Sra. Presidente, boa tarde."
+
+    # Presidente com prefixo Senhor
+    texto3 = "Discurso feito. Senhor Presidente, boa tarde."
+    assert limpar_transcricao(texto3) == "Senhor Presidente, boa tarde."
+
+    # Sras. e Srs.
+    texto4 = "CÂMARA DOS DEPUTADOS.   Sras. e Srs., boa tarde."
+    assert limpar_transcricao(texto4) == "Sras. e Srs., boa tarde."
+
+    # Senhoras e Senhores
+    texto5 = "A VOLTA. Senhoras e Senhores, boa tarde."
+    assert limpar_transcricao(texto5) == "Senhoras e Senhores, boa tarde."
+
+
+@patch("logging.warning")
+def test_nao_casamento_geral(mock_warning):
+    """
+    Garante que se nenhum padrão casar, o texto original é preservado
+    e um aviso de aviso de falha (warning) é registrado de forma segura.
+    """
+    texto_atipico = (
+        "Texto totalmente atípico sem nenhum padrão de cabeçalho conhecido no parser."
+    )
+    texto_limpo = limpar_transcricao(texto_atipico)
+    assert texto_limpo == texto_atipico
+    mock_warning.assert_called_once()
+
+
+@patch("logging.warning")
+def test_casos_de_borda_padrao_3(mock_warning):
+    """
+    Garante que o limite de 200 caracteres para o preâmbulo no Padrão 3 funcione:
+    - Um preâmbulo de 200 caracteres (dentro do limite) é limpo com sucesso.
+    - Um preâmbulo de 250 caracteres (fora do limite) não casa e cai no log de fallback com segurança.
+    """
+    # Caso 1: Preâmbulo com exatamente 200 caracteres (dentro do limite)
+    preambulo_200 = "A" * 200
+    texto_dentro = (
+        preambulo_200 + "pronuncia o seguinte discurso: Meu discurso começa aqui."
+    )
+    texto_limpo_dentro = limpar_transcricao(texto_dentro)
+    assert texto_limpo_dentro == "Meu discurso começa aqui."
+
+    # Caso 2: Preâmbulo com 250 caracteres (acima do limite)
+    preambulo_250 = "A" * 250
+    texto_fora = (
+        preambulo_250 + "pronuncia o seguinte discurso: Meu discurso começa aqui."
+    )
+    texto_limpo_fora = limpar_transcricao(texto_fora)
+
+    # Não deve casar com o Padrão 3 e deve cair no log de fallback, mantendo o texto intacto
+    assert texto_limpo_fora == texto_fora
+    mock_warning.assert_called_once()
+
+
+def test_padrao_1_casos():
+    """
+    Testa os cenários do Padrão 1 (1a e 1b) para garantir que
+    cabeçalhos clássicos com travessão sejam removidos corretamente.
+    """
+    # Cenário A (Obrigatório e Integral)
+    texto_a = "O SR. JOÃO (PT-SP) - Presidente, meu discurso."
+    assert limpar_transcricao(texto_a) == "Presidente, meu discurso."
+
+    # Cenário B: Orador sem parênteses e com travessão
+    texto_b = "O SR. JOÃO - Presidente, meu discurso."
+    assert limpar_transcricao(texto_b) == "Presidente, meu discurso."
+
+    # Cenário C: Orador com colchetes ou chaves no partido antes do travessão
+    texto_c_colchetes = "O SR. JOÃO [PT-SP] - Presidente, meu discurso."
+    texto_c_chaves = "O SR. JOÃO {PT-SP} - Presidente, meu discurso."
+    assert limpar_transcricao(texto_c_colchetes) == "Presidente, meu discurso."
+    assert limpar_transcricao(texto_c_chaves) == "Presidente, meu discurso."
+
+    # Cenário D: Caso sem prefixo de pronome de tratamento
+    texto_d = "JOÃO (PT-SP) - Presidente, meu discurso."
+    assert limpar_transcricao(texto_d) == "Presidente, meu discurso."
+
+    # Cenário de Capitalização Mista (com re.IGNORECASE)
+    texto_capitalizacao_mista = "O Sr. João (PT-SP) - Presidente, meu discurso."
+    assert limpar_transcricao(texto_capitalizacao_mista) == "Presidente, meu discurso."
+
+
+def test_padrao_4b_casos():
+    """
+    Testa os cenários do Padrão 4b para garantir que
+    cabeçalhos sem fechamento de parêntese mas com saudação presidencial
+    ou outras saudações sejam limpos corretamente.
+    """
+    # Caso 1: Com Excelentíssimo Senhor Presidente
+    texto1 = (
+        "O Sr. Ricardo (PT-TO Excelentíssimo Senhor Presidente, inicio meu discurso."
+    )
+    assert (
+        limpar_transcricao(texto1)
+        == "Excelentíssimo Senhor Presidente, inicio meu discurso."
+    )
+
+    # Caso 2: Com Senhoras e Senhores
+    texto2 = "O Sr. Ricardo (PT-TO Senhoras e Senhores, inicio meu discurso."
+    assert limpar_transcricao(texto2) == "Senhoras e Senhores, inicio meu discurso."
+
+    # Caso 3: Com Sras. e Srs.
+    texto3 = "O Sr. Ricardo (PT-TO Sras. e Srs., inicio meu discurso."
+    assert limpar_transcricao(texto3) == "Sras. e Srs., inicio meu discurso."

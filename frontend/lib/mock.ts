@@ -408,10 +408,7 @@ export function mockGetVotos(id: number, params: { pagina?: number; tamanho?: nu
 
   const raw = VOTOS_POR_POLITICO[id] ?? gerarVotosGenericos(id, partido, score);
 
-  const ordered =
-    params.tamanho === undefined || params.pagina === undefined
-      ? [...raw].reverse()
-      : [...raw].reverse();
+  const ordered = [...raw].reverse();
 
   const tamanho = params.tamanho ?? 20;
   const pagina  = params.pagina  ?? 1;
