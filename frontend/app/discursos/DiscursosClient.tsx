@@ -460,9 +460,12 @@ function DiscursosInner({
       {discursoAberto && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop escurecido */}
-          <div
+          <button
+            type="button"
             onClick={() => setDiscursoAberto(null)}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
+            className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
+            tabIndex={-1}
+            aria-hidden="true"
           />
 
           <div className="absolute inset-y-0 right-0 max-w-full flex">

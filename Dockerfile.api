@@ -1,7 +1,7 @@
 # =================================================================
 # Estágio 1: 'base' - Imagem python com utilitários
 # =================================================================
-FROM python:3.12-slim as base
+FROM python:3.12-slim AS base
 
 WORKDIR /app
 
@@ -12,10 +12,14 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
+# Cria usuário não-root com UID/GID 1000 para compatibilidade no desenvolvimento
+RUN addgroup --gid 1000 appgroup && \
+    adduser --uid 1000 --gid 1000 --disabled-password --gecos "" appuser
+
 # =================================================================
 # Estágio 2: 'builder_prod' - Instala apenas dependências de PRODUÇÃO
 # =================================================================
-FROM base as builder_prod
+FROM base AS builder_prod
 
 COPY requirements.api.txt .
 RUN pip install --no-cache-dir -r requirements.api.txt
@@ -24,12 +28,18 @@ RUN pip install --no-cache-dir -r requirements.api.txt
 # Estágio 3: 'test' - Adiciona dependências de TESTE e define o comando
 # Para executar os testes: docker build --target test .
 # =================================================================
-FROM builder_prod as test
+FROM builder_prod AS test
 
 COPY requirements.test.txt .
 RUN pip install --no-cache-dir -r requirements.test.txt
 
-COPY . .
+# Copia arquivos necessários para a execução dos testes
+COPY --chown=appuser:appgroup app/ ./app/
+COPY --chown=appuser:appgroup utils/ ./utils/
+COPY --chown=appuser:appgroup tests/ ./tests/
+COPY --chown=appuser:appgroup pytest.ini .
+
+USER appuser
 
 # O comando `pytest` será executado no diretório raiz do projeto
 CMD ["pytest"]
@@ -38,12 +48,17 @@ CMD ["pytest"]
 # Estágio 4: 'production' (final) - Imagem de produção enxuta
 # Esta é a imagem construída por padrão pelo `docker compose build`
 # =================================================================
-FROM base as production
+FROM base AS production
 
 # Copia apenas os pacotes de produção pré-instalados do estágio 'builder_prod'
 COPY --from=builder_prod /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder_prod /usr/local/bin /usr/local/bin
 
-COPY . .
+# Copia apenas os diretórios da aplicação (evitando COPY . .)
+COPY --chown=appuser:appgroup app/ ./app/
+COPY --chown=appuser:appgroup utils/ ./utils/
+
+USER appuser
+
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

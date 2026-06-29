@@ -39,19 +39,19 @@ export default async function HomePage() {
 
         {/* conteúdo */}
         <div className="relative z-10 max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-coherent drop-shadow-sm">
+          <p className="hero-subtitle text-xs font-bold uppercase tracking-[0.3em] text-coherent drop-shadow-sm">
             Portal de consulta · Câmara e Senado
           </p>
           <h1 className="font-display text-bright font-black leading-[0.92] mt-5 text-6xl sm:text-8xl">
             O que dizem.<br />
             <span className="text-coherent italic font-normal">Como votam.</span>
           </h1>
+          <div className="mt-20">
+            <HomeBusca />
+          </div>
           <p className="text-mid font-medium max-w-xl mx-auto mt-6 text-lg sm:text-xl leading-relaxed">
             Discursos, votações e proposições das duas casas legislativas, reunidos e abertos para você consultar.
           </p>
-          <div className="mt-8">
-            <HomeBusca />
-          </div>
         </div>
       </header>
 
