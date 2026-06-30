@@ -67,3 +67,5 @@ A execução das suítes de testes locais e no pipeline de CI/CD retornam as seg
 > pytest --cov=app tests/api
 > pytest --cov=etl --cov=utils tests/etl
 > ```
+
+
